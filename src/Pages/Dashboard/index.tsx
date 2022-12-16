@@ -22,6 +22,7 @@ const Dashboard = () => {
 			<Row gutter={16 + 8 * 2}>
 				<Col span={6}>
 					<Card
+						className="dashboard-cards"
 						style={{
 							width: "100%",
 							backgroundColor: "#FAFAFA",
@@ -61,6 +62,7 @@ const Dashboard = () => {
 				</Col>
 				<Col span={6}>
 					<Card
+						className="dashboard-cards"
 						style={{
 							width: "100%",
 							backgroundColor: "#FAFAFA",
@@ -100,6 +102,7 @@ const Dashboard = () => {
 				</Col>
 				<Col span={6}>
 					<Card
+						className="dashboard-cards"
 						style={{
 							width: "100%",
 							backgroundColor: "#FAFAFA",
@@ -139,6 +142,7 @@ const Dashboard = () => {
 				</Col>
 				<Col span={6}>
 					<Card
+						className="dashboard-cards"
 						style={{
 							width: "100%",
 							height: "100%",
@@ -180,8 +184,9 @@ const Dashboard = () => {
 				</Col>
 			</Row>
 			<br />
+			<br />
 			<Row>
-				<Col span={14}>
+				<Col className="dashboard-cards" span={14}>
 					<Row>
 						<Col span={24}>
 							<div
@@ -189,6 +194,7 @@ const Dashboard = () => {
 									backgroundColor: "#FAFAFA",
 									height: "45px",
 									padding: "13px 10px",
+									borderRadius: "8px",
 								}}
 							>
 								<span style={{ color: "#353535", fontWeight: "bold" }}>
@@ -197,18 +203,18 @@ const Dashboard = () => {
 							</div>
 						</Col>
 					</Row>
-					<Row style={{ height: "500px", padding: "0px 2px" }}>
+					<Row style={{ height: "400px", padding: "0px 2px" }}>
 						<Col span={24}>
 							<MapContainer
-								style={{ height: "70%" }}
-								center={[51.505, -0.09]}
-								zoom={13}
+								style={{ height: "100%" }}
+								center={[25.3548, 51.1839]}
+								zoom={9}
 							>
 								<TileLayer
-									attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-									url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+									attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+									url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
 								/>
-								<Marker position={[51.505, -0.09]}>
+								<Marker position={[25.3548, 51.1839]}>
 									<Popup>
 										A pretty CSS3 popup. <br /> Easily customizable.
 									</Popup>
@@ -218,25 +224,28 @@ const Dashboard = () => {
 					</Row>
 				</Col>
 				<Col span={10} style={{ paddingLeft: "12px" }}>
-					<div
-						style={{
-							backgroundColor: "#FAFAFA",
-							height: "45px",
-							padding: "13px 10px",
-							width: "100%",
-						}}
-					>
-						<span
+					<div className="dashboard-cards">
+						<div
 							style={{
-								color: "#353535",
-								fontWeight: "bold",
+								backgroundColor: "#FAFAFA",
+								height: "45px",
+								padding: "13px 10px",
+								width: "100%",
+								borderRadius: "8px",
 							}}
 						>
-							Recent Activity
-						</span>
-					</div>
-					<div className="recentActivity">
-						<p style={{ padding: "10px" }}>No recent Activity</p>
+							<span
+								style={{
+									color: "#353535",
+									fontWeight: "bold",
+								}}
+							>
+								Recent Activity
+							</span>
+						</div>
+						<div className="recentActivity">
+							<p style={{ padding: "10px" }}>No recent Activity</p>
+						</div>
 					</div>
 				</Col>
 			</Row>

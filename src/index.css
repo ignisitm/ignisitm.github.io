@@ -1,9 +1,12 @@
+/* @import url("https://fonts.googleapis.com/css2?family=Montserrat"); */
+@import url("https://fonts.googleapis.com/css2?family=Poppins");
 body {
 	margin: 0;
-	background-color: #f0f2f5 !important;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+	background-color: transparent;
+	font-family: "Montserrat", sans-serif !important;
+	/* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
 		"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-		sans-serif;
+		sans-serif; */
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -13,15 +16,42 @@ code {
 		monospace;
 }
 
+.dashboard-cards {
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	border-radius: 8px !important;
+}
+
+::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+	background: #bababa;
+	border-radius: 100px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+	background: #bababa;
+	border-radius: 100px;
+}
+
 .logo {
-	height: 70px;
+	height: 165px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
 
 .logo img {
-	height: 50px;
+	height: 115px;
 }
 
 .login-form-forgot {
@@ -44,10 +74,13 @@ code {
 	min-width: 250px;
 	padding: 15px;
 	padding-top: 30px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	border-radius: 8px !important;
 }
 
 .login-footer {
 	text-align: center;
+	font-size: 12px;
 }
 
 .table-search {
@@ -64,8 +97,8 @@ code {
 }
 
 .main-label {
-	font-size: 34px;
-	margin-bottom: 20px !important;
+	font-size: 25px;
+	margin-bottom: 40px !important;
 }
 
 .delete-table-action {
@@ -86,7 +119,7 @@ code {
 
 .table-result-label {
 	margin-left: 7px;
-	margin-top: -45px;
+	margin-top: -28px;
 	color: slategray;
 	font-style: italic;
 }

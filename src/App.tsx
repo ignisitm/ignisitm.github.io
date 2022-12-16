@@ -16,6 +16,7 @@ import { ClientContext } from "./Helpers/Context";
 import Dashboard from "./Pages/Dashboard";
 import WorkOrder from "./Pages/WorkOrders";
 // import Home from "./Pages/Landing";
+import { ConfigProvider, theme } from "antd";
 
 let DefaultIcon = L.icon({
 	iconUrl: icon,
@@ -37,25 +38,35 @@ const App: FC = () => {
 
 	return Client ? (
 		Client !== "invalid" ? (
-			<div className="App">
-				<ClientContext.Provider value={Client}>
-					<BrowserRouter>
-						<Routes>
-							<Route path="/login" element={<Login />} />
-							<Route path="/resetpassword" element={<ResetPassword />} />
-							<Route path="" element={<Layout />}>
-								<Route path="/" element={<Dashboard />} />
-								<Route path="/buildings" element={<Buildings />} />
-								<Route path="/building/:id" element={<Building />} />
-								<Route path="/notifications" element={<Notifications />} />
-								<Route path="/workorders" element={<WorkOrder />} />
-								<Route path="/superuser" element={<SuperUser />} />
-								<Route path="/masters" element={<Masters />} />
-							</Route>
-						</Routes>
-					</BrowserRouter>
-				</ClientContext.Provider>
-			</div>
+			<ConfigProvider
+				theme={{
+					algorithm: theme.compactAlgorithm,
+					token: {
+						colorPrimary: "#F9992E",
+						fontFamily: `'Poppins', sans-serif`,
+					},
+				}}
+			>
+				<div className="App">
+					<ClientContext.Provider value={Client}>
+						<BrowserRouter>
+							<Routes>
+								<Route path="/login" element={<Login />} />
+								<Route path="/resetpassword" element={<ResetPassword />} />
+								<Route path="" element={<Layout />}>
+									<Route path="/" element={<Dashboard />} />
+									<Route path="/buildings" element={<Buildings />} />
+									<Route path="/building/:id" element={<Building />} />
+									<Route path="/notifications" element={<Notifications />} />
+									<Route path="/workorders" element={<WorkOrder />} />
+									<Route path="/superuser" element={<SuperUser />} />
+									<Route path="/masters" element={<Masters />} />
+								</Route>
+							</Routes>
+						</BrowserRouter>
+					</ClientContext.Provider>
+				</div>
+			</ConfigProvider>
 		) : (
 			<div>ERROR 404: INVALID CLIENT ADDRESS</div>
 		)

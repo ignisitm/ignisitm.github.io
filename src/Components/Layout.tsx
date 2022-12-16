@@ -166,7 +166,7 @@ const AppLayout: FC = () => {
 				<Masters />
 			</Modal>
 			<Sider
-				theme="light"
+				// theme="light"
 				style={{
 					overflow: "auto",
 					height: "100vh",
@@ -184,11 +184,11 @@ const AppLayout: FC = () => {
 						display: "flex",
 						flexDirection: "column",
 						justifyContent: "space-between",
-						height: "calc(100% - 70px)",
+						height: "calc(100% - 165px)",
 					}}
 				>
 					<Menu
-						theme="light"
+						theme="dark"
 						mode="inline"
 						defaultSelectedKeys={[location.pathname.toLowerCase()]}
 						items={items}
@@ -196,14 +196,14 @@ const AppLayout: FC = () => {
 					/>
 					<span>
 						<Menu
-							theme="light"
+							theme="dark"
 							mode="inline"
 							items={settingItems}
 							onClick={showModal}
 							selectedKeys={[]}
 						/>
 						<Menu
-							theme="light"
+							theme="dark"
 							mode="inline"
 							defaultSelectedKeys={[location.pathname.toLowerCase()]}
 							items={loginItems}
@@ -224,16 +224,16 @@ const AppLayout: FC = () => {
 			>
 				<Content
 					style={{
-						margin: "24px 16px 0px 16px",
+						margin: "12px 16px 0px 16px",
 						paddingBottom: "42px",
-						backgroundColor: "white",
+						backgroundColor: "transparent",
 						height: "100%",
 					}}
 				>
 					<div
 						className="site-layout-background"
 						style={{
-							padding: 24,
+							padding: 5,
 						}}
 					>
 						<span className="main-label">
@@ -245,7 +245,9 @@ const AppLayout: FC = () => {
 								]
 							}
 						</span>
-						<Outlet context={{ completeLoading }} />
+						<div style={{ marginTop: "17px" }}>
+							<Outlet context={{ completeLoading }} />
+						</div>
 					</div>
 				</Content>
 				<Footer

@@ -50,7 +50,7 @@ export default function NormalLoginForm() {
 
 	return (
 		<div className="loginform">
-			<img style={{ paddingLeft: "30px" }} src="logo.png" height={100}></img>
+			<img style={{ paddingLeft: "47px" }} src="logo.png" height={100}></img>
 			<div style={{ height: "25px" }}></div>
 			<Form
 				name="normal_login"

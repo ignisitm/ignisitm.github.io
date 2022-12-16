@@ -438,7 +438,7 @@ const SelectBuilding: FC<props> = ({
 					<Col md={12} xs={24}>
 						<div
 							style={{
-								width: "100%",
+								width: "calc(100% - 10px)",
 								height: "90%",
 								paddingLeft: "10px",
 							}}

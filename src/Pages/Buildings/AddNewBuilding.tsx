@@ -258,12 +258,12 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			visible={visible}
 			destroyOnClose={true}
 			footer={null}
-			style={{ top: "10px" }}
+			style={{ top: "15px" }}
 			bodyStyle={{ overflowY: "scroll", maxHeight: "calc(100vh - 150px)" }}
 			title={
 				<>
-					<h3>Create Contract</h3>
-					<br />
+					<h3 style={{ marginTop: "2px" }}>Create Contract</h3>
+
 					<Steps size="small">
 						<Step
 							status={getStepStatus("buildingStep")}

@@ -1,9 +1,11 @@
 import { Button, Form, Input, message, Modal, Select } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { FC, useState, useContext } from "react";
 import { SuperUserContext } from "../../Helpers/Context";
 import { apiCall } from "../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
+import confirmButton from "../../Components/ConfirmButton";
 import Schedule from "./Schedule";
 
 interface props {
@@ -53,6 +55,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [systems, setSystems] = useState<any>([]);
 	const [showSystems, setShowSystems] = useState(false);
 	const [record, setRecord] = useState<any>({});
+	const [modal, contextHolder] = Modal.useModal();
 
 	const handleITMChange = (value: any) => {
 		console.log(value);
@@ -61,7 +64,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	return (
 		<Modal
 			visible={visible}
-			title="Add a new WorkOrder"
+			style={{ top: "15px" }}
+			title="Create Notification"
 			okText="Create Notification"
 			cancelText="Cancel"
 			onCancel={() => {
@@ -72,8 +76,24 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				form
 					.validateFields()
 					.then((values) => {
-						onCreate(values).then(() => {
-							form.resetFields();
+						// confirmButton({
+						// 	modal,
+						// 	onClick: async () => {
+						// 		await onCreate(values);
+						// 		form.resetFields();
+						// 	},
+						// 	message: "do yoy want to continue?",
+						// 	title: "Create New Notification ?",
+						// });
+						modal.confirm({
+							title: "Create New Notification ?",
+							icon: <ExclamationCircleOutlined />,
+							content: "do yoy want to continue?",
+							onOk: async () => {
+								await onCreate(values);
+								form.resetFields();
+							},
+							onCancel: () => {},
 						});
 					})
 					.catch((info) => {
@@ -82,6 +102,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
+			{contextHolder}
 			<Form
 				form={form}
 				layout="vertical"

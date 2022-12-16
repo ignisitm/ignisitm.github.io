@@ -1,49 +1,48 @@
 import { Form, Input, Button, Alert, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import {apiCall} from "../../axiosConfig";
+import { apiCall } from "../../axiosConfig";
 import { useState } from "react";
 import { setUserSession, getUser } from "../../Auth/Auth";
 import { useNavigate } from "react-router-dom";
 
-
 interface resetPassword {
-    new_password :string ;
-    confirm_password :string ;
+	new_password: string;
+	confirm_password: string;
 }
 
 export default function ResetPassword() {
 	let navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
 
-	const onFinish = (values :any) => {
+	const onFinish = (values: any) => {
 		setLoading(true);
 		console.log("Received values of form: ", values);
-		let { new_password, confirm_password } :resetPassword = { ...values };
+		let { new_password, confirm_password }: resetPassword = { ...values };
 		new_password = new_password.trim();
 		confirm_password = confirm_password.trim();
-		let user :object|null = getUser();
+		let user: object | null = getUser();
 		apiCall({
-            method: "POST",
-            url: "/auth/reset",
-            data: {user, new_password, confirm_password },
-            handleResponse: (res) => {
-                setLoading(false);
+			method: "POST",
+			url: "/auth/reset",
+			data: { user, new_password, confirm_password },
+			handleResponse: (res) => {
+				setLoading(false);
 				console.log(res);
 				message.success(
 					"Password changed successfully, Login with new credentials"
 				);
 				navigate("/login");
-            },
-            handleError: (err) => {
-                setLoading(false);
+			},
+			handleError: (err) => {
+				setLoading(false);
 				console.log(err);
-            }
-        })
+			},
+		});
 	};
 
 	return (
-<div className="loginform">
-			<img style={{ paddingLeft: "30px" }} src="logo.png" height={100}></img>
+		<div className="loginform">
+			<img style={{ paddingLeft: "47px" }} src="logo.png" height={100}></img>
 			<div style={{ height: "70px", marginTop: "10px" }}>
 				<Alert
 					message={
