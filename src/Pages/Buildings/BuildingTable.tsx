@@ -58,6 +58,28 @@ const BuildingTable = () => {
 		{
 			title: "Certificate No.",
 			dataIndex: "building_completion_certificate_number",
+			ellipsis: true,
+		},
+		{
+			title: "Action",
+			dataIndex: "id",
+			render: (id: number) => (
+				<Tooltip title="Remove">
+					<Popconfirm
+						title="Are you sure you want remove to the building?"
+						onConfirm={() => deleteRow(id)}
+						// onCancel={cancel}
+						okText="Remove"
+						cancelText="Cancel"
+						placement="left"
+					>
+						<div className="delete-table-action">
+							<DeleteOutlined />
+						</div>
+					</Popconfirm>
+				</Tooltip>
+			),
+			width: "5%",
 		},
 		// {
 		// 	title: "Action",
@@ -81,7 +103,7 @@ const BuildingTable = () => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
-				url: "/clients",
+				url: "/buildings",
 				data: { data: { id } },
 				handleResponse: (res) => {
 					message.success(res.data.message);
