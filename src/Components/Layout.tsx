@@ -12,6 +12,7 @@ import {
 	SettingOutlined,
 	AuditOutlined,
 	PoweroffOutlined,
+	DollarCircleOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, Modal, Tooltip } from "antd";
 import { getUser, resetUserSession } from "../Auth/Auth";
@@ -36,6 +37,7 @@ const headings: headers = {
 	"/notifications": "Notifications",
 	"/master": "Master Page",
 	"/superuser": "Settings",
+	"/invoice": "Invoices",
 };
 
 const AppLayout: FC = () => {
@@ -82,6 +84,11 @@ const AppLayout: FC = () => {
 			key: "/workorders",
 			icon: <AuditOutlined />,
 			label: "Work Orders",
+		},
+		{
+			key: "/invoice",
+			icon: <DollarCircleOutlined />,
+			label: "Invoices",
 		},
 		...(client === "admin"
 			? [

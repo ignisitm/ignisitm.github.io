@@ -88,7 +88,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						modal.confirm({
 							title: "Create New Notification ?",
 							icon: <ExclamationCircleOutlined />,
-							content: "do yoy want to continue?",
+							content: "do you want to continue?",
 							onOk: async () => {
 								await onCreate(values);
 								form.resetFields();

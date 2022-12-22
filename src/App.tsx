@@ -15,6 +15,7 @@ import Masters from "./Pages/Masters";
 import { ClientContext } from "./Helpers/Context";
 import Dashboard from "./Pages/Dashboard";
 import WorkOrder from "./Pages/WorkOrders";
+import Invoice from "./Pages/Invoice";
 // import Home from "./Pages/Landing";
 import { ConfigProvider, theme } from "antd";
 
@@ -59,6 +60,7 @@ const App: FC = () => {
 									<Route path="/building/:id" element={<Building />} />
 									<Route path="/notifications" element={<Notifications />} />
 									<Route path="/workorders" element={<WorkOrder />} />
+									<Route path="/invoice" element={<Invoice />} />
 									<Route path="/superuser" element={<SuperUser />} />
 									<Route path="/masters" element={<Masters />} />
 								</Route>
