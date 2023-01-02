@@ -173,7 +173,7 @@ const AppLayout: FC = () => {
 				<Masters />
 			</Modal>
 			<Sider
-				// theme="light"
+				theme="light"
 				style={{
 					overflow: "auto",
 					height: "100vh",
@@ -195,7 +195,7 @@ const AppLayout: FC = () => {
 					}}
 				>
 					<Menu
-						theme="dark"
+						theme="light"
 						mode="inline"
 						defaultSelectedKeys={[location.pathname.toLowerCase()]}
 						items={items}
@@ -203,14 +203,14 @@ const AppLayout: FC = () => {
 					/>
 					<span>
 						<Menu
-							theme="dark"
+							theme="light"
 							mode="inline"
 							items={settingItems}
 							onClick={showModal}
 							selectedKeys={[]}
 						/>
 						<Menu
-							theme="dark"
+							theme="light"
 							mode="inline"
 							defaultSelectedKeys={[location.pathname.toLowerCase()]}
 							items={loginItems}

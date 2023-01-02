@@ -1,7 +1,11 @@
 import { useState, useEffect, FC } from "react";
 import { useParams, Link } from "react-router-dom";
 import { apiCall } from "../../axiosConfig";
-import { LoadingOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+	LoadingOutlined,
+	ArrowLeftOutlined,
+	EditOutlined,
+} from "@ant-design/icons";
 import {
 	Progress,
 	Row,
@@ -468,7 +472,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 				</Col>
 			</Row>
 			<Row>
-				<Col span={24}>
+				<Col span={20}>
 					<Form.Item
 						label="Authority Having Jurisdiction"
 						name="jurisdiction"
@@ -493,6 +497,17 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 							</Row>
 						</Radio.Group>
 					</Form.Item>
+				</Col>
+				<Col span={4}>
+					<div className="edit-building-button">
+						<Tooltip title="Edit" placement="left">
+							<Button
+								size="large"
+								shape="circle"
+								icon={<EditOutlined size={20} />}
+							/>
+						</Tooltip>
+					</div>
 				</Col>
 			</Row>
 		</Form>

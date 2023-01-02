@@ -266,3 +266,9 @@ code {
 .assets-card .ant-card-body {
 	padding: 5px;
 }
+
+.edit-building-button {
+	position: absolute;
+	right: 2px;
+	bottom: 0px;
+}

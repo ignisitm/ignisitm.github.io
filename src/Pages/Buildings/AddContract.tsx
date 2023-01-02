@@ -5,16 +5,20 @@ const { Option } = Select;
 
 interface props {
 	nextFunc: Function;
+	prevFunc: Function;
 	contractType: any;
 	setContractDetails: Function;
 	systems: any;
+	contractDetails: any;
 }
 
 const AddContract: FC<props> = ({
 	nextFunc,
+	prevFunc,
 	contractType,
 	setContractDetails,
 	systems,
+	contractDetails,
 }) => {
 	const onFinish = (values: any) => {
 		console.log(values);
@@ -35,6 +39,7 @@ const AddContract: FC<props> = ({
 			labelCol={{ span: 24, style: { paddingTop: 3 } }}
 			wrapperCol={{ span: 24 }}
 			onValuesChange={(changedValues, allValues) => {}}
+			initialValues={contractDetails}
 		>
 			<Row>
 				<Col md={6} xs={24} style={{ paddingRight: "10px" }}>
@@ -175,7 +180,12 @@ const AddContract: FC<props> = ({
 			</Row>
 			<Row>
 				<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
-				<Col md={12} xs={12} style={{ paddingLeft: "10px" }}>
+				<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
+					<Button size="middle" block type="default" onClick={() => prevFunc()}>
+						Back
+					</Button>
+				</Col>
+				<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
 					<Button size="middle" block type="primary" htmlType="submit">
 						Next
 					</Button>

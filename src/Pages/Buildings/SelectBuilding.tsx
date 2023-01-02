@@ -23,6 +23,7 @@ interface props {
 	typeOfConstruction: any;
 	requiredFields: any;
 	setBuildingDetails: Function;
+	buildingDetails: any;
 	buildingNames: Array<any>;
 	engineers: any;
 	// form: FormInstance;
@@ -37,10 +38,12 @@ const SelectBuilding: FC<props> = ({
 	setBuildingDetails,
 	buildingNames,
 	engineers,
-	// form,
+	buildingDetails,
 }) => {
 	const [form] = Form.useForm();
-	const [newBuilding, setNewBuilding] = useState(false);
+	const [newBuilding, setNewBuilding] = useState(
+		buildingDetails.newBuilding ? buildingDetails.newBuilding : false
+	);
 	const [displayMap, setDisplayMap] = useState(false);
 	const [selectedBuildingId, setSelectedBuildingId] = useState(-1);
 	const [fetchingBuildingDetails, setFetchingBuildingDetails] = useState(false);
@@ -53,12 +56,13 @@ const SelectBuilding: FC<props> = ({
 		lat: 25.3548,
 		long: 51.1839,
 	});
+	const [i, set_i] = useState(0);
 
 	const onFinish = (values: any) => {
 		console.log("Success:", values);
-		if (newBuilding) setBuildingDetails(values);
+		if (newBuilding) setBuildingDetails({ ...values, newBuilding });
 		else if (selectedBuildingId !== -1) {
-			setBuildingDetails({ id: selectedBuildingId });
+			setBuildingDetails({ id: selectedBuildingId, ...values });
 		}
 		nextFunc();
 	};
@@ -131,14 +135,17 @@ const SelectBuilding: FC<props> = ({
 				<Switch
 					checked={newBuilding}
 					onClick={() => {
-						setNewBuilding((value) => !value);
+						setNewBuilding((value: any) => !value);
 						form.resetFields();
+						setBuildingDetails({});
+						set_i((x) => x + 1);
 					}}
 				/>
 				<span> Add a new building</span>
 			</div>
 
 			<Form
+				key={i}
 				form={form}
 				preserve={false}
 				size="small"
@@ -147,7 +154,11 @@ const SelectBuilding: FC<props> = ({
 				onFinishFailed={onFinishFailed}
 				labelCol={{ span: 24, style: { paddingTop: 3 } }}
 				wrapperCol={{ span: 24 }}
-				initialValues={{ metrics: "feet", jurisdiction: "1" }}
+				initialValues={{
+					metrics: "feet",
+					jurisdiction: "1",
+					...buildingDetails,
+				}}
 				onValuesChange={(changedValues, allValues) => {
 					if (
 						changedValues.building_no ||
@@ -485,7 +496,7 @@ const SelectBuilding: FC<props> = ({
 				<Row>
 					<Col span={6} style={{ paddingLeft: "10px" }}>
 						<Form.Item
-							label="Building Controller"
+							label="Assigned Engineer"
 							name="building_controller"
 							rules={[
 								{

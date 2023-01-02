@@ -7,6 +7,9 @@ import {
 	Select,
 	Steps,
 	Result,
+	Descriptions,
+	Row,
+	Col,
 } from "antd";
 import {
 	PlusOutlined,
@@ -155,6 +158,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				case "contract":
 				case "attachments":
 				case "completed":
+				case "summary":
 					return "finish";
 			}
 		} else if (step === "contractStep") {
@@ -166,6 +170,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					return "process";
 				case "attachments":
 				case "completed":
+				case "summary":
 					return "finish";
 			}
 		} else if (step === "attachmentsStep") {
@@ -177,6 +182,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				case "attachments":
 					return "process";
 				case "completed":
+				case "summary":
 					return "finish";
 			}
 		} else if (step === "completedStep") {
@@ -187,6 +193,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				case "attachments":
 					return "wait";
 				case "completed":
+				case "summary":
 					return "finish";
 			}
 		}
@@ -251,6 +258,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setSavingAttachments(-1);
 		setSavingContract(-1);
 		setAddingBuilding(-1);
+		setBuildingDetails({});
+		setContractDetails({});
+		setAttachmentDetails({});
 	};
 
 	return (
@@ -282,7 +292,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						/>
 						<Step
 							status={getStepStatus("completedStep")}
-							title="Completed"
+							title="Summary"
 							icon={<FileDoneOutlined />}
 						/>
 					</Steps>
@@ -316,6 +326,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					setBuildingDetails={setBuildingDetails}
 					buildingNames={buildingNames}
 					engineers={engineers}
+					buildingDetails={buildingDetails || {}}
 					// form={BuildingForm}
 				/>
 			) : page === "addBuilding" ? (
@@ -325,23 +336,70 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					nextFunc={() => {
 						setPage("attachments");
 					}}
+					prevFunc={() => {
+						setPage("selectBuilding");
+					}}
 					contractType={contractType}
 					setContractDetails={setContractDetails}
 					systems={systems}
+					contractDetails={contractDetails || {}}
 				/>
 			) : // <Button onClick={() => setPage("attachments")}>Next</Button>
 			page === "attachments" ? (
 				// <Button onClick={() => setPage("completed")}>Next</Button>
 				<AddAttachments
 					nextFunc={() => {
-						setPage("completed");
+						setPage("summary");
 						console.log("buildingDetails: ", buildingDetails);
 						console.log("AttachmentDetails: ", attachmentDetails);
 						console.log("ContractDetails: ", contractDetails);
-						submit();
+					}}
+					prevFunc={() => {
+						setPage("contract");
 					}}
 					setAttachmentDetails={setAttachmentDetails}
 				/>
+			) : page === "summary" ? (
+				<>
+					<br />
+					<Descriptions title="Summary" size="small" column={2}>
+						<Descriptions.Item label="Building">
+							{buildingDetails.building_name}
+						</Descriptions.Item>
+						<Descriptions.Item label="Address">
+							Building {buildingDetails.building_no}, Street{" "}
+							{buildingDetails.street_no}, Zone {buildingDetails.zone_no}
+						</Descriptions.Item>
+					</Descriptions>
+					<br />
+					<Row>
+						<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
+						<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
+							<Button
+								size="middle"
+								block
+								type="default"
+								onClick={() => setPage("attachments")}
+							>
+								Back
+							</Button>
+						</Col>
+						<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
+							<Button
+								size="middle"
+								block
+								type="primary"
+								onClick={() => {
+									setPage("completed");
+									submit();
+								}}
+							>
+								Submit
+							</Button>
+						</Col>
+						<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
+					</Row>
+				</>
 			) : (
 				// <>
 				// 	{addingBuilding === 1 ? (

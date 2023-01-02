@@ -5,9 +5,14 @@ import { InboxOutlined } from "@ant-design/icons";
 interface props {
 	nextFunc: Function;
 	setAttachmentDetails: Function;
+	prevFunc: Function;
 }
 
-const AddAttachments: FC<props> = ({ nextFunc, setAttachmentDetails }) => {
+const AddAttachments: FC<props> = ({
+	nextFunc,
+	setAttachmentDetails,
+	prevFunc,
+}) => {
 	const normFile = (e: any) => {
 		console.log("Upload event:", e);
 
@@ -62,7 +67,12 @@ const AddAttachments: FC<props> = ({ nextFunc, setAttachmentDetails }) => {
 			</Form.Item>
 			<Row>
 				<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
-				<Col md={12} xs={12} style={{ paddingLeft: "10px" }}>
+				<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
+					<Button size="middle" block type="default" onClick={() => prevFunc()}>
+						Back
+					</Button>
+				</Col>
+				<Col md={6} xs={6} style={{ paddingLeft: "10px" }}>
 					<Button size="middle" block type="primary" htmlType="submit">
 						Next
 					</Button>
