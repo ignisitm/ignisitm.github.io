@@ -101,6 +101,33 @@ const Invoices = () => {
   // 	width: "10%",
   // },
   //   ];
+
+  const fetchData = (
+    curr_pagination: any = pagination,
+    search: string = searchText
+  ) => {
+    setLoading(true);
+    setShowClose(search ? true : false);
+    apiCall({
+      method: "GET",
+      url: `/workorders?status=Completed&page=${
+        curr_pagination.current
+      }&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
+      handleResponse: (res) => {
+        console.log(res.data.message);
+        setData(res.data.message);
+        setLoading(false);
+        if (res.data.message.length > 0) {
+          let total = res.data.message[0].full_count;
+          setPagination({ ...curr_pagination, total });
+        }
+      },
+      handleError: () => {
+        setLoading(false);
+      },
+    });
+  };
+
   const columns = [
     {
       title: "Workorder ID",
@@ -110,10 +137,21 @@ const Invoices = () => {
     {
       title: "Building Name",
       dataIndex: "building_name",
+      ellipsis: true,
     },
     {
-      title: "Description",
+      title: (
+        <>
+          Description{" "}
+          <div style={{ display: "inline-block", float: "right" }}>
+            {" "}
+            <GenerateInvoice fetchData={fetchData} />
+          </div>
+        </>
+      ),
       dataIndex: "details",
+      width: "65%",
+      ellipsis: true,
     },
   ];
 
@@ -160,32 +198,6 @@ const Invoices = () => {
       storage[group].push(item);
       return storage;
     }, {});
-  };
-
-  const fetchData = (
-    curr_pagination: any = pagination,
-    search: string = searchText
-  ) => {
-    setLoading(true);
-    setShowClose(search ? true : false);
-    apiCall({
-      method: "GET",
-      url: `/workorders?status=Completed&page=${
-        curr_pagination.current
-      }&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
-      handleResponse: (res) => {
-        console.log(res.data.message);
-        setData(res.data.message);
-        setLoading(false);
-        if (res.data.message.length > 0) {
-          let total = res.data.message[0].full_count;
-          setPagination({ ...curr_pagination, total });
-        }
-      },
-      handleError: () => {
-        setLoading(false);
-      },
-    });
   };
 
   const search = (clear: boolean = false) => {
@@ -416,7 +428,6 @@ const Invoices = () => {
           } out of ${pagination.total} records`}</div>
         </Col>
       </Row>
-      <GenerateInvoice fetchData={fetchData} />
     </>
   );
 };

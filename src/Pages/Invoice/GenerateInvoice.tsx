@@ -48,20 +48,58 @@ const GenerateInvoiceForm: FC<GenerateInvoiceFormProps> = ({
 
   const columns: any = [
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Sl No.",
+      dataIndex: "sl_no",
+      key: "sl_no",
       // render: (text) => <a>{text}</a>,
     },
     {
-      title: "Age",
-      dataIndex: "age",
-      key: "age",
+      title: "Workorder No.",
+      dataIndex: "workorder_no",
+      key: "workorder_no",
+      render: (text: any) => <Input value={text} />,
     },
     {
-      title: "Address",
-      dataIndex: "address",
-      key: "address",
+      title: "Part No.",
+      dataIndex: "part_no",
+      key: "part_no",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Unit Price",
+      dataIndex: "unit_price",
+      key: "unit_price",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Discount",
+      dataIndex: "discount",
+      key: "discount",
+      render: (text: any) => <Input value={text} />,
+    },
+    {
+      title: "Input Cost",
+      dataIndex: "input_cost",
+      key: "input_cost",
+      render: (text: any) => <Input value={text} />,
     },
   ];
 
@@ -87,6 +125,7 @@ const GenerateInvoiceForm: FC<GenerateInvoiceFormProps> = ({
       title="Invoicing Details"
       okText="Generate"
       cancelText="Cancel"
+      width={1200}
       onCancel={() => {
         form.resetFields();
         onCancel();
