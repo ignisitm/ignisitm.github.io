@@ -19,6 +19,7 @@ import { AxiosError, AxiosResponse } from "axios";
 interface props {
 	fetchData: Function;
 	systems: any;
+	employees: any;
 }
 
 const { Option } = Select;
@@ -122,6 +123,7 @@ interface NewUserFormProps {
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
 	systems: any;
+	employees: any;
 }
 
 const NewUserForm: FC<NewUserFormProps> = ({
@@ -130,6 +132,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 	onCreate,
 	onCancel,
 	systems,
+	employees,
 }) => {
 	const [form] = Form.useForm();
 	const [userLoading, setUserLoading] = useState(false);
@@ -196,17 +199,40 @@ const NewUserForm: FC<NewUserFormProps> = ({
 						</Form.Item>
 					</Col>
 					<Col span={24}>
-						<Form.Item name="name" label="Name" rules={[{ required: true }]}>
+						{/* <Form.Item name="name" label="Name" rules={[{ required: true }]}>
 							<Input />
-						</Form.Item>
+						</Form.Item> */}
 					</Col>
 					<Col span={24}>
 						<Form.Item
-							name="username"
-							label="Username"
+							name="id"
+							label="Employee Id"
 							rules={[{ required: true }]}
 						>
-							<Input />
+							<Select
+								className="selected-new-building"
+								showSearch
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as number)
+										.toString()
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as number)
+										.toString()
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as number).toString()
+										)
+								}
+							>
+								{employees.map((emp: any) => (
+									<Option value={emp.id}>{emp.id}</Option>
+								))}
+							</Select>
 						</Form.Item>
 					</Col>
 					<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
@@ -325,7 +351,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 	);
 };
 
-const AddNewUser: FC<props> = ({ fetchData, systems }: props) => {
+const AddNewUser: FC<props> = ({ fetchData, systems, employees }: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -372,6 +398,7 @@ const AddNewUser: FC<props> = ({ fetchData, systems }: props) => {
 					setVisible(false);
 				}}
 				confirmLoading={confirmLoading}
+				employees={employees}
 			/>
 		</div>
 	);

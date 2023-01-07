@@ -19,6 +19,7 @@ import { SuperUserContext } from "../../Helpers/Context";
 import { apiCall } from "../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
 import UserTransfer from "./Transfer";
+import ResourceTransfer from "./ResourceTransfer";
 const { RangePicker } = DatePicker;
 
 interface props {
@@ -44,14 +45,24 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 }) => {
 	const [form] = Form.useForm();
 	const contextVariables = useContext(SuperUserContext);
-	const [availableUsers, setAvailableUsers] = useState([]);
+	const [availableUsers, setAvailableUsers] = useState<any>([]);
+	const [availableResources, setAvailableResources] = useState<any>([]);
 	const [searchingTechnicians, setSearchingTechnicians] = useState(-1);
 	const [enableSchedule, setEnableSchedule] = useState(true);
-	const [assignedUsers, setAssignedUsers] = useState<number[]>([]);
+	const [assignedUsers, setAssignedUsers] = useState<any>([]);
+	const [assignedResources, setAssignedResources] = useState<any>([]);
 
 	useEffect(() => {
 		console.log(record);
 	}, []);
+
+	const cancelModal = () => {
+		form.resetFields();
+		onCancel();
+		setAvailableUsers([]);
+		setAvailableResources([]);
+		setSearchingTechnicians(-1);
+	};
 
 	return (
 		<Modal
@@ -59,20 +70,23 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			title="Schedule Work Order"
 			okButtonProps={{ disabled: enableSchedule }}
 			okText="Schedule"
+			style={{ top: "20px" }}
 			cancelText="Cancel"
 			onCancel={() => {
-				form.resetFields();
-				onCancel();
-				setAvailableUsers([]);
-				setSearchingTechnicians(-1);
+				cancelModal();
 			}}
 			onOk={() => {
 				form
 					.validateFields()
 					.then((values) => {
-						values["assigned"] = assignedUsers;
+						let total_assigned_resources = [
+							...assignedUsers,
+							...assignedResources,
+						];
+						values["assigned"] = total_assigned_resources;
+						console.log(total_assigned_resources);
 						onCreate(values).then(() => {
-							form.resetFields();
+							cancelModal();
 						});
 					})
 					.catch((info) => {
@@ -81,11 +95,6 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
-			<h3>Create New Work Order</h3>
-			<br />
-			<b>Schedule:</b>
-			<br />
-			<br />
 			<Form
 				form={form}
 				layout="vertical"
@@ -106,15 +115,24 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							},
 							handleResponse: (res) => {
 								console.log(res);
-								let availableUsers = res.data.message;
-								console.log(availableUsers);
-								availableUsers = availableUsers.map(
-									(user: { user_id: number; name: string }) => ({
-										key: user.user_id.toString(),
+								let newAvailableUsers = res.data.message.employee;
+								console.log(newAvailableUsers);
+								newAvailableUsers = newAvailableUsers.map(
+									(user: { id: number; name: string }) => ({
+										key: user.id.toString(),
 										...user,
 									})
 								);
-								setAvailableUsers(availableUsers);
+								setAvailableUsers(newAvailableUsers);
+								let newAvailableResources = res.data.message.resource;
+								console.log(newAvailableResources);
+								newAvailableResources = newAvailableResources.map(
+									(user: { id: number; name: string }) => ({
+										key: user.id.toString(),
+										...user,
+									})
+								);
+								setAvailableResources(newAvailableResources);
 								setSearchingTechnicians(1);
 							},
 							handleError: (err) => {},
@@ -139,15 +157,24 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					/>
 				</Form.Item>
 				{searchingTechnicians === 1 ? (
-					<UserTransfer
-						users={availableUsers}
-						enable={setEnableSchedule}
-						setAssignedUsers={setAssignedUsers}
-					/>
+					<>
+						<h3>Employees</h3>
+						<UserTransfer
+							users={availableUsers}
+							enable={setEnableSchedule}
+							setAssignedUsers={setAssignedUsers}
+						/>
+						<h3>Equipments</h3>
+						<ResourceTransfer
+							users={availableResources}
+							// enable={setEnableSchedule}
+							setAssignedUsers={setAssignedResources}
+						/>
+					</>
 				) : searchingTechnicians === 0 ? (
 					<div style={{ width: "100%", textAlign: "center" }}>
 						{" "}
-						Searching for available technicians &nbsp; <LoadingOutlined />
+						Searching for available Resources &nbsp; <LoadingOutlined />
 					</div>
 				) : null}
 			</Form>

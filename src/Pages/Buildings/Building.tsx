@@ -43,12 +43,20 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 }) => {
 	const [form] = Form.useForm();
 	const [displayMap, setDisplayMap] = useState(false);
-	const [newBuilding, setNewBuilding] = useState(false);
 	const [isLoadingMap, setLoadingMap] = useState(false);
+	const [editMode, setEditMode] = useState(false);
 	const [coordinates, setCoordinates] = useState({
 		lat: 25.3548,
 		long: 51.1839,
 	});
+
+	const openEditMode = () => {
+		setEditMode(true);
+	};
+
+	const closeEditMode = () => {
+		setEditMode(false);
+	};
 
 	useEffect(() => {
 		getMap(details.building_no, details.street_no, details.zone_no);
@@ -142,7 +150,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 						]}
 					>
 						{Object.keys(details).length > 0 ? (
-							<Input className="selected-building" disabled={!newBuilding} />
+							<Input className="selected-building" disabled={!editMode} />
 						) : (
 							<Skeleton.Input active size="small" block />
 						)}
@@ -160,7 +168,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 						]}
 					>
 						{Object.keys(details).length > 0 ? (
-							<Input className="selected-building" disabled={!newBuilding} />
+							<Input className="selected-building" disabled={!editMode} />
 						) : (
 							<Skeleton.Input active size="small" block />
 						)}
@@ -182,10 +190,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -204,10 +209,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -226,10 +228,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -248,10 +247,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -271,10 +267,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -292,10 +285,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -315,7 +305,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Select className="selected-building" disabled={!newBuilding}>
+									<Select className="selected-building" disabled={!editMode}>
 										{occupancies.map((item: any) => (
 											<Option value={item.id}>{item.value}</Option>
 										))}
@@ -337,7 +327,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Select className="selected-building" disabled={!newBuilding}>
+									<Select className="selected-building" disabled={!editMode}>
 										{hazardClassification.map((item: any) => (
 											<Option value={item.id}>{item.value}</Option>
 										))}
@@ -361,10 +351,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Input
-										className="selected-building"
-										disabled={!newBuilding}
-									/>
+									<Input className="selected-building" disabled={!editMode} />
 								) : (
 									<Skeleton.Input active size="small" block />
 								)}
@@ -385,7 +372,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 									<Select
 										defaultValue="feet"
 										className="selected-building"
-										disabled={!newBuilding}
+										disabled={!editMode}
 									>
 										<Option value="feet">feet</Option>
 										<Option value="meters">meters</Option>
@@ -407,7 +394,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								]}
 							>
 								{Object.keys(details).length > 0 ? (
-									<Select className="selected-building" disabled={!newBuilding}>
+									<Select className="selected-building" disabled={!editMode}>
 										{typeOfConstruction.map((item: any) => (
 											<Option value={item.id}>{item.value}</Option>
 										))}
@@ -485,7 +472,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 					>
 						<Radio.Group
 							className="selected-building"
-							disabled={!newBuilding}
+							disabled={!editMode}
 							style={{ width: "100%" }}
 						>
 							<Row>
@@ -500,13 +487,23 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 				</Col>
 				<Col span={4}>
 					<div className="edit-building-button">
-						<Tooltip title="Edit" placement="left">
-							<Button
-								size="large"
-								shape="circle"
-								icon={<EditOutlined size={20} />}
-							/>
-						</Tooltip>
+						{editMode ? (
+							<>
+								<Button type="primary" style={{ marginRight: "4px" }}>
+									Save
+								</Button>
+								<Button onClick={closeEditMode}>Cancel</Button>
+							</>
+						) : (
+							<Tooltip title="Edit" placement="left">
+								<Button
+									size="large"
+									shape="circle"
+									icon={<EditOutlined size={20} />}
+									onClick={openEditMode}
+								/>
+							</Tooltip>
+						)}
 					</div>
 				</Col>
 			</Row>

@@ -5,14 +5,11 @@ import { tokenToString } from "typescript";
 
 interface props {
 	users: any;
-	enable: Function;
 	setAssignedUsers: Function;
 }
 
-const UserTransfer: React.FC<props> = ({ users, enable, setAssignedUsers }) => {
+const ResourceTransfer: React.FC<props> = ({ users, setAssignedUsers }) => {
 	const [targetKeys, setTargetKeys] = useState<string[]>([]);
-	const [availableLeader, setAL] = useState<string[]>([]);
-	const [leader, setLeader] = useState("");
 
 	useEffect(() => {
 		console.log(users);
@@ -22,13 +19,11 @@ const UserTransfer: React.FC<props> = ({ users, enable, setAssignedUsers }) => {
 		option.name.indexOf(inputValue) > -1;
 
 	const handleChange = (newTargetKeys: string[]) => {
-		if (newTargetKeys.length > 0) enable(false);
-		else enable(true);
 		setTargetKeys(newTargetKeys);
 		let assignedNewUsers: any = [];
 		newTargetKeys.map((x) => {
 			let user = users.find((user: any) => user.key === x);
-			assignedNewUsers.push({ subject_id: user.id, type: "employee" });
+			assignedNewUsers.push({ subject_id: user.id, type: "resource" });
 		});
 		setAssignedUsers(assignedNewUsers);
 		console.log(assignedNewUsers);
@@ -54,29 +49,11 @@ const UserTransfer: React.FC<props> = ({ users, enable, setAssignedUsers }) => {
 				targetKeys={targetKeys}
 				onChange={handleChange}
 				onSearch={handleSearch}
-				onSelectChange={(ssk, tsk) => {
-					setAL(tsk);
-				}}
-				render={(item) => (
-					<>
-						{item.name} {item.user ? "(User)" : ""}
-					</>
-				)}
+				render={(item) => <>{item.name}</>}
 			/>
-			<Button
-				type="link"
-				disabled={availableLeader.length === 1 ? false : true}
-				style={{ float: "right" }}
-				onClick={() => {
-					let new_leader = users.find((x: any) => x.key === availableLeader[0]);
-					setLeader(new_leader?.name || "");
-				}}
-			>
-				{leader ? leader + " (Lead)" : "Assign as Leader"}
-			</Button>
 			<br />
 		</>
 	);
 };
 
-export default UserTransfer;
+export default ResourceTransfer;

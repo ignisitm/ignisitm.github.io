@@ -5,21 +5,17 @@ import { apiCall } from "../../axiosConfig";
 import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewUser from "./AddNewUser";
+import AddNewEquipment from "./AddNewEquipment";
 const { Search } = Input;
 
-interface props {
-	systems: any;
-}
-
-const ClientTable: React.FC<props> = ({ systems }) => {
+const Equipments: React.FC<any> = ({ systems }) => {
 	const [data, setData] = useState();
-	const [employees, setEmployees] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
 	const [pagination, setPagination] = useState({
 		current: 1,
-		pageSize: 10,
+		pageSize: 4,
 		total: 0,
 	});
 
@@ -27,15 +23,17 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 		{
 			title: "Name",
 			dataIndex: "name",
+			ellipsis: true,
 			// sorter: true,
 		},
 		{
-			title: "Username",
-			dataIndex: "username",
+			title: "Type",
+			dataIndex: "type",
 		},
 		{
-			title: "Role",
-			dataIndex: "role",
+			title: "Description",
+			dataIndex: "description",
+			ellipsis: true,
 		},
 		{
 			title: "Action",
@@ -84,7 +82,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/auth/users?page=${curr_pagination.current}&limit=${
+			url: `/auth/resource?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -106,26 +104,15 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 		if (clear) setSearchText("");
 		fetchData(
 			{
-				pageSize: 10,
+				pageSize: 4,
 				current: 1,
 			},
 			text
 		);
 	};
 
-	const getAllEmployeeID = () => {
-		apiCall({
-			method: "GET",
-			url: "/auth/employeeID",
-			handleResponse: (res) => {
-				setEmployees(res.data.message);
-			},
-		});
-	};
-
 	useEffect(() => {
 		search();
-		getAllEmployeeID();
 	}, []);
 
 	const handleTableChange = (newPagination: any) => {
@@ -134,6 +121,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 
 	return (
 		<>
+			<h3>Equipments</h3>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -156,11 +144,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						Refresh
 					</Button>
 					{/* <AddNewClient fetchData={fetchData} /> */}
-					<AddNewUser
-						employees={employees}
-						fetchData={fetchData}
-						systems={systems}
-					/>
+					<AddNewEquipment fetchData={fetchData} systems={systems} />
 				</Col>
 			</Row>
 			<Row>
@@ -176,11 +160,13 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * pagination.pageSize +
+							  pagination.pageSize
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
@@ -188,4 +174,4 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 	);
 };
 
-export default ClientTable;
+export default Equipments;

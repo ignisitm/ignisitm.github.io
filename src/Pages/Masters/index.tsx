@@ -7,6 +7,7 @@ import {
 	UploadOutlined,
 	UserOutlined,
 	VideoCameraOutlined,
+	PartitionOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useState } from "react";
@@ -15,22 +16,28 @@ import User from "./User";
 import MasterBuildings from "./MasterBuildings";
 import Systems from "./Systems";
 import { apiCall } from "../../axiosConfig";
+import Resources from "./Resources";
 
 const { Header, Content, Footer, Sider } = Layout;
 
 const items = [
 	{
 		key: "1",
+		icon: <PartitionOutlined />,
+		label: "Resources",
+	},
+	{
+		key: "2",
 		icon: <UserOutlined />,
 		label: "Users",
 	},
 	{
-		key: "2",
+		key: "3",
 		icon: <BarChartOutlined />,
 		label: "Buildings",
 	},
 	{
-		key: "3",
+		key: "4",
 		icon: <AppstoreOutlined />,
 		label: "Systems",
 	},
@@ -80,10 +87,12 @@ const App: React.FC = () => {
 			</Sider>
 			<Layout style={{ marginLeft: 200, background: "transparent" }}>
 				{page === "1" ? (
-					<User systems={systems} />
+					<Resources />
 				) : page === "2" ? (
-					<MasterBuildings />
+					<User systems={systems} />
 				) : page === "3" ? (
+					<MasterBuildings />
+				) : page === "4" ? (
 					<Systems />
 				) : null}
 			</Layout>

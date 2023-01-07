@@ -80,16 +80,16 @@ const AppLayout: FC = () => {
 			icon: <BellOutlined />,
 			label: "Notifications",
 		},
-		{
-			key: "/workorders",
-			icon: <AuditOutlined />,
-			label: "Work Orders",
-		},
-		{
-			key: "/invoice",
-			icon: <DollarCircleOutlined />,
-			label: "Invoices",
-		},
+		// {
+		// 	key: "/workorders",
+		// 	icon: <AuditOutlined />,
+		// 	label: "Work Orders",
+		// },
+		// {
+		// 	key: "/invoice",
+		// 	icon: <DollarCircleOutlined />,
+		// 	label: "Invoices",
+		// },
 		...(client === "admin"
 			? [
 					{
