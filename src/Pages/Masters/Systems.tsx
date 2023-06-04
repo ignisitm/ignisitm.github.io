@@ -51,7 +51,9 @@ const Systems = () => {
 		setName(event.target.value);
 	};
 
-	const addItem = (e: React.MouseEvent<HTMLAnchorElement>) => {
+	const addItem = (
+		e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
+	) => {
 		e.preventDefault();
 		setSystems([
 			...systems,
@@ -115,7 +117,7 @@ const Systems = () => {
 												<Button
 													type="text"
 													icon={<PlusOutlined />}
-													onClick={addItem}
+													onClick={(e) => addItem(e)}
 												>
 													Add System
 												</Button>

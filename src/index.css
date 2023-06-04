@@ -139,6 +139,10 @@ code {
 	background-color: #1890ff !important;
 }
 
+.selected-building .ant-checkbox-disabled + span {
+	color: black !important;
+}
+
 .ant-radio-checked .ant-radio-inner {
 	border-color: #1890ff;
 	color: black !important;
@@ -271,4 +275,61 @@ code {
 	position: absolute;
 	right: 2px;
 	bottom: 0px;
+}
+
+.menu-cards {
+	width: 300px;
+	height: 100%;
+}
+
+.span-footer {
+	bottom: 10px;
+	position: absolute;
+}
+
+.tree-with-details {
+	display: flex;
+	padding: 1em;
+}
+
+.tree-menu {
+	flex: 0 0 250px;
+	margin-right: 10px;
+}
+
+.tree-main {
+	margin-left: 10px;
+	flex: auto;
+	height: 450px;
+}
+
+.site-tree-search-value {
+	color: #f50;
+}
+
+.loader-container {
+	/* margin: 20px 0; */
+	width: 100%;
+	height: 450px;
+	/* margin-bottom: 20px; */
+	padding: 200px 50px;
+	text-align: center;
+	/* background: rgba(0, 0, 0, 0.05); */
+	border-radius: 4px;
+}
+
+.transparent-load {
+	z-index: 1;
+	position: absolute;
+	background-color: rgba(255, 255, 255, 0.7);
+}
+
+.field-list-number {
+	text-align: end;
+	margin: 5px 8px 0 0;
+}
+
+.form-item-icons {
+	font-size: 16px;
+	margin-top: 5px;
 }

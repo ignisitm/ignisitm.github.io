@@ -18,6 +18,8 @@ import WorkOrder from "./Pages/WorkOrders";
 import Invoice from "./Pages/Invoice";
 // import Home from "./Pages/Landing";
 import { ConfigProvider, theme } from "antd";
+import Admin from "./Pages/Admin";
+import AHJForm from "./Pages/Admin/Components/AHJForm";
 
 let DefaultIcon = L.icon({
 	iconUrl: icon,
@@ -62,6 +64,8 @@ const App: FC = () => {
 									<Route path="/workorders" element={<WorkOrder />} />
 									<Route path="/invoice" element={<Invoice />} />
 									<Route path="/superuser" element={<SuperUser />} />
+									<Route path="/admin" element={<Admin />} />
+									<Route path="/ahj/:id" element={<AHJForm />} />
 									<Route path="/masters" element={<Masters />} />
 								</Route>
 							</Routes>

@@ -13,6 +13,7 @@ import {
 	AuditOutlined,
 	PoweroffOutlined,
 	DollarCircleOutlined,
+	NodeExpandOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, Modal, Tooltip } from "antd";
 import { getUser, resetUserSession } from "../Auth/Auth";
@@ -37,6 +38,7 @@ const headings: headers = {
 	"/notifications": "Notifications",
 	"/master": "Master Page",
 	"/superuser": "Settings",
+	"/admin": "Admin Panel",
 	"/invoice": "Invoices",
 };
 
@@ -79,6 +81,11 @@ const AppLayout: FC = () => {
 			key: "/notifications",
 			icon: <BellOutlined />,
 			label: "Notifications",
+		},
+		{
+			key: "/admin",
+			icon: <NodeExpandOutlined />,
+			label: "Admin Panel",
 		},
 		// {
 		// 	key: "/workorders",
@@ -130,9 +137,9 @@ const AppLayout: FC = () => {
 		console.log("location: ", location);
 		console.log("Client: ", client);
 
-		if (client === "admin") {
-			navigate("/superuser");
-		}
+		// if (client === "admin") {  TODO
+		// 	navigate("/superuser");
+		// }
 
 		if (!getUser()) navigate("/login");
 	}, []);
@@ -184,7 +191,7 @@ const AppLayout: FC = () => {
 				}}
 			>
 				<div className="logo">
-					<img src="../logo.png" />
+					<img src="logo.png" />
 				</div>
 				<div
 					style={{

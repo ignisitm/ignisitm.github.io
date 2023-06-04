@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { message } from "antd";
+import { getToken } from "./Auth/Auth";
 
 type apiMethods = "GET" | "POST" | "DELETE" | "PUT";
 let response: AxiosResponse;
@@ -25,6 +26,7 @@ async function apiCall({
 }: params) {
 	const api = axios.create({
 		baseURL: baseurl,
+		headers: { ignistoken: getToken() },
 		onDownloadProgress: (progress) => {
 			percentage?.(progress);
 		},
