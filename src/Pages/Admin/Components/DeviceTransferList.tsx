@@ -52,7 +52,7 @@ const DeviceTransferList: FC<props> = ({
 			onChange={handleChange}
 			onSearch={handleSearch}
 			render={(item) => item.name}
-			listStyle={(dir) => ({ width: "600px" })}
+			listStyle={{ width: "50%" }}
 			style={{ width: "600px" }}
 			locale={{
 				itemUnit: "device",

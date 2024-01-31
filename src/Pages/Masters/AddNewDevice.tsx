@@ -30,6 +30,7 @@ const DeviceCreateForm: FC<DeviceCreateFormProps> = ({
 			visible={visible}
 			title="Add Work"
 			okText="Add Work"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();

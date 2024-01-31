@@ -14,6 +14,8 @@ import {
 	ModalFuncProps,
 	Tooltip,
 	Checkbox,
+	Divider,
+	Avatar,
 } from "antd";
 import { FC, Fragment, ReactElement, useEffect, useRef, useState } from "react";
 import { apiCall } from "../../../axiosConfig";
@@ -26,38 +28,54 @@ import {
 	PlusOutlined,
 	LoadingOutlined,
 	QuestionCircleOutlined,
+	EditOutlined,
+	UserOutlined,
 } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewDevice from "./AddNewDevice";
 import { ModalStaticFunctions } from "antd/es/modal/confirm";
+import { useLoaderContext } from "../../../Components/Layout";
+import DeviceCommonFields from "./DeviceCommonFields";
 const { Search } = Input;
 
-const mockSystems = [
-	{
-		id: 1,
-		name: "Fire Alarm",
-	},
-	{
-		id: 2,
-		name: "Fire Extinguiser",
-	},
-];
+type props = {
+	system_id: number;
+};
 
-const DeviceTable = () => {
+const DevicesTable: FC<props> = ({ system_id }) => {
+	const { completeLoading } = useLoaderContext();
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
 	const [systems, setSystems] = useState<any>([]);
+	const [frequency, setFrequency] = useState<any>([]);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [fields_form] = Form.useForm();
 	const [fieldsEditMode, setFieldsEditMode] = useState(false);
 	const [editLoading, setEditLoading] = useState(false);
 	const [selectedDevice, setSelectedDevice] = useState<any>();
+	const [frequencyModal, setFrequencyModal] = useState(false);
+	const [newFrequency, setNewFrequency] = useState<number>();
+	const [savingFrequency, setSavingFrequency] = useState(false);
+
+	//FREQUENCY MODAL OPERATIONS
+	const showFrequencyModal = (id: number, row: any) => {
+		setNewFrequency(id);
+		setFrequencyModal(true);
+		setSelectedDevice(row);
+	};
+
+	const closeFrequencyModal = () => {
+		setNewFrequency(0);
+		setSelectedDevice(null);
+		setFrequencyModal(false);
+	};
 
 	const showModal = (row: any) => {
 		setIsModalOpen(true);
 		setSelectedDevice(row);
+		fields_form.setFieldsValue(row);
 	};
 
 	const handleOk = () => {
@@ -77,15 +95,15 @@ const DeviceTable = () => {
 
 	const columns = [
 		{
-			title: "Device Name",
+			title: "Device Type",
 			dataIndex: "name",
 			// sorter: true,
 		},
-		{
-			title: "System",
-			dataIndex: "sysname",
-			// sorter: true,
-		},
+		// {
+		// 	title: "System",
+		// 	dataIndex: "sysname",
+		// 	// sorter: true,
+		// },
 		{
 			title: "Fields",
 			dataIndex: "id",
@@ -93,17 +111,41 @@ const DeviceTable = () => {
 				return (
 					<span key={id}>
 						<Button type="link" onClick={() => showModal(row)}>
-							View Fields
+							View/Edit Fields
 						</Button>
 					</span>
 				);
 			},
 		},
+		// {
+		// 	title: "Frequency",
+		// 	dataIndex: "frequency",
+		// 	render: (id: number, row: any) => (
+		// 		<>
+		// 			{frequency?.find((x: any) => x.id === id)?.name || "nil"}{" "}
+		// 			<Tooltip title="Edit frequency">
+		// 				<Button
+		// 					style={{ float: "right" }}
+		// 					size="small"
+		// 					shape="circle"
+		// 					icon={<EditOutlined />}
+		// 					onClick={() => showFrequencyModal(id, row)}
+		// 				></Button>
+		// 			</Tooltip>
+		// 		</>
+		// 	),
+		// },
 		{
 			title: "Created By",
-			dataIndex: "username",
+			dataIndex: "createdby",
 			width: "20%",
-			render: (username: string, row: any) => `${row.uname} (${username})`,
+			render: (username: string, row: any) => (
+				<>
+					<Avatar size="small" icon={<UserOutlined />} />
+					&nbsp;
+					{username}
+				</>
+			),
 		},
 		{
 			title: "Action",
@@ -156,9 +198,9 @@ const DeviceTable = () => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/devicemaster?page=${curr_pagination.current}&limit=${
-				curr_pagination.pageSize
-			}&searchText=${search || ""}`,
+			url: `/devicemaster?system_id=${system_id}&page=${
+				curr_pagination.current
+			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -188,7 +230,7 @@ const DeviceTable = () => {
 			apiCall({
 				method: "PUT",
 				url: "/devicemaster",
-				data: { client: values },
+				data: values,
 				handleResponse: (res) => {
 					resolve(res);
 					setEditLoading(false);
@@ -216,6 +258,39 @@ const DeviceTable = () => {
 		);
 	};
 
+	const saveFrequency = () => {
+		setSavingFrequency(true);
+		let {
+			id,
+			general_fields,
+			inspection_fields,
+			testing_fields,
+			maintenance_fields,
+		} = selectedDevice;
+		apiCall({
+			method: "PUT",
+			url: "/devicemaster",
+			data: {
+				id,
+				frequency: newFrequency,
+				general_fields,
+				inspection_fields,
+				testing_fields,
+				maintenance_fields,
+			},
+			handleResponse: (res) => {
+				fetchData();
+				setSavingFrequency(false);
+				message.success(res.data.message);
+				setFrequencyModal(false);
+				setNewFrequency(0);
+			},
+			handleError: (err) => {
+				setSavingFrequency(false);
+			},
+		});
+	};
+
 	useEffect(() => {
 		search();
 		apiCall({
@@ -223,6 +298,13 @@ const DeviceTable = () => {
 			url: "/dropdown/systemtypes",
 			handleResponse: (res) => {
 				setSystems(res.data.message);
+			},
+		});
+		apiCall({
+			method: "GET",
+			url: "/dropdown/frequency",
+			handleResponse: (res) => {
+				setFrequency(res.data.message);
 			},
 		});
 	}, []);
@@ -244,7 +326,7 @@ const DeviceTable = () => {
 						<Col className="field-list-number" span={1}>
 							{index + 1}
 						</Col>
-						<Col span={8}>
+						<Col span={15}>
 							<Form.Item
 								{...restField}
 								name={[name, "name"]}
@@ -257,7 +339,7 @@ const DeviceTable = () => {
 								/>
 							</Form.Item>
 						</Col>
-						<Col span={6} style={{ paddingLeft: "10px" }}>
+						<Col span={4} style={{ paddingLeft: "10px" }}>
 							<Form.Item
 								{...restField}
 								name={[name, "type"]}
@@ -270,14 +352,12 @@ const DeviceTable = () => {
 								>
 									<Select.Option value="text">Text</Select.Option>
 									<Select.Option value="number">Number</Select.Option>
-									{parent_name !== "general_fields" ? (
-										<Select.Option value="condition">Condition</Select.Option>
-									) : null}
+
 									<Select.Option value="boolean">Yes / No</Select.Option>
 								</Select>
 							</Form.Item>
 						</Col>
-						<Col span={6} style={{ paddingLeft: "10px" }}>
+						<Col span={1} style={{ paddingLeft: "10px" }}>
 							<Form.Item
 								{...restField}
 								name={[name, "mandatory"]}
@@ -515,7 +595,7 @@ const DeviceTable = () => {
 	return (
 		<>
 			<Row style={{ marginBottom: 10 }}>
-				<Col span={18}>
+				<Col span={12}>
 					<Search
 						className="table-search"
 						placeholder="Search using Column Values"
@@ -527,7 +607,8 @@ const DeviceTable = () => {
 						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
-				<Col span={6} className="table-button">
+				<Col span={12} className="table-button">
+					<DeviceCommonFields />
 					<Button
 						icon={<SyncOutlined />}
 						style={{ marginRight: "5px" }}
@@ -535,7 +616,12 @@ const DeviceTable = () => {
 					>
 						Refresh
 					</Button>
-					<AddNewDevice fetchData={fetchData} systems={systems} />
+					<AddNewDevice
+						fetchData={fetchData}
+						systems={systems}
+						frequency={frequency}
+						system_id={system_id}
+					/>
 				</Col>
 			</Row>
 			<Row>
@@ -550,21 +636,37 @@ const DeviceTable = () => {
 						size="small"
 						bordered
 					/>
-					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+					{/* <div className="table-result-label">{`Showing ${
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
+					} out of ${pagination.total} records`}</div> */}
+					<div className="table-result-label">{`Showing ${
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+					} - ${
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
+							? pagination.total
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
 			{/* <FieldsModal row={selectedDevice} /> */}
 			<Modal
-				title="Fields"
+				title="Field Types"
+				width={"100%"}
+				style={{ maxWidth: "800px", top: "20px" }}
 				destroyOnClose={true}
 				open={isModalOpen}
 				onOk={handleOk}
+				maskClosable={false}
 				onCancel={handleCancel}
 				footer={null}
 				afterOpenChange={(open) => {
@@ -577,9 +679,6 @@ const DeviceTable = () => {
 					name="form_in_modal"
 					initialValues={{
 						general_fields: selectedDevice?.general_fields || [],
-						inspection_fields: selectedDevice?.inspection_fields || [],
-						testing_fields: selectedDevice?.testing_fields || [],
-						maintenance_fields: selectedDevice?.maintenance_fields || [],
 					}}
 					onFinish={() => {
 						fields_form
@@ -602,23 +701,8 @@ const DeviceTable = () => {
 						items={[
 							{
 								key: "1",
-								label: "General",
+								label: "General Fields",
 								children: <GeneralProperties />,
-							},
-							{
-								key: "2",
-								label: "Inspection",
-								children: <InspectionProperties />,
-							},
-							{
-								key: "3",
-								label: "Testing",
-								children: <TestingProperties />,
-							},
-							{
-								key: "4",
-								label: "Maintenance",
-								children: <MaintenanceProperties />,
 							},
 						]}
 						tabBarExtraContent={
@@ -645,8 +729,29 @@ const DeviceTable = () => {
 					/>
 				</Form>
 			</Modal>
+			<Modal
+				open={frequencyModal}
+				onCancel={closeFrequencyModal}
+				title="Change Frequency"
+				okText="Save"
+				onOk={saveFrequency}
+				confirmLoading={savingFrequency}
+			>
+				<Divider />
+				<h4>Frequency</h4>
+				<Select
+					onChange={(e) => setNewFrequency(e)}
+					value={newFrequency}
+					style={{ width: "100%" }}
+				>
+					{frequency.map((f: any) => (
+						<Select.Option value={f.id}>{f.name}</Select.Option>
+					))}
+				</Select>
+				<br />
+			</Modal>
 		</>
 	);
 };
 
-export default DeviceTable;
+export default DevicesTable;

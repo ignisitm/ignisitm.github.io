@@ -19,6 +19,7 @@ import { AxiosError, AxiosResponse } from "axios";
 interface props {
 	fetchData: Function;
 	systems: any;
+	userRoles: any;
 	employees: any;
 }
 
@@ -124,6 +125,7 @@ interface NewUserFormProps {
 	onCancel: () => void;
 	systems: any;
 	employees: any;
+	userRoles: any;
 }
 
 const NewUserForm: FC<NewUserFormProps> = ({
@@ -133,6 +135,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 	onCancel,
 	systems,
 	employees,
+	userRoles,
 }) => {
 	const [form] = Form.useForm();
 	const [userLoading, setUserLoading] = useState(false);
@@ -147,6 +150,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 			visible={visible}
 			title="Add a new User"
 			okText="Add User"
+			maskClosable={false}
 			cancelText="Cancel"
 			destroyOnClose={true}
 			onCancel={() => {
@@ -176,7 +180,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 				labelCol={{ span: 24, style: { paddingTop: 3 } }}
 				wrapperCol={{ span: 24 }}
 				size="small"
-				initialValues={{ role: "admin" }}
+				initialValues={userRoles ? { role: userRoles[0].id } : {}}
 				onValuesChange={(changedValues, AllValues) => {
 					console.log(AllValues);
 
@@ -192,9 +196,9 @@ const NewUserForm: FC<NewUserFormProps> = ({
 							rules={[{ required: true }]}
 						>
 							<Select>
-								<Option value="admin"> Admin</Option>
-								<Option value="engineer">Engineer</Option>
-								<Option value="technician">Technician</Option>
+								{userRoles?.map((row: any) => (
+									<Option value={row.id}>{row.role}</Option>
+								))}
 							</Select>
 						</Form.Item>
 					</Col>
@@ -205,7 +209,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 					</Col>
 					<Col span={24}>
 						<Form.Item
-							name="id"
+							name="username"
 							label="Employee Id"
 							rules={[{ required: true }]}
 						>
@@ -230,7 +234,9 @@ const NewUserForm: FC<NewUserFormProps> = ({
 								}
 							>
 								{employees.map((emp: any) => (
-									<Option value={emp.id}>{emp.id}</Option>
+									<Option value={JSON.stringify(emp)}>
+										{emp.id} - {emp.full_name}
+									</Option>
 								))}
 							</Select>
 						</Form.Item>
@@ -351,19 +357,25 @@ const NewUserForm: FC<NewUserFormProps> = ({
 	);
 };
 
-const AddNewUser: FC<props> = ({ fetchData, systems, employees }: props) => {
+const AddNewUser: FC<props> = ({
+	fetchData,
+	systems,
+	employees,
+	userRoles,
+}: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
 
 	const onCreate = (values: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-			values["password"] = "123456";
-			console.log("Received values of form: ", values);
+			let emp_data = JSON.parse(values.username);
+			let data = { ...values, username: emp_data.id, name: emp_data.full_name };
+			console.log("Received values of form: ", data);
 			setConfirmLoading(true);
 			apiCall({
 				method: "POST",
-				url: "auth/register",
-				data: { userInfo: values },
+				url: "/clientusers",
+				data: data,
 				handleResponse: (res) => {
 					resolve(res);
 					setConfirmLoading(false);
@@ -399,6 +411,7 @@ const AddNewUser: FC<props> = ({ fetchData, systems, employees }: props) => {
 				}}
 				confirmLoading={confirmLoading}
 				employees={employees}
+				userRoles={userRoles}
 			/>
 		</div>
 	);

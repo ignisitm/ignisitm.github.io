@@ -1,4 +1,4 @@
-import { Table, Row, Col, Input, Button, Popconfirm, message } from "antd";
+import { Table, Row, Col, Input, Button, Popconfirm, message, Tag } from "antd";
 import React, { useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 // import AddNewClient from "./AddNewClient";
@@ -17,6 +17,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
+	const [userRoles, setUserRoles] = useState();
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -35,35 +36,78 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 		},
 		{
 			title: "Role",
-			dataIndex: "role",
+			dataIndex: "rolename",
+		},
+		{
+			title: "Status",
+			dataIndex: "status",
+			render: (status: string) => (
+				<Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
+			),
 		},
 		{
 			title: "Action",
-			dataIndex: "id",
-			render: (id: number) => (
-				<Popconfirm
-					title="Are you sure to delete?"
-					onConfirm={() => deleteRow(id)}
-					// onCancel={cancel}
-					okText="Delete"
-					cancelText="Cancel"
-					placement="left"
-				>
-					<div className="delete-table-action">
-						<DeleteOutlined />
-					</div>
-				</Popconfirm>
+			dataIndex: "username",
+			render: (id: string, row: any) => (
+				<>
+					<Popconfirm
+						title="Are you sure you want to reset this user?"
+						onConfirm={() => resetRow(id)}
+						// onCancel={cancel}
+						okText="Reset"
+						cancelText="Cancel"
+						placement="left"
+					>
+						<Button type="link">Reset</Button>
+					</Popconfirm>
+					<Popconfirm
+						title={`Are you sure you want to ${
+							row.status === "ACTIVE" ? "deactivate" : "activate"
+						} this user?`}
+						onConfirm={() => deleteRow(id, row.status)}
+						// onCancel={cancel}
+						okText={row.status === "ACTIVE" ? "deactivate" : "activate"}
+						cancelText="Cancel"
+						placement="left"
+					>
+						<Button danger={row.status === "ACTIVE"} type="link">
+							{row.status === "ACTIVE" ? "Deactivate" : "Activate"}
+						</Button>
+					</Popconfirm>
+				</>
 			),
-			width: "5%",
 		},
 	];
 
-	const deleteRow = (id: number) => {
+	const deleteRow = (username: any, status: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
-				url: "/user",
-				data: { data: { id } },
+				url: "/clientusers",
+				data: {
+					data: {
+						username,
+						status: status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+					},
+				},
+				handleResponse: (res) => {
+					message.success(res.data.message);
+					fetchData();
+					resolve(res);
+				},
+				handleError: (err) => {
+					reject(err);
+				},
+			});
+		});
+	};
+
+	const resetRow = (username: any) => {
+		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
+			apiCall({
+				method: "PUT",
+				url: "/clientusers",
+				data: { username },
 				handleResponse: (res) => {
 					message.success(res.data.message);
 					fetchData();
@@ -84,7 +128,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/auth/users?page=${curr_pagination.current}&limit=${
+			url: `/clientusers?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -116,7 +160,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 	const getAllEmployeeID = () => {
 		apiCall({
 			method: "GET",
-			url: "/auth/employeeID",
+			url: "/dropdown/employees",
 			handleResponse: (res) => {
 				setEmployees(res.data.message);
 			},
@@ -126,7 +170,19 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 	useEffect(() => {
 		search();
 		getAllEmployeeID();
+		getAllRoles();
 	}, []);
+
+	const getAllRoles = () => {
+		apiCall({
+			method: "GET",
+			url: "/dropdown/clientRoles",
+			handleResponse: (res) => {
+				console.log(res);
+				setUserRoles(res.data.message);
+			},
+		});
+	};
 
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
@@ -134,6 +190,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 
 	return (
 		<>
+			<h3>Users</h3>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -155,11 +212,11 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 					>
 						Refresh
 					</Button>
-					{/* <AddNewClient fetchData={fetchData} /> */}
 					<AddNewUser
 						employees={employees}
 						fetchData={fetchData}
 						systems={systems}
+						userRoles={userRoles}
 					/>
 				</Col>
 			</Row>
@@ -176,11 +233,14 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>

@@ -32,8 +32,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		<Modal
 			open={visible}
 			title="Add a new AHJ"
-			style={{ minWidth: "632px" }}
+			style={{ minWidth: "632px", top: "20px" }}
 			okText="Add AHJ"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();
@@ -96,7 +97,7 @@ const AddNewAhj: FC<props> = ({ fetchData }: props) => {
 			apiCall({
 				method: "POST",
 				url: "/ahjform",
-				data: { client: values },
+				data: values,
 				handleResponse: (res) => {
 					resolve(res);
 					setConfirmLoading(false);

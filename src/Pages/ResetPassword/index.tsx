@@ -1,9 +1,10 @@
 import { Form, Input, Button, Alert, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { apiCall } from "../../axiosConfig";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { setUserSession, getUser } from "../../Auth/Auth";
 import { useNavigate } from "react-router-dom";
+import { ClientContext } from "../../Helpers/Context";
 
 interface resetPassword {
 	new_password: string;
@@ -13,6 +14,7 @@ interface resetPassword {
 export default function ResetPassword() {
 	let navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
+	let client = useContext(ClientContext);
 
 	const onFinish = (values: any) => {
 		setLoading(true);
@@ -23,8 +25,13 @@ export default function ResetPassword() {
 		let user: object | null = getUser();
 		apiCall({
 			method: "POST",
-			url: "/auth/reset",
-			data: { user, new_password, confirm_password },
+			url: `/${client.client_id === "admin" ? "super" : "client"}auth/reset`,
+			data: {
+				user,
+				new_password,
+				confirm_password,
+				client_id: client.client_id,
+			},
 			handleResponse: (res) => {
 				setLoading(false);
 				console.log(res);

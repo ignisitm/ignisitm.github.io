@@ -48,6 +48,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 			visible={visible}
 			title="Add a new Employee"
 			okText="Add Employee"
+			maskClosable={false}
 			cancelText="Cancel"
 			destroyOnClose={true}
 			onCancel={() => {
@@ -89,7 +90,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 					</Col>
 					<Col span={24}>
 						<Form.Item
-							name="name"
+							name="full_name"
 							label="Full Name"
 							rules={[{ required: true }]}
 						>
@@ -98,7 +99,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 					</Col>
 					<Col span={24}>
 						<Form.Item
-							name="role"
+							name="designation"
 							label="Designation"
 							rules={[{ required: true }]}
 						>
@@ -124,8 +125,8 @@ const AddNewEmployee: FC<props> = ({ fetchData, systems }: props) => {
 			setConfirmLoading(true);
 			apiCall({
 				method: "POST",
-				url: "auth/employee",
-				data: { employeeInfo: values },
+				url: "clientemployees",
+				data: values,
 				handleResponse: (res) => {
 					resolve(res);
 					setConfirmLoading(false);

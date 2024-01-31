@@ -13,13 +13,25 @@ import {
 	AuditOutlined,
 	PoweroffOutlined,
 	DollarCircleOutlined,
+	ReconciliationOutlined,
 	NodeExpandOutlined,
+	FormOutlined,
+	ApiOutlined,
+	TeamOutlined,
+	FileProtectOutlined,
+	ApartmentOutlined,
+	ClusterOutlined,
+	GroupOutlined,
+	ControlOutlined,
+	UserOutlined,
+	UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Modal, Tooltip } from "antd";
-import { getUser, resetUserSession } from "../Auth/Auth";
+import { Avatar, Layout, Menu, Modal, Space, Tooltip } from "antd";
+import { getToken, getUser, resetUserSession } from "../Auth/Auth";
 import { ClientContext } from "../Helpers/Context";
 import Masters from "../Pages/Masters";
 import LoadingBar from "react-top-loading-bar";
+import { apiCall } from "../axiosConfig";
 const { Content, Footer, Sider } = Layout;
 
 type headers = {
@@ -28,18 +40,6 @@ type headers = {
 
 type contextType = {
 	completeLoading: Function;
-};
-
-const headings: headers = {
-	"/": "Dashboard",
-	"/buildings": "Buildings",
-	"/building/": "Buildings",
-	"/workorders": "Work Orders",
-	"/notifications": "Notifications",
-	"/master": "Master Page",
-	"/superuser": "Settings",
-	"/admin": "Admin Panel",
-	"/invoice": "Invoices",
 };
 
 const AppLayout: FC = () => {
@@ -53,6 +53,7 @@ const AppLayout: FC = () => {
 	};
 
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [userdetails, setUserDetails] = useState<any>(null);
 
 	const showModal = () => {
 		setIsModalOpen(true);
@@ -66,16 +67,58 @@ const AppLayout: FC = () => {
 		setIsModalOpen(false);
 	};
 
-	const items = [
+	const headings: headers = {
+		"/": "Dashboard",
+		"/buildings": "Buildings",
+		"/building/": "Buildings",
+		"/contracts": "Contracts",
+		"/systems": "Systems",
+		"/assets": "Assets",
+		"/workorders": "Work Orders",
+		"/notifications": "Notifications",
+		"/master": "Master Page",
+		"/admin": "Admin Panel",
+		"/invoice": "Invoices",
+		"/devices": "Device Types",
+		"/ahjforms": "Authority Having Jurisdiction forms",
+		"/superuser": "Clients",
+		"/teams": "Teams",
+		...(client.client_id === "admin" ? { "/": "System Types" } : {}),
+	};
+
+	const admin_items = [
+		{
+			key: "/",
+			icon: <NodeExpandOutlined />,
+			label: "Systems",
+		},
+		{
+			key: "/devices",
+			icon: <ApiOutlined />,
+			label: "Devices",
+		},
+		{
+			key: "/ahjforms",
+			icon: <FormOutlined />,
+			label: "AHJ Forms",
+		},
+		{
+			key: "/superuser",
+			icon: <TeamOutlined />,
+			label: "Clients",
+		},
+	];
+
+	const client_items = [
+		{
+			key: "Planning",
+			type: "group",
+			label: "Planning",
+		},
 		{
 			key: "/",
 			icon: <BarChartOutlined />,
 			label: "Dashboard",
-		},
-		{
-			key: "/buildings",
-			icon: <BankOutlined />,
-			label: "Buildings",
 		},
 		{
 			key: "/notifications",
@@ -83,9 +126,40 @@ const AppLayout: FC = () => {
 			label: "Notifications",
 		},
 		{
-			key: "/admin",
-			icon: <NodeExpandOutlined />,
-			label: "Admin Panel",
+			key: "/workorders",
+			icon: <ReconciliationOutlined />,
+			label: "Work Orders",
+		},
+		{ key: "Divider", type: "divider" },
+		{
+			key: "Resources",
+			type: "group",
+			label: "Resources",
+		},
+		{
+			key: "/contracts",
+			icon: <FileProtectOutlined />,
+			label: "Contracts",
+		},
+		{
+			key: "/buildings",
+			icon: <BankOutlined />,
+			label: "Buildings",
+		},
+		{
+			key: "/systems",
+			icon: <ApartmentOutlined />,
+			label: "Systems",
+		},
+		{
+			key: "/assets",
+			icon: <ClusterOutlined />,
+			label: "Assets",
+		},
+		{
+			key: "/teams",
+			icon: <UsergroupAddOutlined />,
+			label: "Teams",
 		},
 		// {
 		// 	key: "/workorders",
@@ -97,15 +171,10 @@ const AppLayout: FC = () => {
 		// 	icon: <DollarCircleOutlined />,
 		// 	label: "Invoices",
 		// },
-		...(client === "admin"
-			? [
-					{
-						key: "/superuser",
-						icon: <SettingOutlined />,
-						label: "Settings",
-					},
-			  ]
-			: []),
+	];
+
+	const items = [
+		...(client.client_id === "admin" ? admin_items : client_items),
 	];
 
 	const loginItems = [
@@ -119,8 +188,8 @@ const AppLayout: FC = () => {
 	const settingItems = [
 		{
 			key: "/Settings",
-			icon: <SettingOutlined />,
-			label: "Settings",
+			icon: <ControlOutlined />,
+			label: "Admin Panel",
 		},
 	];
 
@@ -128,9 +197,21 @@ const AppLayout: FC = () => {
 		loaderRef.current.complete();
 	};
 
+	const verify = () => {
+		apiCall({
+			method: "POST",
+			url: `/${client.client_id === "admin" ? "super" : "client"}auth/verify`,
+			data: { user: getUser(), token: getToken() },
+			handleResponse: (res) => {
+				console.log("token Verified");
+			},
+		});
+	};
+
 	useEffect(() => {
 		loaderRef.current.continuousStart();
 		console.log("changed page");
+		verify();
 	}, [location.pathname]);
 
 	useEffect(() => {
@@ -142,11 +223,41 @@ const AppLayout: FC = () => {
 		// }
 
 		if (!getUser()) navigate("/login");
+		else setUserDetails(getUser());
+		console.log(getUser());
 	}, []);
 
 	return (
 		<Layout hasSider>
 			<LoadingBar color="orange" height={4} ref={loaderRef} />
+			<div
+				className="user-full-name"
+				style={{ position: "fixed", top: "21px", right: "10px" }}
+			>
+				<span>{userdetails?.name}&nbsp;&nbsp;</span>
+				<Avatar style={{ top: "-2px" }} shape="square" size={28}>
+					{userdetails?.name.split(" ")[0][0] +
+						(userdetails?.name.split(" ")?.[1]?.[0] || "")}
+				</Avatar>
+			</div>
+			<div className="user-full-name" style={{}}>
+				<span style={{ top: "-2px", position: "relative", right: "2px" }}>
+					{userdetails?.name}&nbsp;
+				</span>
+				<Avatar icon={<UserOutlined />} shape="square" size={30}></Avatar>
+				<br />
+				<span
+					style={{
+						color: "gray",
+						fontSize: "10px",
+						position: "relative",
+						top: "-16px",
+						left: "0px",
+					}}
+				>
+					admin
+				</span>
+			</div>
 			{/* <Tooltip title="Settings" placement="leftBottom">
 				<div
 					style={{
@@ -165,10 +276,10 @@ const AppLayout: FC = () => {
 			<Modal
 				title={
 					<span style={{ marginLeft: "200px", fontSize: "18px" }}>
-						Master Settings
+						Admin Panel
 					</span>
 				}
-				visible={isModalOpen}
+				open={isModalOpen}
 				onCancel={handleCancel}
 				cancelText="Done"
 				okButtonProps={{ style: { display: "none" } }}
@@ -209,13 +320,17 @@ const AppLayout: FC = () => {
 						onClick={({ key }) => navigate(key)}
 					/>
 					<span>
-						<Menu
-							theme="light"
-							mode="inline"
-							items={settingItems}
-							onClick={showModal}
-							selectedKeys={[]}
-						/>
+						{client.client_id === "admin" ? (
+							" "
+						) : (
+							<Menu
+								theme="light"
+								mode="inline"
+								items={settingItems}
+								onClick={showModal}
+								selectedKeys={[]}
+							/>
+						)}
 						<Menu
 							theme="light"
 							mode="inline"
@@ -232,7 +347,7 @@ const AppLayout: FC = () => {
 			<Layout
 				className="site-layout"
 				style={{
-					marginLeft: 200,
+					marginLeft: 125,
 					minHeight: "100vh",
 				}}
 			>
@@ -274,7 +389,7 @@ const AppLayout: FC = () => {
 						bottom: "0px",
 					}}
 				>
-					{capitalizeFirstLetter(client)} ©2022 powered by IGNIS ITM
+					{capitalizeFirstLetter(client.client_name)} ©2024 powered by IGNIS ITM
 				</Footer>
 			</Layout>
 		</Layout>

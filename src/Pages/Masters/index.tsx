@@ -8,6 +8,9 @@ import {
 	UserOutlined,
 	VideoCameraOutlined,
 	PartitionOutlined,
+	UserSwitchOutlined,
+	UsergroupAddOutlined,
+	ToolOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useEffect, useState } from "react";
@@ -17,30 +20,44 @@ import MasterBuildings from "./MasterBuildings";
 import Systems from "./Systems";
 import { apiCall } from "../../axiosConfig";
 import Resources from "./Resources";
+import Roles from "./Roles";
+import BuildingControllers from "./BuildingControllers";
+import Employees from "./Employees";
+import Equipments from "./Equipments";
 
 const { Header, Content, Footer, Sider } = Layout;
 
 const items = [
 	{
 		key: "1",
-		icon: <PartitionOutlined />,
-		label: "Resources",
+		icon: <UsergroupAddOutlined />,
+		label: "Employees",
 	},
 	{
 		key: "2",
-		icon: <UserOutlined />,
-		label: "Users",
+		icon: <ToolOutlined />,
+		label: "Equipments",
 	},
 	{
 		key: "3",
-		icon: <BarChartOutlined />,
-		label: "Buildings",
+		icon: <UserSwitchOutlined />,
+		label: "Roles",
 	},
 	{
 		key: "4",
-		icon: <AppstoreOutlined />,
-		label: "Systems",
+		icon: <UserOutlined />,
+		label: "Users",
 	},
+	// {
+	// 	key: "5",
+	// 	icon: <BarChartOutlined />,
+	// 	label: "Buildings",
+	// },
+	// {
+	// 	key: "6",
+	// 	icon: <UsergroupAddOutlined />,
+	// 	label: "Building Controllers",
+	// },
 ];
 
 const App: React.FC = () => {
@@ -59,11 +76,11 @@ const App: React.FC = () => {
 	};
 
 	useEffect(() => {
-		getSystems();
+		// getSystems();
 	}, []);
 
 	return (
-		<Layout hasSider style={{ background: "transparent" }}>
+		<Layout hasSider style={{ background: "transparent", height: "100%" }}>
 			<Sider
 				theme="light"
 				style={{
@@ -85,14 +102,22 @@ const App: React.FC = () => {
 					items={items}
 				/>
 			</Sider>
-			<Layout style={{ marginLeft: 200, background: "transparent" }}>
+			<Layout
+				style={{ marginLeft: 200, background: "transparent", height: "100%" }}
+			>
 				{page === "1" ? (
-					<Resources />
+					<Employees />
 				) : page === "2" ? (
-					<User systems={systems} />
+					<Equipments />
 				) : page === "3" ? (
-					<MasterBuildings />
+					<Roles />
 				) : page === "4" ? (
+					<User systems={systems} />
+				) : page === "5" ? (
+					<MasterBuildings />
+				) : page === "6" ? (
+					<BuildingControllers />
+				) : page === "7" ? (
 					<Systems />
 				) : null}
 			</Layout>

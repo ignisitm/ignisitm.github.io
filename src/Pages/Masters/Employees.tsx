@@ -15,7 +15,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 	const [showClose, setShowClose] = useState(false);
 	const [pagination, setPagination] = useState({
 		current: 1,
-		pageSize: 4,
+		pageSize: 10,
 		total: 0,
 	});
 
@@ -27,11 +27,11 @@ const Employees: React.FC<any> = ({ systems }) => {
 		},
 		{
 			title: "Full Name",
-			dataIndex: "name",
+			dataIndex: "full_name",
 		},
 		{
 			title: "Designation",
-			dataIndex: "role",
+			dataIndex: "designation",
 		},
 		{
 			title: "Action",
@@ -58,7 +58,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
-				url: "/user",
+				url: "/clientemployees",
 				data: { data: { id } },
 				handleResponse: (res) => {
 					message.success(res.data.message);
@@ -80,7 +80,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/auth/employee?page=${curr_pagination.current}&limit=${
+			url: `/clientemployees?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -102,7 +102,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 		if (clear) setSearchText("");
 		fetchData(
 			{
-				pageSize: 4,
+				pageSize: 10,
 				current: 1,
 			},
 			text

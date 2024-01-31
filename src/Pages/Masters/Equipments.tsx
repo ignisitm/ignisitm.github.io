@@ -15,7 +15,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 	const [showClose, setShowClose] = useState(false);
 	const [pagination, setPagination] = useState({
 		current: 1,
-		pageSize: 4,
+		pageSize: 10,
 		total: 0,
 	});
 
@@ -60,7 +60,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
-				url: "/user",
+				url: "/clientresources",
 				data: { data: { id } },
 				handleResponse: (res) => {
 					message.success(res.data.message);
@@ -82,7 +82,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/auth/resource?page=${curr_pagination.current}&limit=${
+			url: `/clientresources?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -104,7 +104,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		if (clear) setSearchText("");
 		fetchData(
 			{
-				pageSize: 4,
+				pageSize: 10,
 				current: 1,
 			},
 			text

@@ -48,6 +48,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 			visible={visible}
 			title="Add a new Equipment"
 			okText="Add Equipment"
+			maskClosable={false}
 			cancelText="Cancel"
 			destroyOnClose={true}
 			onCancel={() => {
@@ -127,8 +128,8 @@ const AddNewEquipment: FC<props> = ({ fetchData, systems }: props) => {
 			setConfirmLoading(true);
 			apiCall({
 				method: "POST",
-				url: "auth/resource",
-				data: { resourceInfo: values },
+				url: "clientresources",
+				data: values,
 				handleResponse: (res) => {
 					resolve(res);
 					setConfirmLoading(false);

@@ -33,6 +33,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			visible={visible}
 			title="Add a new System"
 			okText="Add System"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();

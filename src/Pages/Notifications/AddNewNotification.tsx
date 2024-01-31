@@ -1,40 +1,20 @@
 import { Button, Form, Input, message, Modal, Select } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { FC, useState, useContext } from "react";
-import { SuperUserContext } from "../../Helpers/Context";
+import { FC, useState, useContext, useEffect } from "react";
+import { NotificationContext } from "../../Helpers/Context";
 import { apiCall } from "../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
-import confirmButton from "../../Components/ConfirmButton";
-import Schedule from "./Schedule";
+const { TextArea } = Input;
 
 interface props {
 	fetchData: Function;
-	buildingNames: any;
 }
-
-const itm_options = [
-	{
-		label: "Inspection",
-		value: "Inspection",
-	},
-	{
-		label: "Testing",
-		value: "Testing",
-	},
-	{
-		label: "Maintenance",
-		value: "Maintenance",
-	},
-];
 
 interface CollectionCreateFormProps {
 	visible: boolean;
 	confirmLoading: boolean;
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
-	buildingNames: any;
-	fetchdata: Function;
 }
 
 const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
@@ -42,58 +22,79 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	confirmLoading,
 	onCreate,
 	onCancel,
-	buildingNames,
-	fetchdata,
 }) => {
 	const [form] = Form.useForm();
-	const contextVariables = useContext(SuperUserContext);
-	const [showAsset, setShowAsset] = useState(false);
-	const [assets, setAssets] = useState([]);
-	const [loadingContracts, setLoadingContracts] = useState(false);
-	const [showContracts, setShowContracts] = useState(false);
-	const [contracts, setContracts] = useState<any>([]);
-	const [systems, setSystems] = useState<any>([]);
-	const [showSystems, setShowSystems] = useState(false);
-	const [record, setRecord] = useState<any>({});
-	const [modal, contextHolder] = Modal.useModal();
+	const contextVariables = useContext(NotificationContext);
+	const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
+	const [selectedSystem, setSelectedSystem] = useState<any>(null);
+	const [loadingSystems, setLoadingSystems] = useState(false);
+	const [systems, setSystems] = useState<any[]>([]);
+	const [loadingAssets, setLoadingAssets] = useState(false);
+	const [assets, setAssets] = useState<any[]>([]);
 
-	const handleITMChange = (value: any) => {
-		console.log(value);
+	useEffect(() => {
+		if (selectedBuilding) getSystems(selectedBuilding);
+	}, [selectedBuilding]);
+
+	useEffect(() => {
+		if (selectedSystem) getAssets(selectedSystem);
+	}, [selectedSystem]);
+
+	const resetModal = () => {
+		form.resetFields();
+		setSelectedBuilding(null);
+		setSelectedSystem(null);
+		setSystems([]);
+		setAssets([]);
+	};
+
+	const getSystems = (building_id: any) => {
+		setLoadingSystems(true);
+		apiCall({
+			method: "GET",
+			url: `/dropdown/systems?building_id=${building_id}&status=ACTIVE`,
+			handleResponse: (res) => {
+				console.log(res);
+				setSystems(res.data.message);
+				setLoadingSystems(false);
+			},
+			handleError: () => setLoadingSystems(false),
+		});
+	};
+
+	const getAssets = (system_id: any) => {
+		setLoadingAssets(true);
+		apiCall({
+			method: "GET",
+			url: `/dropdown/assets?system_id=${system_id}`,
+			handleResponse: (res) => {
+				console.log(res);
+				setAssets(res.data.message);
+				setLoadingAssets(false);
+			},
+			handleError: () => setLoadingAssets(false),
+		});
 	};
 
 	return (
 		<Modal
-			visible={visible}
-			style={{ top: "15px" }}
-			title="Create Notification"
-			okText="Create Notification"
+			open={visible}
+			style={{ top: "20px" }}
+			title="Add a new Notification"
+			okText="Add Notification"
+			maskClosable={false}
+			destroyOnClose={true}
 			cancelText="Cancel"
 			onCancel={() => {
-				form.resetFields();
+				resetModal();
 				onCancel();
 			}}
 			onOk={() => {
 				form
 					.validateFields()
 					.then((values) => {
-						// confirmButton({
-						// 	modal,
-						// 	onClick: async () => {
-						// 		await onCreate(values);
-						// 		form.resetFields();
-						// 	},
-						// 	message: "do yoy want to continue?",
-						// 	title: "Create New Notification ?",
-						// });
-						modal.confirm({
-							title: "Create New Notification ?",
-							icon: <ExclamationCircleOutlined />,
-							content: "do you want to continue?",
-							onOk: async () => {
-								await onCreate(values);
-								form.resetFields();
-							},
-							onCancel: () => {},
+						onCreate(values).then(() => {
+							resetModal();
 						});
 					})
 					.catch((info) => {
@@ -102,97 +103,20 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
-			{contextHolder}
 			<Form
 				form={form}
 				layout="vertical"
 				name="form_in_modal"
-				initialValues={{ type: "Corrective Maintanance" }}
-				// onValuesChange={(cv, av) => {
-				// 	let fire_protection_systems = av.systems?.map((system: any) => {
-				// 		return { system };
-				// 	});
-				// 	let newSys = {
-				// 		...av,
-				// 		fire_protection_systems,
-				// 		notification_type: av.itm.join("") || "",
-				// 	};
-				// 	setRecord(newSys);
-				// }}
+				initialValues={{ modifier: "public" }}
 			>
-				<Form.Item
-					name="type"
-					label="Type"
-					rules={[
-						{
-							required: true,
-							message: "Please input the name of client!",
-						},
-					]}
-				>
-					<Select>
-						<Select.Option value="Corrective Maintanance">
-							Corrective Maintanance
-						</Select.Option>
-					</Select>
-				</Form.Item>
 				<Form.Item
 					name="building_id"
 					label="Select Building"
-					rules={[
-						{
-							required: true,
-							message: "Please input the name of client!",
-						},
-					]}
+					rules={[{ required: true, message: "Please select a Building" }]}
 				>
 					<Select
-						onSelect={(value: any) => {
-							setLoadingContracts(true);
-							apiCall({
-								method: "GET",
-								url: `assets/getContractforBldg?id=${value}`,
-								// handleResponse: (res) => {
-								// 	console.log("wo assets: ", res);
-								// 	let new_assets = res.data.message;
-								// 	console.log(res.data.message);
-
-								// 	new_assets = new_assets.map((asset: any) => {
-								// 		return { label: asset.device, value: asset.asset_id };
-								// 	});
-								// 	console.log(new_assets);
-								// 	setAssets(new_assets);
-								// 	setShowAsset(true);
-								// },
-								handleResponse: (res) => {
-									let new_contracts = res.data.message;
-									console.log(new_contracts);
-									new_contracts = new_contracts.map((asset: any) => {
-										return { label: asset.contract_number, value: asset.id };
-									});
-									apiCall({
-										method: "GET",
-										url: `assets/getSystemsforContract?id=${
-											new_contracts[0].value ? new_contracts[0].value : "0"
-										}`,
-										handleResponse: (res) => {
-											console.log(res);
-											let systems = res.data.message || [];
-											systems = systems.map((system: any) => {
-												return { label: system.name, value: system.id };
-											});
-											setSystems(systems);
-											setContracts(new_contracts);
-											setShowContracts(true);
-											setShowSystems(true);
-											setLoadingContracts(false);
-										},
-									});
-								},
-							});
-						}}
-						className="selected-new-building"
 						showSearch
+						onChange={(e) => setSelectedBuilding(e)}
 						placeholder="Search to Select"
 						optionFilterProp="children"
 						filterOption={(input, option) =>
@@ -208,191 +132,121 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								)
 						}
 					>
-						{buildingNames.map((bldg: any) => (
-							<Select.Option value={bldg.id}>
-								{bldg.building_name}
-							</Select.Option>
-						))}
+						{contextVariables.buildings?.map(
+							(item: { id: object; building_name: string }, index: number) => (
+								<Select.Option value={item.id}>
+									{item.building_name}
+								</Select.Option>
+							)
+						)}
 					</Select>
 				</Form.Item>
-				{loadingContracts ? (
-					<>
-						<LoadingOutlined /> Loading details...
-					</>
+				{loadingSystems && (
+					<h4>
+						<LoadingOutlined /> Loading Systems...
+					</h4>
+				)}
+				{systems.length > 0 ? (
+					<Form.Item
+						name="system_id"
+						label="Select System"
+						rules={[{ required: true, message: "Please select a System" }]}
+					>
+						<Select
+							showSearch
+							onChange={(e) => setSelectedSystem(e)}
+							placeholder="Search to Select"
+							optionFilterProp="children"
+							filterOption={(input, option) =>
+								(option!.children as unknown as string)
+									.toLowerCase()
+									.includes(input)
+							}
+							filterSort={(optionA, optionB) =>
+								(optionA!.children as unknown as string)
+									.toLowerCase()
+									.localeCompare(
+										(optionB!.children as unknown as string).toLowerCase()
+									)
+							}
+						>
+							{systems?.map(
+								(item: { id: object; name: string }, index: number) => (
+									<Select.Option value={item.id}>{item.name}</Select.Option>
+								)
+							)}
+						</Select>
+					</Form.Item>
 				) : null}
-				{showContracts ? (
-					<>
-						<Form.Item
-							name="contract_id"
-							label="Select Contract"
-							rules={[
-								{
-									required: true,
-									message: "Please Select a Contract!",
-								},
-							]}
+				{loadingAssets && (
+					<h4>
+						<LoadingOutlined /> Loading Assets...
+					</h4>
+				)}
+				{assets.length > 0 ? (
+					<Form.Item
+						name="procedure_ids"
+						label="Select Assets"
+						rules={[{ required: true, message: "Please select assets" }]}
+					>
+						<Select
+							showSearch
+							mode="multiple"
+							placeholder="Search to Select"
+							optionFilterProp="children"
+							filterOption={(input, option) =>
+								(option!.children as unknown as string)
+									.toLowerCase()
+									.includes(input)
+							}
+							filterSort={(optionA, optionB) =>
+								(optionA!.children as unknown as string)
+									.toLowerCase()
+									.localeCompare(
+										(optionB!.children as unknown as string).toLowerCase()
+									)
+							}
 						>
-							<Select
-								style={{ width: "100%" }}
-								placeholder="Select Contract"
-								// defaultValue={contracts[0].value}
-								// onChange={handleITMChange}
-								options={contracts}
-							/>
-						</Form.Item>
-					</>
+							{assets?.map(
+								(
+									item: { id: number; name: string; tag: string },
+									index: number
+								) => (
+									<Select.Option
+										value={item.id}
+									>{`${item.tag} : ${item.name}`}</Select.Option>
+								)
+							)}
+						</Select>
+					</Form.Item>
 				) : null}
-				{showSystems ? (
-					<>
-						<Form.Item
-							name="systems"
-							label="Select Systems"
-							rules={[
-								{
-									required: true,
-									message: "Please input the name of client!",
-								},
-							]}
-						>
-							<Select
-								// mode="multiple"
-								allowClear
-								style={{ width: "100%" }}
-								placeholder="Select Systems"
-								// defaultValue={[]}
-								// onChange={handleITMChange}
-								options={systems}
-							/>
-						</Form.Item>
-						<Form.Item
-							name="itm"
-							label="Activity"
-							rules={[
-								{
-									required: true,
-									message: "Select Activity",
-								},
-							]}
-						>
-							<Select
-								// mode="multiple"
-								allowClear
-								style={{ width: "100%" }}
-								placeholder="Select Activity"
-								// defaultValue={[]}
-								// onChange={handleITMChange}
-								options={itm_options}
-							/>
-						</Form.Item>
-						<Form.Item
-							name="reason"
-							label="Description"
-							rules={[
-								{
-									required: true,
-									message: "Please give your reason",
-								},
-							]}
-						>
-							<Input />
-						</Form.Item>
-					</>
-				) : null}
-				{/* {showAsset ? (
-					<>
-						<Form.Item
-							name="asset"
-							label="Select Asset"
-							rules={[
-								{
-									required: true,
-									message: "Please input the name of client!",
-								},
-							]}
-						>
-							<Select
-								// mode="multiple"
-								// allowClear
-								style={{ width: "100%" }}
-								placeholder="Select Assets"
-								// defaultValue={[]}
-								// onChange={handleITMChange}
-								options={assets}
-							/>
-						</Form.Item>
-						<Form.Item
-							name="itm"
-							label="Activity"
-							rules={[
-								{
-									required: true,
-									message: "Please input the name of client!",
-								},
-							]}
-						>
-							<Select
-								mode="multiple"
-								allowClear
-								style={{ width: "100%" }}
-								placeholder="Please Select Activity or Activities"
-								defaultValue={[]}
-								onChange={handleITMChange}
-								options={itm_options}
-							/>
-						</Form.Item>
-						<Form.Item
-							name="reason"
-							label="Description"
-							rules={[
-								{
-									required: true,
-									message: "Please input the name of client!",
-								},
-							]}
-						>
-							<Input />
-						</Form.Item>
-					</>
-				) : null} */}
+				{selectedSystem && (
+					<Form.Item name="description" label="Description">
+						<TextArea rows={4} />
+					</Form.Item>
+				)}
 			</Form>
 		</Modal>
 	);
 };
 
-const AddNewNotification: FC<props> = ({ fetchData, buildingNames }: props) => {
+const AddNewNotification: FC<props> = ({ fetchData }: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
 
-	const info = (clientId: string) => {
-		Modal.info({
-			title: "Client Successfully Added",
-			content: (
-				<div>
-					<p>Log in to the following url using admin credentials:</p>
-					<p>
-						<a href={`http://${clientId}.localhost:3000/`}>
-							www.{clientId}.ignis.com
-						</a>
-					</p>
-				</div>
-			),
-			onOk() {},
-		});
-	};
-
 	const onCreate = (values: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-			console.log("Received values of form: ", values);
+			let responseData = { ...values, type: "CORRECTIVE", status: "OPEN" };
+			delete responseData["building_id"];
+			console.log("Received values of form: ", responseData);
 			setConfirmLoading(true);
-			// console.log("notoficaitopm: ", values);
 			apiCall({
 				method: "POST",
-				url: "/notifications",
-				data: { notification: values },
+				url: "/clientnotifications",
+				data: responseData,
 				handleResponse: (res) => {
 					resolve(res);
 					setConfirmLoading(false);
-					// info(values.clientId);
 					setVisible(false);
 					fetchData();
 				},
@@ -413,17 +267,15 @@ const AddNewNotification: FC<props> = ({ fetchData, buildingNames }: props) => {
 				}}
 				type="primary"
 			>
-				Create Notification
+				Add Notification
 			</Button>
 			<CollectionCreateForm
-				buildingNames={buildingNames}
 				visible={visible}
 				onCreate={onCreate}
 				onCancel={() => {
 					setVisible(false);
 				}}
 				confirmLoading={confirmLoading}
-				fetchdata={fetchData}
 			/>
 		</div>
 	);

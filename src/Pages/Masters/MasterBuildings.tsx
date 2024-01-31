@@ -261,14 +261,14 @@ export default function MasterBuildings() {
 					setHazardClassification(res.data.message.hazardClassification);
 					setTypeOfConstruction(res.data.message.typeOfConstruction);
 					setContractType(res.data.message.contractType);
-					if (
-						res.data.message.add_building_required_fields
-							.add_building_required_fields
-					)
-						setRequiredFields(
-							res.data.message.add_building_required_fields
-								.add_building_required_fields
-						);
+					// if (
+					// 	res.data.message.add_building_required_fields
+					// 		.add_building_required_fields
+					// )
+					// 	setRequiredFields(
+					// 		res.data.message.add_building_required_fields
+					// 			.add_building_required_fields
+					// 	);
 					setOccupancyLoading(false);
 					setHazardLoading(false);
 					setConstructionLoading(false);
@@ -562,7 +562,7 @@ export default function MasterBuildings() {
 						size={5}
 						style={{ width: "100%", borderColor: "lightgrey" }}
 					>
-						{contractType.map((type: any) => (
+						{contractType?.map((type: any) => (
 							<option value={type.id} disabled>
 								{type.value}
 							</option>
@@ -593,10 +593,10 @@ export default function MasterBuildings() {
 					</Input.Group>
 				</Col>
 			</Row>
-			<Divider orientation="left" orientationMargin={25}>
+			{/* <Divider orientation="left" orientationMargin={25}>
 				Manage Building Controllers &nbsp;{" "}
-				{/* {requiredFieldsLoading && <LoadingOutlined />} */}
-			</Divider>
+				{requiredFieldsLoading && <LoadingOutlined />}
+			</Divider> */}
 		</div>
 	);
 }

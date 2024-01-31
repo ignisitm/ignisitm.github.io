@@ -8,7 +8,7 @@ import {
 	Modal,
 	Row,
 	Select,
-	Space,
+	Typography,
 	Tabs,
 	Tooltip,
 } from "antd";
@@ -21,16 +21,21 @@ import { FC, useState, useContext, Fragment } from "react";
 import { SuperUserContext } from "../../../Helpers/Context";
 import { apiCall } from "../../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
+import DeviceCommonFields from "./DeviceCommonFields";
+const { Text, Link } = Typography;
 
 interface props {
 	fetchData: Function;
 	systems: any[];
+	frequency: any[];
+	system_id: number;
 }
 
 interface CollectionCreateFormProps {
 	visible: boolean;
 	confirmLoading: boolean;
 	systems: any[];
+	frequency: any[];
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
 }
@@ -43,7 +48,7 @@ const PropertiesFields: FC<any> = ({ fields, add, remove, parent_name }) => {
 					<Col className="field-list-number" span={1}>
 						{index + 1}
 					</Col>
-					<Col span={8}>
+					<Col span={11}>
 						<Form.Item
 							{...restField}
 							name={[name, "name"]}
@@ -68,7 +73,7 @@ const PropertiesFields: FC<any> = ({ fields, add, remove, parent_name }) => {
 							</Select>
 						</Form.Item>
 					</Col>
-					<Col span={6} style={{ paddingLeft: "10px" }}>
+					<Col span={3} style={{ paddingLeft: "10px" }}>
 						<Form.Item
 							{...restField}
 							name={[name, "mandatory"]}
@@ -290,28 +295,40 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	visible,
 	confirmLoading,
 	systems,
+	frequency,
 	onCreate,
 	onCancel,
 }) => {
 	const [form] = Form.useForm();
 	const contextVariables = useContext(SuperUserContext);
+	const [addCommonFields, setAddCommonFields] = useState(true);
+
+	const resetModalData = () => {
+		form.resetFields();
+		form.setFieldValue("general_fields", []);
+		setAddCommonFields(true);
+	};
 
 	return (
 		<Modal
-			visible={visible}
+			open={visible}
+			width={"100%"}
+			style={{ maxWidth: "800px", top: "20px" }}
 			title="Add a new Device"
 			okText="Add Device"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
-				form.resetFields();
+				resetModalData();
 				onCancel();
 			}}
 			onOk={() => {
 				form
 					.validateFields()
 					.then((values) => {
+						values["addCommonFields"] = addCommonFields;
 						onCreate(values).then(() => {
-							form.resetFields();
+							resetModalData();
 						});
 					})
 					.catch((info) => {
@@ -320,23 +337,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
-			<Form
-				form={form}
-				layout="vertical"
-				name="form_in_modal"
-				onFinish={() => {
-					form
-						.validateFields()
-						.then((values) => {
-							onCreate(values).then(() => {
-								form.resetFields();
-							});
-						})
-						.catch((info) => {
-							console.log("Validate Failed:", info);
-						});
-				}}
-			>
+			<Form form={form} layout="vertical" name="form_in_modal">
 				<Form.Item
 					name="name"
 					label="Device Name"
@@ -349,7 +350,23 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				>
 					<Input />
 				</Form.Item>
-				<Form.Item
+				{/* <Form.Item
+					name="frequency"
+					label="Select NFPA Frequency"
+					rules={[
+						{
+							required: true,
+							message: "Please select the frequency",
+						},
+					]}
+				>
+					<Select placeholder="Search to Select" optionFilterProp="children">
+						{frequency.map((x: any) => (
+							<Select.Option value={x.id}>{x.name}</Select.Option>
+						))}
+					</Select>
+				</Form.Item> */}
+				{/* <Form.Item
 					name="systemid"
 					label="Select System"
 					rules={[
@@ -373,9 +390,25 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						}
 						options={systems.map((x: any) => ({ label: x.name, value: x.id }))}
 					/>
-				</Form.Item>
-				<label>Fields: </label>
-				<Tabs
+				</Form.Item> */}
+				<Checkbox
+					onChange={(e) => setAddCommonFields(e.target.checked)}
+					checked={addCommonFields}
+				>
+					Add the common fields{" "}
+				</Checkbox>
+
+				<br />
+				<Text type="secondary">
+					Leave this box checked if you want to add all the common fields for
+					this device.
+					<DeviceCommonFields />
+				</Text>
+				<br />
+				<br />
+
+				<label>General Fields: </label>
+				{/* <Tabs
 					style={{ marginTop: "10px" }}
 					type="card"
 					items={[
@@ -400,20 +433,49 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							children: <MaintenanceProperties />,
 						},
 					]}
-				/>
+				/> */}
+				<GeneralProperties />
 			</Form>
 		</Modal>
 	);
 };
 
-const AddNewDevice: FC<props> = ({ fetchData, systems }: props) => {
+const AddNewDevice: FC<props> = ({
+	fetchData,
+	systems,
+	frequency,
+	system_id,
+}: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
+
+	const addData = (values: any) => {
+		return new Promise<any>((resolve, reject) => {
+			if (values.addCommonFields)
+				apiCall({
+					method: "GET",
+					url: "/commonfields",
+					handleResponse: (res) => {
+						let newValues = values;
+						newValues.general_fields = [
+							...(res.data.message.value || []),
+							...(newValues.general_fields || []),
+						];
+						resolve(newValues);
+					},
+					handleError: (err) => {
+						reject(err);
+					},
+				});
+			else resolve(values);
+		});
+	};
 
 	const onCreate = (values: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
+			values["systemid"] = system_id;
 			// values["itm_fields"] = {
 			// 	inspection: values.inspection_fields,
 			// 	testing: values.testing_fields,
@@ -422,21 +484,27 @@ const AddNewDevice: FC<props> = ({ fetchData, systems }: props) => {
 			// delete values.inspection_fields;
 			// delete values.testing_fields;
 			// delete values.maintenance_fields;
-			apiCall({
-				method: "POST",
-				url: "/devicemaster",
-				data: { client: values },
-				handleResponse: (res) => {
-					resolve(res);
-					setConfirmLoading(false);
-					message.success(res.data.message);
-					setVisible(false);
-					fetchData();
-				},
-				handleError: (err) => {
+
+			addData(values).then((newData) => {
+				apiCall({
+					method: "POST",
+					url: "/devicemaster",
+					data: newData,
+					handleResponse: (res) => {
+						resolve(res);
+						setConfirmLoading(false);
+						message.success(res.data.message);
+						setVisible(false);
+						fetchData();
+					},
+					handleError: (err) => {
+						reject(err);
+						setConfirmLoading(false);
+					},
+				}).catch((err) => {
 					reject(err);
 					setConfirmLoading(false);
-				},
+				});
 			});
 		});
 	};
@@ -450,10 +518,11 @@ const AddNewDevice: FC<props> = ({ fetchData, systems }: props) => {
 				}}
 				type="primary"
 			>
-				Add Device
+				Add Device Type
 			</Button>
 			<CollectionCreateForm
 				systems={systems}
+				frequency={frequency}
 				visible={visible}
 				onCreate={onCreate}
 				onCancel={() => {

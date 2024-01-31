@@ -27,9 +27,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 
 	return (
 		<Modal
-			visible={visible}
+			open={visible}
 			title="Add a new Client"
 			okText="Add Client"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();
@@ -109,6 +110,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							)
 						)}
 					</Select>
+				</Form.Item>
+				<Form.Item
+					name="notifiation_frequency"
+					label="Notification Frequency (No. of Days)"
+					rules={[
+						{
+							required: true,
+							message:
+								"Please input the no. of days before which you would like to recieve the notification!",
+						},
+					]}
+				>
+					<Input type="number" />
 				</Form.Item>
 			</Form>
 		</Modal>

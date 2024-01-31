@@ -103,7 +103,7 @@ const BuildingTable = () => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
-				url: "/buildings",
+				url: "/clientbuildings",
 				data: { data: { id } },
 				handleResponse: (res) => {
 					message.success(res.data.message);
@@ -125,7 +125,7 @@ const BuildingTable = () => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "GET",
-			url: `/buildings?page=${curr_pagination.current}&limit=${
+			url: `/clientbuildings?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {

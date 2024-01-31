@@ -174,11 +174,14 @@ const DeviceTable: React.FC<props> = ({ sys_id }) => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>

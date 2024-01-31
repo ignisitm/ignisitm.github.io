@@ -70,6 +70,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			title="Schedule Work Order"
 			okButtonProps={{ disabled: enableSchedule }}
 			okText="Schedule"
+			maskClosable={false}
 			style={{ top: "20px" }}
 			cancelText="Cancel"
 			onCancel={() => {

@@ -52,7 +52,9 @@ const AHJForms: FC<props> = ({ forms, fetchData }) => {
 		<Space size={[12, 32]} wrap>
 			{forms.map((form) => (
 				<Card
-					onClick={() => navigate(`/ahj/${form.id}`)}
+					onClick={() =>
+						navigate(`/ahj/${form.id}`, { state: { heading: form.name } })
+					}
 					key={form.id}
 					hoverable={true}
 					className="menu-cards"
@@ -62,17 +64,25 @@ const AHJForms: FC<props> = ({ forms, fetchData }) => {
 					}}
 				>
 					<h2>{form.name}</h2>
-					<span className="span-footer">Created by: {form.uname}</span>
+					<span className="span-footer">Created by: {form.createdby}</span>
 					<span className="span-footer" style={{ right: "10px" }}>
 						<Popconfirm
 							title="Are you sure to delete?"
+							onPopupClick={(e) => {
+								e.stopPropagation();
+							}}
 							onConfirm={() => deleteRow(form.id)}
 							// onCancel={cancel}
 							okText="Delete"
 							cancelText="Cancel"
 							placement="left"
 						>
-							<div className="delete-table-action">
+							<div
+								onClick={(e) => {
+									e.stopPropagation();
+								}}
+								className="delete-table-action"
+							>
 								<DeleteOutlined />
 							</div>
 						</Popconfirm>

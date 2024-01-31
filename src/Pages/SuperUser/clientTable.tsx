@@ -1,10 +1,22 @@
-import { Table, Row, Col, Input, Button, Popconfirm, message } from "antd";
+import {
+	Table,
+	Row,
+	Col,
+	Input,
+	Button,
+	Popconfirm,
+	message,
+	Typography,
+	Modal,
+	Space,
+} from "antd";
 import { useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 import AddNewClient from "./AddNewClient";
 import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 const { Search } = Input;
+const { Text } = Typography;
 
 const ClientTable = () => {
 	const [data, setData] = useState();
@@ -16,12 +28,86 @@ const ClientTable = () => {
 		pageSize: 10,
 		total: 0,
 	});
+	const [modal, contextHolder] = Modal.useModal();
+	const [changeNameLoading, setChangeNameLoading] = useState(false);
 
 	const columns = [
 		{
 			title: "Name",
 			dataIndex: "name",
 			// sorter: true,
+			render: (name: string, row: any) => {
+				return (
+					<Text
+						editable={{
+							onChange: (val) => {
+								let renameConfirmationModal = modal.info({
+									icon: null,
+									footer: null,
+									content: (
+										<>
+											Are you sure you want to rename client <b>{name}</b> to{" "}
+											<b>{val}</b> {"?"}
+											<div style={{ height: "24px" }} />
+											<Space align="end" style={{ float: "right" }}>
+												<Button
+													loading={changeNameLoading}
+													type="primary"
+													onClick={() => {
+														setChangeNameLoading(true);
+														changeClientName(
+															row.id,
+															val,
+															row.notifiation_frequency
+														)
+															.then((res) => {
+																renameConfirmationModal.destroy();
+																fetchData();
+															})
+															.finally(() => {
+																setChangeNameLoading(false);
+															});
+													}}
+												>
+													Yes
+												</Button>
+												<Button
+													type="default"
+													onClick={() => renameConfirmationModal.destroy()}
+												>
+													No
+												</Button>
+											</Space>
+										</>
+									),
+								});
+							},
+						}}
+					>
+						{name}
+					</Text>
+				);
+			},
+		},
+		{
+			title: "Client Portal",
+			dataIndex: "client_id",
+			render: (id: string) => (
+				<Button
+					style={{ paddingLeft: 0 }}
+					type="link"
+					onClick={() =>
+						window.open(`https://www.${id}.ignisitm.com`, "_blank")
+					}
+				>
+					www.{id}.ignisitm.com
+				</Button>
+			),
+		},
+		{
+			title: "Notification Frequency",
+			dataIndex: "notifiation_frequency",
+			width: "20%",
 		},
 		{
 			title: "Country",
@@ -48,6 +134,22 @@ const ClientTable = () => {
 			width: "5%",
 		},
 	];
+
+	const changeClientName = (id: number, val: string, nf: number) => {
+		return new Promise((resolve, reject) => {
+			apiCall({
+				method: "PUT",
+				url: "/clients",
+				data: { id: id, name: val, notifiation_frequency: nf },
+				handleResponse: (res) => {
+					resolve(res);
+				},
+				handleError: (err) => {
+					reject(err);
+				},
+			});
+		});
+	};
 
 	const deleteRow = (id: number) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
@@ -151,14 +253,18 @@ const ClientTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
+			{contextHolder}
 		</>
 	);
 };

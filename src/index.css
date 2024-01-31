@@ -16,6 +16,55 @@ code {
 		monospace;
 }
 
+.main-background {
+	background-color: #f9f9f9;
+}
+
+.nlayout-menu-bar-icons {
+	width: 100%;
+	text-align: center;
+	padding: 5px 7px;
+	font-size: 22px;
+	color: gray;
+}
+
+.nlayout-menu-icon-wrapper-selected {
+	border-radius: 8px;
+	background-color: #e9e9e9;
+	color: #f9992e;
+}
+
+.nlayout-menu-icon-wrapper {
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.nlayout-menu-icon-wrapper:hover {
+	background-color: #e9e9e9;
+	color: #343434;
+	transition-timing-function: ease;
+}
+
+.nlayout-header {
+	position: fixed;
+	top: 0;
+	width: calc(100% - 55px);
+	background-color: #f9f9f9;
+	padding: 0 15px;
+	height: 45px;
+	z-index: 2;
+	border-bottom: 0.5px solid silver;
+}
+
+/* .nlayout-menu-bar-icons:hover {
+	width: 100%;
+	text-align: center;
+	margin: 7px 5px;
+	cursor: pointer;
+	color: black;
+	background-color: gray;
+} */
+
 .dashboard-cards {
 	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 	border-radius: 8px !important;
@@ -70,7 +119,7 @@ code {
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	background-color: #f5f5f5;
+	background-color: #f9f9f9;
 	min-width: 250px;
 	padding: 15px;
 	padding-top: 30px;
@@ -158,12 +207,18 @@ code {
 
 .workorders-list {
 	background-color: white;
-	padding: 15px;
+	padding-top: 9px !important;
+	padding-left: 12px !important;
 	cursor: pointer;
 }
 
 .workorders-list:hover .wo-card-title {
 	color: #55a0e7;
+}
+
+.wo-card-title {
+	color: black;
+	font-weight: bold;
 }
 
 .wo-card-title.selected {
@@ -236,11 +291,11 @@ code {
 }
 
 .wo_card_desc {
-	font-size: 12px;
-	height: 32px;
+	font-size: 10px;
 }
 
 .wo-label {
+	font-size: 10px;
 	max-width: 280px;
 	overflow: hidden;
 	white-space: nowrap;
@@ -332,4 +387,300 @@ code {
 .form-item-icons {
 	font-size: 16px;
 	margin-top: 5px;
+}
+
+.add-modal {
+	width: "100%" !important;
+	max-width: "900px" !important;
+}
+
+.bubble {
+	position: relative;
+	max-width: 310px;
+	padding: 7px 10px;
+	background: #dbdbdb;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+}
+
+.bubble:after {
+	content: "";
+	position: absolute;
+	border-style: solid;
+	border-width: 5px 6px 5px 0;
+	border-color: transparent #dbdbdb;
+	display: block;
+	width: 0;
+	z-index: 1;
+	left: -6px;
+	top: 5px;
+}
+
+.bubble-self {
+	position: relative;
+	max-width: 310px;
+	padding: 7px 10px;
+	background: #81a6d3;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+	color: white;
+}
+
+.bubble-self:after {
+	content: "";
+	position: absolute;
+	border-style: solid;
+	border-width: 5px 0 5px 6px;
+	border-color: transparent #81a6d3;
+	display: block;
+	width: 0;
+	z-index: 1;
+	right: -6px;
+	top: 5px;
+}
+
+.nfpa-overriding {
+	position: relative;
+	top: -15px;
+}
+
+.user-full-name {
+	font-size: 13px;
+	float: right;
+	height: 100%;
+	margin-top: -5px;
+}
+
+.team-menu {
+	height: 445px;
+	width: 210px;
+	background-color: white;
+	border-radius: 4px;
+}
+
+.team-menu-loading {
+	height: 445px;
+	width: 210px;
+	background-color: white;
+	border-radius: 4px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.team-view {
+	height: 445px;
+	margin-left: 10px;
+	width: calc(100% - 220px);
+	background-color: white;
+	padding: 10px;
+	border-radius: 4px;
+}
+
+.team-card {
+	height: 350px;
+}
+
+.team-view-buttons {
+	position: relative;
+	float: right;
+	margin-top: 10px;
+	margin-right: 5px;
+}
+
+.team-view-empty {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 445px;
+	margin-left: 10px;
+	width: calc(100% - 220px);
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.content-empty {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 200px;
+}
+
+.content-wrapper {
+	height: 100%;
+	width: 100%;
+	display: flex;
+}
+
+.content-fixed {
+	height: 100%;
+	width: 230px;
+	border-right: 0.5px solid silver;
+	padding: 15px 15px 15px 0;
+}
+
+.content-fixed-item {
+	padding: 5px 0px;
+	width: 100%;
+}
+
+.content-flex {
+	flex-grow: 1;
+	padding: 10px;
+}
+
+.system-list-item {
+	padding: 5px 3px;
+	color: #3c3c3c;
+	cursor: pointer;
+	border-radius: 6px;
+}
+
+.system-list-item-selected {
+	padding: 5px 3px;
+	color: black;
+	cursor: pointer;
+	background-color: #eeeeee;
+	border-radius: 6px;
+}
+
+.system-list-item:hover {
+	padding: 5px 3px;
+	color: #141414;
+	background-color: #eeeeee;
+	cursor: pointer;
+	border-radius: 6px;
+}
+
+.content-flex-empty {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 90%;
+	padding: 10px;
+	width: 100%;
+	border-radius: 4px;
+}
+
+.pdf-view {
+	height: calc(100% - 44px);
+	width: 100%;
+	display: flex;
+	border: 1px solid black;
+}
+
+.thumbnail-wrapper {
+	position: relative;
+	height: 100%;
+	width: 120px;
+	color: white;
+	font-size: 12px;
+	background-color: #505050;
+}
+
+.thumbnail-contents {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: scroll;
+	padding: 0px 10px;
+}
+
+.thumbnail {
+	text-align: center;
+	margin: 20px 2px;
+	border-radius: 8px;
+	padding: 2px;
+	border: transparent 2px solid;
+	cursor: pointer;
+}
+
+.thumbnail:hover {
+	text-align: center;
+	margin: 20px 2px;
+	border-radius: 8px;
+	padding: 2px;
+	border: gray 2px solid;
+	cursor: pointer;
+}
+
+.thumbnail-selected {
+	text-align: center;
+	margin: 20px 2px;
+	border: orange 2px solid;
+	border-radius: 8px;
+	padding: 2px;
+	color: orange;
+	cursor: pointer;
+}
+
+.pdf-main-view-wrapper {
+	background-color: #2c2c2c;
+	flex-grow: 1;
+	position: relative;
+}
+
+.pdf-main-view {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: scroll;
+}
+
+.div-blocks {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(255, 99, 71, 0.9);
+	border-radius: 4px;
+}
+
+.div-block-input {
+	width: 60%;
+	height: 95%;
+	background-color: transparent;
+	border: unset;
+	color: white;
+}
+
+.div-block-input::placeholder {
+	color: #e8e8e8;
+	opacity: 1; /* Firefox */
+}
+
+.div-block-input::-ms-input-placeholder {
+	/* Edge 12 -18 */
+	color: #e8e8e8;
+}
+
+.pdf-header {
+	height: 28px;
+	background-color: #505050;
+	color: white !important;
+	padding: 3px 3px 0 15px;
+}
+
+.side-panel-wrapper {
+	position: relative;
+	height: 100%;
+	width: 200px;
+	color: white;
+	font-size: 12px;
+	background-color: #505050;
+}
+
+.side-panel-contents {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: scroll;
+	padding: 0px 10px;
 }

@@ -5,6 +5,7 @@ import { useLoaderContext } from "../../Components/Layout";
 import DeviceTable from "./Components/DevicesTable";
 import AHJForms from "./Components/AHJForms";
 import AHJ from "./Components/AHJ";
+import SuperUser from "../SuperUser";
 
 const tab_items = [
 	{
@@ -12,15 +13,20 @@ const tab_items = [
 		key: "1",
 		children: <SystemsTable />,
 	},
-	{
-		label: "Devices",
-		key: "2",
-		children: <DeviceTable />,
-	},
+	// {
+	// 	label: "Devices",
+	// 	key: "2",
+	// 	children: <DeviceTable />,
+	// },
 	{
 		label: "AHJ Forms",
 		key: "3",
 		children: <AHJ />,
+	},
+	{
+		label: "Clients",
+		key: "4",
+		children: <SuperUser />,
 	},
 ];
 const Admin: FC = () => {

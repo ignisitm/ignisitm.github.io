@@ -24,11 +24,13 @@ const SuperUser: FC = () => {
 
 	return (
 		<SuperUserContext.Provider value={{ countries: countries }}>
-			<Row>
-				<Col span={24}>
-					<ClientTable />
-				</Col>
-			</Row>
+			<div style={{ paddingTop: "10px" }}>
+				<Row>
+					<Col span={24}>
+						<ClientTable />
+					</Col>
+				</Row>
+			</div>
 		</SuperUserContext.Provider>
 	);
 };

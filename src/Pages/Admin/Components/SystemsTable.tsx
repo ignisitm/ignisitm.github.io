@@ -12,6 +12,7 @@ import {
 	Space,
 	Tooltip,
 	Checkbox,
+	Typography,
 } from "antd";
 import { FC, Fragment, useEffect, useState } from "react";
 import { apiCall } from "../../../axiosConfig";
@@ -26,9 +27,13 @@ import {
 	QuestionCircleOutlined,
 } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
+import { useLoaderContext } from "../../../Components/Layout";
+
 const { Search } = Input;
+const { Text } = Typography;
 
 const SystemsTable = () => {
+	const { completeLoading } = useLoaderContext();
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -70,9 +75,8 @@ const SystemsTable = () => {
 		},
 		{
 			title: "Created By",
-			dataIndex: "username",
+			dataIndex: "createdby",
 			width: "20%",
-			render: (username: string, row: any) => `${row.uname} (${username})`,
 		},
 		{
 			title: "Action",
@@ -127,6 +131,7 @@ const SystemsTable = () => {
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
+				completeLoading();
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
 					setPagination({ ...curr_pagination, total });
@@ -262,19 +267,25 @@ const SystemsTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
 			<Modal
 				title="General Fields"
 				destroyOnClose={true}
+				width={"100%"}
+				style={{ maxWidth: "800px", top: "20px" }}
 				open={isModalOpen}
 				onOk={handleOk}
+				maskClosable={false}
 				onCancel={handleCancel}
 				footer={<ModalFooter />}
 				afterOpenChange={(open) => {
@@ -400,8 +411,8 @@ const PropertiesFields: FC<any> = ({ fields, add, remove, fieldsEditMode }) => {
 							>
 								<Select.Option value="text">Text</Select.Option>
 								<Select.Option value="number">Number</Select.Option>
-								{/* <Select.Option value="condition">Condition</Select.Option> */}
-								<Select.Option value="boolean">Yes / No</Select.Option>
+								<Select.Option value="longtext">Long Text</Select.Option>
+								<Select.Option value="dropdown">Dropdown</Select.Option>
 							</Select>
 						</Form.Item>
 					</Col>
@@ -437,135 +448,94 @@ const PropertiesFields: FC<any> = ({ fields, add, remove, fieldsEditMode }) => {
 							/>
 						)}
 					</Col>
-					{/* <Form.Item
-						noStyle
-						shouldUpdate={(prevValues, currentValues) =>
-							prevValues.general_information[name]?.type !==
-							currentValues.general_information[name]?.type
-						}
-					>
-						{({ getFieldValue }) =>
-							getFieldValue(["general_information", name, "type"]) ===
-							"condition" ? (
-								<>
-									<Col style={{ paddingLeft: "35px" }}>{"-"}</Col>
-									<Col span={7} style={{ paddingLeft: "8px" }}>
-										<Form.Item
-											{...restField}
-											name={[name, "condition"]}
-											rules={[{ required: true, message: "Missing Field" }]}
-										>
-											<Select
-												className="selected-building"
-												placeholder="Condition"
-												disabled={!fieldsEditMode}
+					<Col span={24}>
+						<Form.Item
+							noStyle
+							shouldUpdate={(prevValues, currentValues) =>
+								prevValues.general_information[name]?.type !==
+								currentValues.general_information[name]?.type
+							}
+						>
+							{({ getFieldValue }) =>
+								getFieldValue(["general_information", name, "type"]) ===
+								"dropdown" ? (
+									<Row>
+										<Col style={{ paddingLeft: "35px" }}>{"-"}</Col>
+										<Col span={18} style={{ paddingLeft: "8px" }}>
+											<Form.Item
+												{...restField}
+												name={[name, "data"]}
+												rules={[
+													{
+														required: true,
+														message: "No options added for dropdown",
+													},
+												]}
+												noStyle
 											>
-												<Select.Option value="in_between">
-													In Between
-												</Select.Option>
-												<Select.Option value="not_between">
-													Not Between
-												</Select.Option>
-												<Select.Option value="equals_to">
-													Equals To
-												</Select.Option>
-												<Select.Option value="not_equals_to">
-													Not Equals To
-												</Select.Option>
-												<Select.Option value="greater_than">
-													Greater Than
-												</Select.Option>
-												<Select.Option value="lesser_than">
-													Lesser Than
-												</Select.Option>
-											</Select>
-										</Form.Item>
-									</Col>
-									<Col span={6} style={{ paddingLeft: "10px" }}>
-										<Form.Item
-											{...restField}
-											name={[name, "value_1"]}
-											rules={[{ required: true, message: "Missing Field" }]}
-										>
-											<Select
-												className="selected-building"
-												placeholder="Value 1"
-												disabled={!fieldsEditMode}
+												<Select
+													className="selected-building"
+													disabled={!fieldsEditMode}
+													mode="tags"
+													placeholder="Insert Dropdown Options"
+													tokenSeparators={[","]}
+													dropdownStyle={{ display: "none" }}
+													style={{ width: "100%" }}
+													suffixIcon={<></>}
+												>
+													{" "}
+												</Select>
+											</Form.Item>
+											<Text type="secondary" italic>
+												Use Comma(,) to separate values.
+											</Text>
+											<Form.Item
+												{...restField}
+												name={[name, "others"]}
+												rules={[
+													{
+														required: true,
+														message: "No options added for dropdown",
+													},
+												]}
+												valuePropName="checked"
+												initialValue={false}
 											>
-												{getFieldValue("general_information").map((row: any) =>
-													row?.type && row?.type === "number" ? (
-														<Select.Option value={row.name}>
-															{row.name}
-														</Select.Option>
-													) : null
-												)}
-											</Select>
-										</Form.Item>
-									</Col>
-									<Col span={6} style={{ paddingLeft: "10px" }}>
-										<Form.Item
-											noStyle
-											shouldUpdate={(prevValues, currentValues) =>
-												prevValues.general_information[name]?.condition !==
-												currentValues.general_information[name]?.condition
-											}
-										>
-											{({ getFieldValue }) =>
-												getFieldValue([
-													"general_information",
-													name,
-													"condition",
-												]) &&
-												(getFieldValue([
-													"general_information",
-													name,
-													"condition",
-												]) === "in_between" ||
-													getFieldValue([
-														"general_information",
-														name,
-														"condition",
-													]) === "not_between") ? (
-													<Form.Item
-														{...restField}
-														name={[name, "value_2"]}
-														rules={[
-															{ required: true, message: "Missing Field" },
-														]}
-													>
-														<Select
-															className="selected-building"
-															placeholder="Value 2"
-															disabled={!fieldsEditMode}
-														>
-															{getFieldValue("general_information").map(
-																(row: any) =>
-																	row?.type && row?.type === "number" ? (
-																		<Select.Option value={row.name}>
-																			{row.name}
-																		</Select.Option>
-																	) : null
-															)}
-														</Select>
-													</Form.Item>
-												) : null
-											}
-										</Form.Item>
-									</Col>
-									<Col span={2} style={{ paddingLeft: "10px" }}>
-										{fieldsEditMode ? (
+												<Checkbox disabled={!fieldsEditMode}>
+													Include 'Others' in dropdown options
+												</Checkbox>
+											</Form.Item>
+										</Col>
+										<Col span={2} style={{ paddingLeft: "10px" }}>
 											<Tooltip
 												placement="right"
-												title="Define atleast one numerical field before adding a condition"
+												title={
+													<div style={{ margin: "10px" }}>
+														If the dropdown options are:
+														<br />
+														Fire
+														<br />
+														Water
+														<br />
+														Air
+														<br />
+														<br />
+														Then it has to be entered Like:
+														<br />
+														<Text style={{ color: "white" }} keyboard>
+															Fire, Water, Air
+														</Text>
+													</div>
+												}
 											>
 												<QuestionCircleOutlined className="form-item-icons" />
 											</Tooltip>
-										) : null}
-									</Col>
-								</>
-							) : null
-						}
-					</Form.Item> */}
+										</Col>
+									</Row>
+								) : null
+							}
+						</Form.Item>
+					</Col>
 				</Fragment>
 			))}
 			<Col span={24}>

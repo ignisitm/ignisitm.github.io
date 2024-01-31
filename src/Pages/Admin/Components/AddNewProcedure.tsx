@@ -1,7 +1,7 @@
-import { Button, Form, Input, message, Modal, Select } from "antd";
+import { Button, Checkbox, Form, Input, message, Modal, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { FC, useState, useContext } from "react";
-import { SuperUserContext } from "../../../Helpers/Context";
+import { AHJFormContext, SuperUserContext } from "../../../Helpers/Context";
 import { apiCall } from "../../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
 import DeviceTransferList from "./DeviceTransferList";
@@ -21,6 +21,7 @@ interface CollectionCreateFormProps {
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
 	setSelectedDevices: Function;
+	selectedDevices: any;
 }
 
 const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
@@ -28,21 +29,25 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	devices,
 	confirmLoading,
 	setSelectedDevices,
+	selectedDevices,
 	onCreate,
 	onCancel,
 }) => {
 	const [form] = Form.useForm();
-	const contextVariables = useContext(SuperUserContext);
+	const cv = useContext(AHJFormContext);
 
 	return (
 		<Modal
 			open={visible}
+			destroyOnClose={true}
 			title="Add a new Procedure"
-			style={{ minWidth: "632px" }}
+			style={{ minWidth: "632px", top: "20px" }}
 			okText="Add Procedure"
+			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();
+				setSelectedDevices([]);
 				onCancel();
 			}}
 			onOk={() => {
@@ -51,6 +56,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					.then((values) => {
 						onCreate(values).then(() => {
 							form.resetFields();
+							setSelectedDevices([]);
 						});
 					})
 					.catch((info) => {
@@ -84,12 +90,53 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				>
 					<Input />
 				</Form.Item>
+				<Form.Item
+					name="frequency"
+					label="Select Frequency"
+					rules={[
+						{
+							required: true,
+							message: "Please select the frequency!",
+						},
+					]}
+				>
+					<Select
+						placeholder="Select frequency"
+						style={{ width: "100%" }}
+						options={cv.frequencies.map((freq: any) => ({
+							label: freq.name,
+							value: freq.id,
+						}))}
+					/>
+				</Form.Item>
+
+				<h4>Select devices to be checked for this procedure : </h4>
+				<DeviceTransferList
+					devices={devices}
+					setSelectedDevices={setSelectedDevices}
+					selectedDevices={selectedDevices}
+				/>
+				<Form.Item
+					name={"device_wise"}
+					rules={[{ required: true, message: "Enter a value" }]}
+					valuePropName="checked"
+					initialValue={false}
+				>
+					<Checkbox>Perform check for each device seperately</Checkbox>
+				</Form.Item>
+				<Form.Item
+					name="instructions"
+					label="Instructions"
+					rules={[
+						{
+							required: false,
+							message: "Please input the instructions!",
+						},
+					]}
+				>
+					<Input.TextArea rows={3} />
+				</Form.Item>
 			</Form>
-			<h4>Select devices to be checked for this procedure : </h4>
-			<DeviceTransferList
-				devices={devices}
-				setSelectedDevices={setSelectedDevices}
-			/>
 		</Modal>
 	);
 };
@@ -154,6 +201,7 @@ const AddNewProcedure: FC<props> = ({
 					setVisible(false);
 				}}
 				confirmLoading={confirmLoading}
+				selectedDevices={selectedDevices}
 			/>
 		</div>
 	);

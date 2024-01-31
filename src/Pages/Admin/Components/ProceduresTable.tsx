@@ -10,8 +10,10 @@ import {
 	Checkbox,
 	Card,
 	Spin,
+	Select,
+	Tooltip,
 } from "antd";
-import { FC, Fragment, useEffect, useState } from "react";
+import { FC, Fragment, useContext, useEffect, useState } from "react";
 import { apiCall } from "../../../axiosConfig";
 import {
 	SyncOutlined,
@@ -24,6 +26,7 @@ import AddNewProcedure from "./AddNewProcedure";
 import DeviceTransferList from "./DeviceTransferList";
 import { sortBy } from "lodash";
 import { isEqual } from "lodash";
+import { AHJFormContext } from "../../../Helpers/Context";
 const { Search } = Input;
 
 interface props {
@@ -39,6 +42,7 @@ interface DeviceProps {
 }
 
 const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
+	const cv = useContext(AHJFormContext);
 	const [data, setData] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -128,7 +132,27 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 		{
 			title: "Procedure",
 			dataIndex: "procedure",
-			width: "60%",
+			width: "50%",
+		},
+		{
+			title: "Frequency",
+			dataIndex: "frequency",
+			render: (freq: any) =>
+				cv.frequencies?.find((x: any) => x.id === freq)?.name,
+		},
+		{
+			title: "Instructions",
+			dataIndex: "instructions",
+			render: (info: any) => (
+				<Popover
+					title={"Instructions :"}
+					trigger={"click"}
+					overlayStyle={{ width: "450px" }}
+					content={<Input.TextArea readOnly rows={8} value={info} />}
+				>
+					<Button type="link">Instructions</Button>
+				</Popover>
+			),
 		},
 		{
 			title: "Devices",
@@ -288,11 +312,14 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>

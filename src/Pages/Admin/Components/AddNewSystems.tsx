@@ -9,7 +9,9 @@ import {
 	Modal,
 	Row,
 	Select,
+	Table,
 	Tooltip,
+	Typography,
 } from "antd";
 import {
 	MinusCircleOutlined,
@@ -21,8 +23,11 @@ import { SuperUserContext } from "../../../Helpers/Context";
 import { apiCall } from "../../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
 
+const { Text } = Typography;
+
 interface props {
 	fetchData: Function;
+	type?: string;
 }
 
 interface CollectionCreateFormProps {
@@ -43,7 +48,12 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 
 	return (
 		<Modal
-			visible={visible}
+			className="add-modal"
+			width={"100%"}
+			style={{ maxWidth: "800px", top: "20px" }}
+			maskClosable={false}
+			destroyOnClose={true}
+			open={visible}
 			title="Add a new System"
 			okText="Add System"
 			cancelText="Cancel"
@@ -65,7 +75,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
-			<Form form={form} layout="vertical" name="form_in_modal">
+			<Form preserve={false} form={form} layout="vertical" name="form_in_modal">
 				<Form.Item
 					name="name"
 					label="System Name"
@@ -99,7 +109,7 @@ const PropertiesFields: FC<any> = ({ fields, add, remove }) => {
 					<Col className="field-list-number" span={1}>
 						{index + 1}
 					</Col>
-					<Col span={8}>
+					<Col span={14}>
 						<Form.Item
 							{...restField}
 							name={[name, "name"]}
@@ -108,7 +118,7 @@ const PropertiesFields: FC<any> = ({ fields, add, remove }) => {
 							<Input placeholder="Field name" />
 						</Form.Item>
 					</Col>
-					<Col span={6} style={{ paddingLeft: "10px" }}>
+					<Col span={4} style={{ paddingLeft: "10px" }}>
 						<Form.Item
 							{...restField}
 							name={[name, "type"]}
@@ -117,12 +127,14 @@ const PropertiesFields: FC<any> = ({ fields, add, remove }) => {
 							<Select placeholder="Field Type">
 								<Select.Option value="text">Text</Select.Option>
 								<Select.Option value="number">Number</Select.Option>
+								<Select.Option value="longtext">Long Text</Select.Option>
+								<Select.Option value="dropdown">Dropdown</Select.Option>
 								{/* <Select.Option value="condition">Condition</Select.Option> */}
-								<Select.Option value="boolean">Yes / No</Select.Option>
+								{/* <Select.Option value="boolean">Yes / No</Select.Option> */}
 							</Select>
 						</Form.Item>
 					</Col>
-					<Col span={6} style={{ paddingLeft: "10px" }}>
+					<Col span={3} style={{ paddingLeft: "10px" }}>
 						<Form.Item
 							{...restField}
 							name={[name, "mandatory"]}
@@ -140,138 +152,98 @@ const PropertiesFields: FC<any> = ({ fields, add, remove }) => {
 							<Checkbox>Required</Checkbox>
 						</Form.Item>
 					</Col>
-					<Col span={2} style={{ paddingLeft: "10px" }}>
+					<Col span={1} style={{ paddingLeft: "10px" }}>
 						<MinusCircleOutlined
 							className="form-item-icons"
 							onClick={() => remove(name)}
 						/>
 					</Col>
-					{/* <Col span={24}> */}
-					{/* <Form.Item
-						noStyle
-						shouldUpdate={(prevValues, currentValues) =>
-							prevValues.general_information[name]?.type !==
-							currentValues.general_information[name]?.type
-						}
-					>
-						{({ getFieldValue }) =>
-							getFieldValue(["general_information", name, "type"]) ===
-							"condition" ? (
-								<>
-									<Col style={{ paddingLeft: "35px" }}>{"-"}</Col>
-									<Col span={7} style={{ paddingLeft: "8px" }}>
-										<Form.Item
-											{...restField}
-											name={[name, "condition"]}
-											rules={[{ required: true, message: "Missing Field" }]}
-										>
-											<Select
-												className="selected-building"
-												placeholder="Condition"
+					<Col span={24}>
+						<Form.Item
+							noStyle
+							shouldUpdate={(prevValues, currentValues) =>
+								prevValues.general_information[name]?.type !==
+								currentValues.general_information[name]?.type
+							}
+						>
+							{({ getFieldValue }) =>
+								getFieldValue(["general_information", name, "type"]) ===
+								"dropdown" ? (
+									<Row>
+										<Col style={{ paddingLeft: "35px" }}>{"-"}</Col>
+										<Col span={18} style={{ paddingLeft: "8px" }}>
+											<Form.Item
+												{...restField}
+												name={[name, "data"]}
+												rules={[
+													{
+														required: true,
+														message: "No options added for dropdown",
+													},
+												]}
+												noStyle
 											>
-												<Select.Option value="in_between">
-													In Between
-												</Select.Option>
-												<Select.Option value="not_between">
-													Not Between
-												</Select.Option>
-												<Select.Option value="equals_to">
-													Equals To
-												</Select.Option>
-												<Select.Option value="not_equals_to">
-													Not Equals To
-												</Select.Option>
-												<Select.Option value="greater_than">
-													Greater Than
-												</Select.Option>
-												<Select.Option value="lesser_than">
-													Lesser Than
-												</Select.Option>
-											</Select>
-										</Form.Item>
-									</Col>
-									<Col span={6} style={{ paddingLeft: "10px" }}>
-										<Form.Item
-											{...restField}
-											name={[name, "value_1"]}
-											rules={[{ required: true, message: "Missing Field" }]}
-										>
-											<Select
-												className="selected-building"
-												placeholder="Value 1"
+												<Select
+													mode="tags"
+													placeholder="Insert Dropdown Options"
+													tokenSeparators={[","]}
+													dropdownStyle={{ display: "none" }}
+													style={{ width: "100%" }}
+													suffixIcon={<></>}
+												>
+													{" "}
+												</Select>
+											</Form.Item>
+											<Text type="secondary" italic>
+												Use Comma(,) to separate values.
+											</Text>
+											<Form.Item
+												{...restField}
+												name={[name, "others"]}
+												rules={[
+													{
+														required: true,
+														message: "No options added for dropdown",
+													},
+												]}
+												valuePropName="checked"
+												initialValue={false}
 											>
-												{getFieldValue("general_information").map((row: any) =>
-													row?.type && row?.type === "number" ? (
-														<Select.Option value={row.name}>
-															{row.name}
-														</Select.Option>
-													) : null
-												)}
-											</Select>
-										</Form.Item>
-									</Col>
-									<Col span={6} style={{ paddingLeft: "10px" }}>
-										<Form.Item
-											noStyle
-											shouldUpdate={(prevValues, currentValues) =>
-												prevValues.general_information[name]?.condition !==
-												currentValues.general_information[name]?.condition
-											}
-										>
-											{({ getFieldValue }) =>
-												getFieldValue([
-													"general_information",
-													name,
-													"condition",
-												]) &&
-												(getFieldValue([
-													"general_information",
-													name,
-													"condition",
-												]) === "in_between" ||
-													getFieldValue([
-														"general_information",
-														name,
-														"condition",
-													]) === "not_between") ? (
-													<Form.Item
-														{...restField}
-														name={[name, "value_2"]}
-														rules={[
-															{ required: true, message: "Missing Field" },
-														]}
-													>
-														<Select
-															className="selected-building"
-															placeholder="Value 2"
-														>
-															{getFieldValue("general_information").map(
-																(row: any) =>
-																	row?.type && row?.type === "number" ? (
-																		<Select.Option value={row.name}>
-																			{row.name}
-																		</Select.Option>
-																	) : null
-															)}
-														</Select>
-													</Form.Item>
-												) : null
-											}
-										</Form.Item>
-									</Col>
-									<Col span={2} style={{ paddingLeft: "10px" }}>
-										<Tooltip
-											placement="right"
-											title="Define atleast one numerical field before adding a condition"
-										>
-											<QuestionCircleOutlined className="form-item-icons" />
-										</Tooltip>
-									</Col>
-								</>
-							) : null
-						}
-					</Form.Item> */}
-					{/* </Col> */}
+												<Checkbox>
+													Include 'Others' in dropdown options
+												</Checkbox>
+											</Form.Item>
+										</Col>
+										<Col span={2} style={{ paddingLeft: "10px" }}>
+											<Tooltip
+												placement="right"
+												title={
+													<div style={{ margin: "10px" }}>
+														If the dropdown options are:
+														<br />
+														Fire
+														<br />
+														Water
+														<br />
+														Air
+														<br />
+														<br />
+														Then it has to be entered Like:
+														<br />
+														<Text style={{ color: "white" }} keyboard>
+															Fire, Water, Air
+														</Text>
+													</div>
+												}
+											>
+												<QuestionCircleOutlined className="form-item-icons" />
+											</Tooltip>
+										</Col>
+									</Row>
+								) : null
+							}
+						</Form.Item>
+					</Col>
 				</Fragment>
 			))}
 			<Col span={24}>
@@ -290,7 +262,7 @@ const PropertiesFields: FC<any> = ({ fields, add, remove }) => {
 	);
 };
 
-const AddNewSystem: FC<props> = ({ fetchData }: props) => {
+const AddNewSystem: FC<props> = ({ fetchData, type }: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -319,15 +291,32 @@ const AddNewSystem: FC<props> = ({ fetchData }: props) => {
 
 	return (
 		<div>
-			<Button
-				icon={<PlusOutlined />}
-				onClick={() => {
-					setVisible(true);
-				}}
-				type="primary"
-			>
-				Add System
-			</Button>
+			{type === "normal_small" ? (
+				<Button
+					style={{ marginTop: "5px" }}
+					size="small"
+					icon={<PlusOutlined />}
+					onClick={() => {
+						setVisible(true);
+					}}
+					type="primary"
+				>
+					Add a System Type
+				</Button>
+			) : (
+				<Button
+					block
+					size="small"
+					icon={<PlusOutlined />}
+					onClick={() => {
+						setVisible(true);
+					}}
+					type="default"
+				>
+					Add a System Type
+				</Button>
+			)}
+
 			<CollectionCreateForm
 				visible={visible}
 				onCreate={onCreate}

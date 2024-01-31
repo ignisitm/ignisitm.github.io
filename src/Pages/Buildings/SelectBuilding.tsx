@@ -41,9 +41,7 @@ const SelectBuilding: FC<props> = ({
 	buildingDetails,
 }) => {
 	const [form] = Form.useForm();
-	const [newBuilding, setNewBuilding] = useState(
-		buildingDetails.newBuilding ? buildingDetails.newBuilding : false
-	);
+	const [newBuilding, setNewBuilding] = useState(true);
 	const [displayMap, setDisplayMap] = useState(false);
 	const [selectedBuildingId, setSelectedBuildingId] = useState(-1);
 	const [fetchingBuildingDetails, setFetchingBuildingDetails] = useState(false);
@@ -52,15 +50,13 @@ const SelectBuilding: FC<props> = ({
 		{ label: "QCD", value: 1 },
 		{ label: "NFPA", value: 2 },
 	]);
-	const [coordinates, setCoordinates] = useState({
-		lat: 25.3548,
-		long: 51.1839,
-	});
+	const [coordinates, setCoordinates] = useState<any>(null);
 	const [i, set_i] = useState(0);
 
 	const onFinish = (values: any) => {
 		console.log("Success:", values);
-		if (newBuilding) setBuildingDetails({ ...values, newBuilding });
+		values["coordinates"] = coordinates;
+		if (newBuilding) setBuildingDetails({ ...values });
 		else if (selectedBuildingId !== -1) {
 			setBuildingDetails({ id: selectedBuildingId, ...values });
 		}
@@ -131,7 +127,7 @@ const SelectBuilding: FC<props> = ({
 
 	return (
 		<div>
-			<div style={{ margin: "10px 0 30px 10px" }}>
+			{/* <div style={{ margin: "10px 0 30px 10px" }}>
 				<Switch
 					checked={newBuilding}
 					onClick={() => {
@@ -142,7 +138,7 @@ const SelectBuilding: FC<props> = ({
 					}}
 				/>
 				<span> Add a new building</span>
-			</div>
+			</div> */}
 
 			<Form
 				key={i}
@@ -157,6 +153,7 @@ const SelectBuilding: FC<props> = ({
 				initialValues={{
 					metrics: "feet",
 					jurisdiction: "1",
+
 					...buildingDetails,
 				}}
 				onValuesChange={(changedValues, allValues) => {
@@ -229,7 +226,7 @@ const SelectBuilding: FC<props> = ({
 							name="building_completion_certificate_number"
 							rules={[
 								{
-									required: true,
+									required: false,
 									message: "Please enter the building name",
 								},
 							]}
@@ -394,7 +391,7 @@ const SelectBuilding: FC<props> = ({
 									name="building_height"
 									rules={[
 										{
-											required: true,
+											required: false,
 											message: "",
 										},
 									]}
@@ -494,25 +491,25 @@ const SelectBuilding: FC<props> = ({
 					</Col>
 				</Row>
 				<Row>
-					<Col span={6} style={{ paddingLeft: "10px" }}>
+					{/* <Col span={6} style={{ paddingLeft: "10px" }}>
 						<Form.Item
-							label="Assigned Engineer"
+							label="Assigned Controller"
 							name="building_controller"
 							rules={[
 								{
-									required: false,
+									required: true,
 									message: "",
 								},
 							]}
 						>
 							<Select className="selected-building" disabled={!newBuilding}>
-								{engineers.map((engineer: { id: number; name: string }) => (
-									<Option value={engineer.id}>{engineer.name}</Option>
+								{engineers.map((engineer: { id: string }) => (
+									<Option value={engineer.id}>{engineer.id}</Option>
 								))}
 							</Select>
 						</Form.Item>
-					</Col>
-					<Col span={18} style={{ paddingLeft: "30px" }}>
+					</Col> */}
+					<Col span={18} style={{ paddingLeft: "10px" }}>
 						<Form.Item
 							label="Authority Having Jurisdiction"
 							name="jurisdiction"

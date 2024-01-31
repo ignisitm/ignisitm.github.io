@@ -1,4 +1,4 @@
-import { Card } from "antd";
+import { Card, Skeleton, Table } from "antd";
 import { Row, Col } from "antd";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { useLoaderContext } from "../../Components/Layout";
@@ -7,14 +7,60 @@ import {
 	BankOutlined,
 	BellOutlined,
 	FormOutlined,
+	ContainerOutlined,
+	FileDoneOutlined,
+	FlagOutlined,
+	ReconciliationOutlined,
+	ClockCircleOutlined,
+	CheckCircleOutlined,
 } from "@ant-design/icons";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { apiCall } from "../../axiosConfig";
 
 const Dashboard = () => {
 	const { completeLoading } = useLoaderContext();
+	const [loading, setLoading] = useState(false);
+	const [data, setData] = useState<any>();
+	const [alerts, setAlerts] = useState<any>([]);
 
 	useEffect(() => {
-		completeLoading();
+		setLoading(true);
+		apiCall({
+			method: "GET",
+			url: "/ClientDashboard",
+			handleResponse: (res) => {
+				console.log(res);
+				let data = res.data.message;
+				setData(data);
+				completeLoading();
+				setLoading(false);
+				let systems_wo_contracts =
+					data?.["sys_co"]?.find((x: any) => x.current_contract === null)
+						?.count || 0;
+				let systems_wo_teams =
+					data?.["sys_team"]?.find((x: any) => x.team === null)?.count || 0;
+				let alerts = [];
+				console.log("Counts : ", systems_wo_contracts, systems_wo_teams);
+				if (systems_wo_contracts == 1)
+					alerts.push({
+						label: `There is ${systems_wo_contracts} system without contract assigned to it`,
+					});
+				else if (systems_wo_contracts > 1)
+					alerts.push({
+						label: `There are ${systems_wo_contracts} systems without contract assigned to them`,
+					});
+				if (systems_wo_teams == 1)
+					alerts.push({
+						label: `There is ${systems_wo_teams} system without a team assigned to it`,
+					});
+				else if (systems_wo_teams > 1)
+					alerts.push({
+						label: `There are ${systems_wo_teams} systems without a team assigned to them`,
+					});
+				console.log(alerts);
+				setAlerts(alerts);
+			},
+		});
 	}, []);
 
 	return (
@@ -37,7 +83,7 @@ const Dashboard = () => {
 							<Col span={6}>
 								<div style={{ alignItems: "center" }}>
 									<div className="circle_card">
-										<BankOutlined
+										<FileDoneOutlined
 											style={{
 												color: "#353535",
 												padding: "10px",
@@ -49,10 +95,63 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>2</span>
+								<span style={{ color: "#353535", fontSize: "20px" }}>
+									{loading ? (
+										<Skeleton.Button active={true} size="small" />
+									) : (
+										data?.["contract"]?.find((x: any) => x.status === "ACTIVE")
+											?.count || 0
+									)}
+								</span>
+								<br />
+								<span style={{ color: "#353535" }}>Active Contracts</span>
+							</Col>
+						</Row>
+
+						<div></div>
+					</Card>
+				</Col>
+				<Col span={6}>
+					<Card
+						className="dashboard-cards"
+						style={{
+							width: "100%",
+							height: "100%",
+							backgroundColor: "#FAFAFA",
+						}}
+					>
+						<Row
+							gutter={16 + 8 * 2}
+							style={{ alignItems: "center", height: "100%" }}
+							justify="center"
+						>
+							<Col span={6}>
+								<div style={{ alignItems: "center", height: "100%" }}>
+									<div className="circle_card">
+										<ReconciliationOutlined
+											style={{
+												color: "#353535",
+												padding: "10px",
+												fontSize: "25px",
+											}}
+										/>
+									</div>
+								</div>
+							</Col>
+							<Col span={18}>
+								{" "}
+								<span style={{ color: "#353535", fontSize: "20px" }}>
+									{loading ? (
+										<Skeleton.Button active={true} size="small" />
+									) : (
+										data?.["notification"]?.find(
+											(x: any) => x.status === "OPEN"
+										)?.count || 0
+									)}
+								</span>
 								<br />
 								<span style={{ color: "#353535" }}>
-									New buildings require asset tagging
+									Notifications pending for work order creation
 								</span>
 							</Col>
 						</Row>
@@ -77,7 +176,7 @@ const Dashboard = () => {
 							<Col span={6}>
 								<div style={{ alignItems: "center" }}>
 									<div className="circle_card">
-										<FormOutlined
+										<ClockCircleOutlined
 											style={{
 												color: "#353535",
 												padding: "10px",
@@ -89,7 +188,14 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>79</span>
+								<span style={{ color: "#353535", fontSize: "20px" }}>
+									{loading ? (
+										<Skeleton.Button active={true} size="small" />
+									) : (
+										data?.["wo"]?.find((x: any) => x.status === "Pending")
+											?.count || 0
+									)}
+								</span>
 								<br />
 								<span style={{ color: "#353535" }}>
 									Work orders pending to be completed
@@ -117,47 +223,7 @@ const Dashboard = () => {
 							<Col span={6}>
 								<div style={{ alignItems: "center" }}>
 									<div className="circle_card">
-										<BellOutlined
-											style={{
-												color: "#353535",
-												padding: "10px",
-												fontSize: "25px",
-											}}
-										/>
-									</div>
-								</div>
-							</Col>
-							<Col span={18}>
-								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>12</span>
-								<br />
-								<span style={{ color: "#353535" }}>
-									Notifications pending for approval
-								</span>
-							</Col>
-						</Row>
-
-						<div></div>
-					</Card>
-				</Col>
-				<Col span={6}>
-					<Card
-						className="dashboard-cards"
-						style={{
-							width: "100%",
-							height: "100%",
-							backgroundColor: "#FAFAFA",
-						}}
-					>
-						<Row
-							gutter={16 + 8 * 2}
-							style={{ alignItems: "center", height: "100%" }}
-							justify="center"
-						>
-							<Col span={6}>
-								<div style={{ alignItems: "center", height: "100%" }}>
-									<div className="circle_card">
-										<UsergroupAddOutlined
+										<CheckCircleOutlined
 											style={{
 												color: "#353535",
 												padding: "10px",
@@ -170,11 +236,16 @@ const Dashboard = () => {
 							<Col span={18}>
 								{" "}
 								<span style={{ color: "#353535", fontSize: "20px" }}>
-									167/266
+									{loading ? (
+										<Skeleton.Button active={true} size="small" />
+									) : (
+										data?.["wo"]?.find((x: any) => x.status === "Completed")
+											?.count || 0
+									)}
 								</span>
 								<br />
 								<span style={{ color: "#353535" }}>
-									Technicians working currently on site
+									Work Orders pending for approval
 								</span>
 							</Col>
 						</Row>
@@ -228,23 +299,26 @@ const Dashboard = () => {
 						<div
 							style={{
 								backgroundColor: "#FAFAFA",
-								height: "45px",
+								// height: "45px",
 								padding: "13px 10px",
 								width: "100%",
 								borderRadius: "8px",
 							}}
 						>
-							<span
+							{/* <span
 								style={{
 									color: "#353535",
 									fontWeight: "bold",
 								}}
 							>
-								Recent Activity
-							</span>
-						</div>
-						<div className="recentActivity">
-							<p style={{ padding: "10px" }}>No recent Activity</p>
+								Alerts
+							</span> */}
+							<Table
+								dataSource={alerts}
+								pagination={false}
+								locale={{ emptyText: "No Alerts" }}
+								columns={[{ dataIndex: "label", title: `Alerts` }]}
+							/>
 						</div>
 					</div>
 				</Col>

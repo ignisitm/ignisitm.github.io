@@ -1,20 +1,36 @@
 import { Form, Input, Button, Checkbox, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { apiCall } from "../../axiosConfig";
-import { useState, useContext } from "react";
-import { setUserSession } from "../../Auth/Auth";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext, useEffect } from "react";
+import {
+	getPassword,
+	getUsername,
+	resetCredentials,
+	setClientToken,
+	setCredentials,
+	setUserSession,
+} from "../../Auth/Auth";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ClientContext } from "../../Helpers/Context";
 
 interface userDetails {
 	username: string;
 	password: string;
+	client_id: string;
 }
 
 export default function NormalLoginForm() {
 	let navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
 	let client = useContext(ClientContext);
+	let location = useLocation();
+
+	useEffect(() => {
+		console.log(location);
+		if (location.hash === "#token-invalid") {
+			message.error(`Session Timed Out`);
+		}
+	}, []);
 
 	const capitalizeFirstLetter = (string: string) => {
 		return string.charAt(0).toUpperCase() + string.slice(1);
@@ -28,13 +44,15 @@ export default function NormalLoginForm() {
 		password = password.trim();
 		apiCall({
 			method: "POST",
-			url: "/auth/login",
-			data: { userInfo: { username, password } },
+			url: `/${client.client_id === "admin" ? "super" : "client"}auth/login`,
+			data: { userInfo: { username, password, client_id: client.client_id } },
 			handleResponse: (res) => {
 				const user = res.data.message.user;
 				const token = res.data.message.token;
+				setClientToken(res.data.message.clitoken);
 				setUserSession({ user, token });
-
+				if (values.remember) setCredentials({ username, password });
+				else resetCredentials();
 				if (user.first_login) {
 					navigate("/resetpassword");
 				} else {
@@ -48,6 +66,9 @@ export default function NormalLoginForm() {
 		});
 	};
 
+	const rm_username = getUsername();
+	const rm_password = getPassword();
+
 	return (
 		<div className="loginform">
 			<img style={{ paddingLeft: "47px" }} src="logo.png" height={100}></img>
@@ -56,7 +77,10 @@ export default function NormalLoginForm() {
 				name="normal_login"
 				className="login-form"
 				initialValues={{
-					remember: true,
+					remember: false,
+					...(rm_username && rm_username
+						? { username: rm_username, password: rm_password, remember: true }
+						: {}),
 				}}
 				onFinish={onFinish}
 			>
@@ -111,7 +135,7 @@ export default function NormalLoginForm() {
 				</Form.Item>
 			</Form>
 			<div className="login-footer">
-				{capitalizeFirstLetter(client)} ©2022 powered by IGNIS
+				{capitalizeFirstLetter(client.client_name)} ©2024 powered by IGNIS
 			</div>
 		</div>
 	);

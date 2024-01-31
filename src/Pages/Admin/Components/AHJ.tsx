@@ -26,10 +26,13 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewAhj from "./AddNewAhj";
 import AHJForms from "./AHJForms";
+import { useLoaderContext } from "../../../Components/Layout";
+
 const { Search } = Input;
 
 const AHJ = () => {
 	const [data, setData] = useState([]);
+	const { completeLoading } = useLoaderContext();
 	const [loading, setLoading] = useState(true);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
@@ -126,6 +129,7 @@ const AHJ = () => {
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
+				completeLoading();
 				setLoading(false);
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
@@ -134,6 +138,7 @@ const AHJ = () => {
 			},
 			handleError: () => {
 				setLoading(false);
+				completeLoading();
 			},
 		});
 	};
@@ -224,7 +229,7 @@ const AHJ = () => {
 	};
 
 	return (
-		<>
+		<div style={{ paddingTop: "10px" }}>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -270,11 +275,14 @@ const AHJ = () => {
 					) : null}
 					<AHJForms forms={data} fetchData={fetchData} />
 					{/* <div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * 10 + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
-						pagination.total < (pagination.current - 1) * 10 + 10
+						pagination.total <
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * 10 + 10
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div> */}
 				</Col>
 			</Row>
@@ -283,6 +291,7 @@ const AHJ = () => {
 				destroyOnClose={true}
 				open={isModalOpen}
 				onOk={handleOk}
+				maskClosable={false}
 				onCancel={handleCancel}
 				footer={<ModalFooter />}
 				afterOpenChange={(open) => {
@@ -370,7 +379,7 @@ const AHJ = () => {
 					/> */}
 				</Form>
 			</Modal>
-		</>
+		</div>
 	);
 };
 

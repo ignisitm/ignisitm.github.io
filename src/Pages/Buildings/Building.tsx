@@ -5,6 +5,8 @@ import {
 	LoadingOutlined,
 	ArrowLeftOutlined,
 	EditOutlined,
+	DeleteOutlined,
+	UploadOutlined,
 } from "@ant-design/icons";
 import {
 	Progress,
@@ -18,20 +20,26 @@ import {
 	Button,
 	Tabs,
 	Tooltip,
+	message,
+	Popconfirm,
+	Upload,
 } from "antd";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import axios from "axios";
 import { useLoaderContext } from "../../Components/Layout";
 import SelectBuilding from "./SelectBuilding";
 import ContractTable from "./ContractTable";
+import { filter, remove } from "lodash";
 const { Option } = Select;
 
 interface buildingDetailsProps {
 	details: any;
 	occupancies: any;
+	engineers: any;
 	hazardClassification: any;
 	typeOfConstruction: any;
 	ahjOptions: any;
+	params: any;
 }
 
 const BuildingDetails: FC<buildingDetailsProps> = ({
@@ -40,15 +48,20 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 	hazardClassification,
 	typeOfConstruction,
 	ahjOptions,
+	params,
+	engineers,
 }) => {
 	const [form] = Form.useForm();
 	const [displayMap, setDisplayMap] = useState(false);
 	const [isLoadingMap, setLoadingMap] = useState(false);
 	const [editMode, setEditMode] = useState(false);
-	const [coordinates, setCoordinates] = useState({
-		lat: 25.3548,
-		long: 51.1839,
-	});
+	const [isSavingChanges, setIsSavingChanges] = useState(false);
+	const [deletedFiles, setDeletedFiles] = useState<any[]>([]);
+	const [attachments, setAttachments] = useState<any>(
+		details.attachments ? [...details.attachments] : []
+	);
+	const [coordinates, setCoordinates] = useState<any>(null);
+	const [newFiles, setNewFiles] = useState<any[]>([]);
 
 	const openEditMode = () => {
 		setEditMode(true);
@@ -58,12 +71,90 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 		setEditMode(false);
 	};
 
+	const uploadfiles = async () => {
+		let promises: Promise<any>[] = [];
+		let files: any[] = [];
+
+		newFiles.map((file: any) => {
+			promises.push(
+				apiCall({
+					method: "PUT",
+					url: "/fileupload",
+					data: {
+						type: "buildings",
+						type_name: params.id.toString(),
+						file_name: file.name,
+						content_type: file.type,
+					},
+					handleResponse: (res) => {
+						console.log(res);
+						let url = res.data.message.uploadURL;
+						files.push({
+							name: file.name,
+							path: res.data.message.filepath,
+						});
+						axios
+							.put(url, file.originFileObj, {
+								headers: { "Content-Type": file.type },
+							})
+							.then((res) => {
+								console.log(res);
+							});
+					},
+				})
+			);
+		});
+
+		try {
+			await Promise.all(promises);
+			return files;
+		} catch {
+			console.log("error uploading files");
+			return [];
+		}
+	};
+
+	const saveBuilding = async (data: any) => {
+		setIsSavingChanges(true);
+		if (deletedFiles.length) {
+			try {
+				await deleteAllfiles();
+				data["attachments"] = attachments;
+			} catch (err) {
+				message.error("Cannot modify files");
+			}
+		}
+		if (newFiles.length) {
+			try {
+				let files = await uploadfiles();
+				data["attachments"] = [...attachments, ...files];
+			} catch (err) {
+				message.error("Cannot modify files");
+			}
+		}
+		if (coordinates) data["coordinates"] = coordinates;
+		apiCall({
+			method: "PUT",
+			data: { id: params.id, data },
+			url: `/clientbuildings`,
+			handleResponse: (res) => {
+				console.log(res);
+				setDeletedFiles([]);
+				setNewFiles([]);
+				setIsSavingChanges(false);
+				closeEditMode();
+				if (newFiles.length) setAttachments([...data["attachments"]]);
+			},
+		});
+	};
+
 	useEffect(() => {
 		getMap(details.building_no, details.street_no, details.zone_no);
 	}, []);
 
 	const onFinish = (values: any) => {
 		console.log(values);
+		saveBuilding(values);
 	};
 
 	const onFinishFailed = (values: any) => {
@@ -103,6 +194,54 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 				setDisplayMap(false);
 				setLoadingMap(false);
 			});
+	};
+
+	const downloadAttachment = (filepath: any) => {
+		apiCall({
+			method: "POST",
+			url: "/fileupload",
+			data: { filepath },
+			handleResponse: (res) => {
+				window.open(res.data.message, "_blank");
+			},
+		});
+	};
+
+	const removeFile = (filepath: any) => {
+		let files = attachments;
+		let removed_files = remove(files, { path: filepath });
+		setDeletedFiles((files) => [...files, ...removed_files]);
+		setAttachments(files);
+	};
+
+	const deleteAllfiles = async () => {
+		let delete_requests: Promise<any>[] = [];
+		deletedFiles.map((file) => {
+			delete_requests.push(deleteAttachment(file.path));
+		});
+		await Promise.all(delete_requests);
+
+		//Removing from Details Attachment
+		remove(details.attachments, (file) => {
+			return deletedFiles.indexOf(file) !== -1;
+		});
+	};
+
+	const deleteAttachment = (filepath: any) => {
+		return apiCall({
+			method: "DELETE",
+			url: "/fileupload",
+			data: { data: { filepath } },
+			handleResponse: (res) => {
+				console.log(res.data.message);
+			},
+		});
+	};
+
+	const dummyRequest = ({ file, onSuccess }: any) => {
+		setTimeout(() => {
+			onSuccess("ok");
+		}, 0);
 	};
 
 	return (
@@ -162,8 +301,8 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 						name="building_completion_certificate_number"
 						rules={[
 							{
-								required: true,
-								message: "Please enter the building name",
+								required: false,
+								message: "Please enter AHJ Building Completion Certificate No.",
 							},
 						]}
 					>
@@ -345,7 +484,7 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 								name="building_height"
 								rules={[
 									{
-										required: true,
+										required: false,
 										message: "",
 									},
 								]}
@@ -459,7 +598,29 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 				</Col>
 			</Row>
 			<Row>
-				<Col span={20}>
+				{/* <Col span={6} style={{ paddingLeft: "10px" }}>
+					<Form.Item
+						label="Assigned Controller"
+						name="building_controller"
+						rules={[
+							{
+								required: true,
+								message: "",
+							},
+						]}
+					>
+						{Object.keys(details).length > 0 ? (
+							<Select className="selected-building" disabled={!editMode}>
+								{engineers.map((item: any) => (
+									<Option value={item.id}>{item.id}</Option>
+								))}
+							</Select>
+						) : (
+							<Skeleton.Input active size="small" block />
+						)}
+					</Form.Item>
+				</Col> */}
+				<Col span={18} style={{ paddingLeft: "10px" }}>
 					<Form.Item
 						label="Authority Having Jurisdiction"
 						name="jurisdiction"
@@ -485,14 +646,81 @@ const BuildingDetails: FC<buildingDetailsProps> = ({
 						</Radio.Group>
 					</Form.Item>
 				</Col>
+			</Row>
+			<Row>
+				<Col span={20}>
+					<h4 style={{ paddingLeft: "12px", marginBottom: 0 }}>Attachments:</h4>
+					{attachments.length ? (
+						<ul>
+							{attachments?.map((file: any) => {
+								return (
+									<li>
+										<>
+											<Button
+												type="link"
+												onClick={() => downloadAttachment(file.path)}
+											>
+												{file.name}
+											</Button>
+											{editMode && (
+												<Popconfirm
+													title="Are you sure to delete?"
+													onConfirm={() => removeFile(file.path)}
+													// onCancel={cancel}
+													okText="Delete"
+													cancelText="Cancel"
+													placement="left"
+												>
+													<div className="delete-table-action">
+														<DeleteOutlined />
+													</div>
+												</Popconfirm>
+											)}
+										</>
+									</li>
+								);
+							})}
+						</ul>
+					) : (
+						<p style={{ paddingLeft: "25px" }}>
+							No attachments found for this building
+						</p>
+					)}
+					{editMode && (
+						<Upload
+							fileList={newFiles}
+							onChange={(e: any) => {
+								setNewFiles(e.fileList);
+							}}
+							customRequest={dummyRequest}
+						>
+							<Button icon={<UploadOutlined />}>Upload New Files</Button>
+						</Upload>
+					)}
+				</Col>
 				<Col span={4}>
 					<div className="edit-building-button">
 						{editMode ? (
 							<>
-								<Button type="primary" style={{ marginRight: "4px" }}>
+								<Button
+									htmlType="submit"
+									type="primary"
+									style={{ marginRight: "4px" }}
+									loading={isSavingChanges}
+								>
 									Save
 								</Button>
-								<Button onClick={closeEditMode}>Cancel</Button>
+								<Button
+									onClick={() => {
+										closeEditMode();
+										form.resetFields();
+										setAttachments([...details.attachments]);
+										setDeletedFiles([]);
+										setNewFiles([]);
+									}}
+								>
+									Cancel
+								</Button>
 							</>
 						) : (
 							<Tooltip title="Edit" placement="left">
@@ -519,6 +747,7 @@ const Building = () => {
 	const [occupancies, setOccupancies] = useState([]);
 	const [hazardClassification, setHazardClassification] = useState([]);
 	const [typeOfConstruction, setTypeOfConstruction] = useState([]);
+	const [engineers, setEngineers] = useState<any[]>([]);
 	const [ahjOptions, setAhjOptions] = useState([
 		{ label: "QCD", value: 1 },
 		{ label: "NFPA", value: 2 },
@@ -539,14 +768,16 @@ const Building = () => {
 					occupancies={occupancies}
 					hazardClassification={hazardClassification}
 					typeOfConstruction={typeOfConstruction}
+					params={params}
+					engineers={engineers}
 				/>
 			),
 		},
-		{
-			label: "Contract Details",
-			key: "2",
-			children: <ContractTable building_id={params.id} />,
-		},
+		// {
+		// 	label: "Contract Details",
+		// 	key: "2",
+		// 	children: <ContractTable building_id={params.id} />,
+		// },
 	];
 
 	const getAllDropdowns = () => {
@@ -557,6 +788,8 @@ const Building = () => {
 				setOccupancies(res.data.message.occupancyClassification || []);
 				setHazardClassification(res.data.message.hazardClassification || []);
 				setTypeOfConstruction(res.data.message.typeOfConstruction || []);
+				setTypeOfConstruction(res.data.message.typeOfConstruction || []);
+				setEngineers(res.data.message.teams || []);
 				// setContractType(res.data.message.contractType || []);
 				// setRequiredFields(
 				// 	res.data.message.add_building_required_fields
@@ -574,10 +807,10 @@ const Building = () => {
 		setPageLoader(25);
 		apiCall({
 			method: "GET",
-			url: `/buildings?id=${id}`,
+			url: `/clientbuildings/${id}`,
 			handleResponse: (res) => {
 				console.log(res);
-				setSelectedBuilding(res.data.message);
+				setSelectedBuilding(res.data.message[0]);
 				completeLoading();
 			},
 			handleError: (err) => {
@@ -620,6 +853,11 @@ const Building = () => {
 						destroyInactiveTabPane={true}
 						type="card"
 						items={tabs}
+						onChange={(key) => {
+							if (key === "1") {
+								getBuildingById(params.id);
+							}
+						}}
 					/>
 				) : null}
 			</div>

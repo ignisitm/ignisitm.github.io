@@ -10,9 +10,10 @@ import {
 	Tabs,
 } from "antd";
 import { CheckboxValueType } from "antd/es/checkbox/Group";
-import { FC, useState } from "react";
+import { FC, useContext, useState } from "react";
 import AddNewProcedure from "./AddNewProcedure";
 import ProceduresTable from "./ProceduresTable";
+import { AHJFormContext } from "../../../Helpers/Context";
 
 interface props {
 	systemId: number;
