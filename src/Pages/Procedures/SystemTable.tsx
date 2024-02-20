@@ -44,8 +44,6 @@ const SystemTable = () => {
 	const [confirmLoading, setConfirmLoading] = useState(false);
 	const [showClose, setShowClose] = useState(false);
 	const [drawerVisible, setDrawerVisible] = useState(false);
-	const [proceduresVisible, setProceduresVisible] = useState(false);
-	const [defectsVisible, setDefectsVisible] = useState(false);
 	const [form] = Form.useForm();
 	const [GI_form] = Form.useForm();
 	const [editMode, setEditMode] = useState(false);
@@ -118,7 +116,9 @@ const SystemTable = () => {
 					);
 				else if (text)
 					return (
-						<Tag color={statusColors[text as keyof typeof statusColors]}>{text}</Tag>
+						<Tag color={statusColors[text as keyof typeof statusColors]}>
+							{text}
+						</Tag>
 					);
 				else
 					return (
@@ -139,50 +139,24 @@ const SystemTable = () => {
 			},
 		},
 		{
-			title: "View",
+			title: "General Info",
 			dataIndex: "general_information",
 			render: (info: any, row: any) => (
-				<Space>
-					<Button
-						onClick={() => {
-							setSelectedSystem(row.id);
-							setDrawerFields(row.fields);
-							setDrawerInfo(info);
-							setTimeout(() => {
-								openDrawer();
-							}, 200);
-						}}
-						type="link"
-					>
-						General Info
-					</Button>
-					<Button
-						onClick={() => {
-							setSelectedSystem(row.id);
-							setDrawerFields(row.fields);
-							setDrawerInfo(info);
-							setTimeout(() => {
-								openDrawer();
-							}, 200);
-						}}
-						type="link"
-					>
-						Procedures
-					</Button>
-					<Button
-						onClick={() => {
-							setSelectedSystem(row.id);
-							setDrawerFields(row.fields);
-							setDrawerInfo(info);
-							setTimeout(() => {
-								openDrawer();
-							}, 200);
-						}}
-						type="link"
-					>
-						Defects
-					</Button>
-				</Space>
+				<Button
+					onClick={() => {
+						setSelectedSystem(row.id);
+						setDrawerFields(row.fields);
+						setDrawerInfo(info);
+						setTimeout(() => {
+							openDrawer();
+						}, 200);
+
+						console.log("first");
+					}}
+					type="link"
+				>
+					View/Edit
+				</Button>
 			),
 		},
 		{
@@ -224,7 +198,10 @@ const SystemTable = () => {
 		});
 	};
 
-	const fetchData = (curr_pagination: any = pagination, search: string = searchText) => {
+	const fetchData = (
+		curr_pagination: any = pagination,
+		search: string = searchText
+	) => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
@@ -354,7 +331,9 @@ const SystemTable = () => {
 						onSearch={() => search()}
 						value={searchText}
 					/>
-					{showClose && <Button onClick={() => search(true)} icon={<CloseOutlined />} />}
+					{showClose && (
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+					)}
 				</Col>
 				<Col span={6} className="table-button">
 					<Button
@@ -402,7 +381,8 @@ const SystemTable = () => {
 					onCancel();
 				}}
 				onOk={() => {
-					form.validateFields()
+					form
+						.validateFields()
 						.then((values) => {
 							onCreate(values).then(() => {
 								form.resetFields();
@@ -481,17 +461,6 @@ const SystemTable = () => {
 				}
 			>
 				<GeneralInfoContent />
-			</Drawer>
-			<Drawer
-				open={proceduresVisible}
-				destroyOnClose={true}
-				title="Procedures"
-				placement="right"
-			>
-				<h1>hello</h1>
-			</Drawer>
-			<Drawer open={defectsVisible} destroyOnClose={true} title="Defects" placement="right">
-				<h1>hello</h1>
 			</Drawer>
 		</>
 	);
