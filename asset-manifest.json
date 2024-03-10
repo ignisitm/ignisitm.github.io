@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/ignisweb_frontend/static/css/main.64e1803c.css",
+    "main.js": "/ignisweb_frontend/static/js/main.d631cb3e.js",
+    "static/js/266.b9ca0d53.chunk.js": "/ignisweb_frontend/static/js/266.b9ca0d53.chunk.js",
+    "static/js/593.93bd7a8a.chunk.js": "/ignisweb_frontend/static/js/593.93bd7a8a.chunk.js",
+    "static/js/662.11a267a4.chunk.js": "/ignisweb_frontend/static/js/662.11a267a4.chunk.js",
+    "static/js/787.5c0c3a99.chunk.js": "/ignisweb_frontend/static/js/787.5c0c3a99.chunk.js",
+    "index.html": "/ignisweb_frontend/index.html",
+    "main.64e1803c.css.map": "/ignisweb_frontend/static/css/main.64e1803c.css.map",
+    "main.d631cb3e.js.map": "/ignisweb_frontend/static/js/main.d631cb3e.js.map",
+    "266.b9ca0d53.chunk.js.map": "/ignisweb_frontend/static/js/266.b9ca0d53.chunk.js.map",
+    "593.93bd7a8a.chunk.js.map": "/ignisweb_frontend/static/js/593.93bd7a8a.chunk.js.map",
+    "662.11a267a4.chunk.js.map": "/ignisweb_frontend/static/js/662.11a267a4.chunk.js.map",
+    "787.5c0c3a99.chunk.js.map": "/ignisweb_frontend/static/js/787.5c0c3a99.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.64e1803c.css",
+    "static/js/main.d631cb3e.js"
+  ]
+}
