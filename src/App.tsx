@@ -57,7 +57,7 @@ const App: FC = () => {
 			vars[1] === "github" ||
 			(vars[0] === "www" && vars[2] === "github")
 		) {
-			return "";
+			_client = "firelink1";
 		} else if (vars[0] === "www") _client = vars[1];
 		else _client = vars[0];
 
