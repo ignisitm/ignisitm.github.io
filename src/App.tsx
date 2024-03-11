@@ -53,11 +53,8 @@ const App: FC = () => {
 		console.log("host: ", host);
 		let vars = host.split(".");
 		let _client;
-		if (
-			vars[1] === "github" ||
-			(vars[0] === "www" && vars[2] === "github")
-		) {
-			_client = "firelink1";
+		if (vars[1] === "github" || (vars[0] === "www" && vars[2] === "github")) {
+			_client = "firelink";
 		} else if (vars[0] === "www") _client = vars[1];
 		else _client = vars[0];
 
@@ -101,71 +98,36 @@ const App: FC = () => {
 					<BrowserRouter>
 						<Routes>
 							<Route path="/login" element={<Login />} />
-							<Route
-								path="/resetpassword"
-								element={<ResetPassword />}
-							/>
+							<Route path="/resetpassword" element={<ResetPassword />} />
 							<Route
 								path=""
 								element={
-									state.client_id === "admin" ? (
-										<Layout />
-									) : (
-										<OldLayout />
-									)
+									state.client_id === "admin" ? <Layout /> : <OldLayout />
 								}
 							>
 								<Route
 									path="/"
 									element={
-										state.client_id === "admin" ? (
-											<SystemList />
-										) : (
-											<Dashboard />
-										)
+										state.client_id === "admin" ? <SystemList /> : <Dashboard />
 									}
 								/>
 
-								<Route
-									path="/buildings"
-									element={<Buildings />}
-								/>
-								<Route
-									path="/building/:id"
-									element={<Building />}
-								/>
-								<Route
-									path="/contracts"
-									element={<Contracts />}
-								/>
-								<Route
-									path="/contract/:id"
-									element={<Contract />}
-								/>
+								<Route path="/buildings" element={<Buildings />} />
+								<Route path="/building/:id" element={<Building />} />
+								<Route path="/contracts" element={<Contracts />} />
+								<Route path="/contract/:id" element={<Contract />} />
 								<Route path="/systems" element={<Systems />} />
 								<Route path="/assets" element={<Assets />} />
-								<Route
-									path="/notifications"
-									element={<Notifications />}
-								/>
-								<Route
-									path="/workorders"
-									element={<WorkOrder />}
-								/>
+								<Route path="/notifications" element={<Notifications />} />
+								<Route path="/workorders" element={<WorkOrder />} />
 								<Route path="/invoice" element={<Invoice />} />
 								{/* <Route path="/devices" element={<DevicesTable />} /> */}
 								<Route path="/ahjforms" element={<AHJ />} />
-								<Route
-									path="/superuser"
-									element={<SuperUser />}
-								/>
+								<Route path="/superuser" element={<SuperUser />} />
 								<Route path="/ahj/:id" element={<AHJForm />} />
 								<Route path="/masters" element={<Masters />} />
 								<Route path="/teams" element={<TeamPage />} />
-								<Route
-									path="/pdfview"
-									element={<PdfViewer />}
-								/>
+								<Route path="/pdfview" element={<PdfViewer />} />
 							</Route>
 						</Routes>
 					</BrowserRouter>
@@ -174,11 +136,7 @@ const App: FC = () => {
 		</ConfigProvider>
 	) : (
 		<div className="loginform" style={{ height: "330.5px" }}>
-			<img
-				style={{ paddingLeft: "47px" }}
-				src="logo.png"
-				height={100}
-			></img>
+			<img style={{ paddingLeft: "47px" }} src="logo.png" height={100}></img>
 			<div style={{ height: "25px" }}></div>
 			<div style={{ textAlign: "center" }}>
 				{state.client_id === "verifying" ? (
