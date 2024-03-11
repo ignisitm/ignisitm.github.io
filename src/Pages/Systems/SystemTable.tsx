@@ -18,7 +18,12 @@ import {
 import { useContext, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 import AddNewClient from "./AddNewSystem";
-import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+	SyncOutlined,
+	CloseOutlined,
+	DeleteOutlined,
+	LoadingOutlined,
+} from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import { SystemContext } from "../../Helpers/Context";
 const { Search } = Input;
@@ -45,6 +50,10 @@ const SystemTable = () => {
 	const [showClose, setShowClose] = useState(false);
 	const [drawerVisible, setDrawerVisible] = useState(false);
 	const [proceduresVisible, setProceduresVisible] = useState(false);
+	const [proceduresData, setProceduresData] = useState<any>(null);
+	const [loadingProcedures, setLoadingProcesures] = useState(false);
+	const [loadingDefects, setLoadingDefects] = useState(false);
+	const [defectsData, setDefectsData] = useState<any>(null);
 	const [defectsVisible, setDefectsVisible] = useState(false);
 	const [form] = Form.useForm();
 	const [GI_form] = Form.useForm();
@@ -69,6 +78,32 @@ const SystemTable = () => {
 
 	const closeEditMode = () => {
 		setEditMode(false);
+	};
+
+	const openProcedures = (id: any) => {
+		setLoadingProcesures(true);
+		setProceduresVisible(true);
+		apiCall({
+			method: "GET",
+			url: `dropdown/client_system_procedures?system_id=${id}`,
+			handleResponse: (res) => {
+				setProceduresData(res.data.message || []);
+				setLoadingProcesures(false);
+			},
+		});
+	};
+
+	const openDefects = (id: any) => {
+		setLoadingDefects(true);
+		setDefectsVisible(true);
+		apiCall({
+			method: "GET",
+			url: `dropdown/client_system_defects?system_id=${id}`,
+			handleResponse: (res) => {
+				setDefectsData(res.data.message || []);
+				setLoadingDefects(false);
+			},
+		});
 	};
 
 	const columns = [
@@ -101,7 +136,13 @@ const SystemTable = () => {
 				if (text === "EXPIRED")
 					return (
 						<>
-							<Tag color={statusColors[text as keyof typeof statusColors]}>
+							<Tag
+								color={
+									statusColors[
+										text as keyof typeof statusColors
+									]
+								}
+							>
 								{text}
 							</Tag>{" "}
 							<Button
@@ -118,12 +159,20 @@ const SystemTable = () => {
 					);
 				else if (text)
 					return (
-						<Tag color={statusColors[text as keyof typeof statusColors]}>{text}</Tag>
+						<Tag
+							color={
+								statusColors[text as keyof typeof statusColors]
+							}
+						>
+							{text}
+						</Tag>
 					);
 				else
 					return (
 						<>
-							<Tag color={statusColors["NO CONTRACT"]}>{"NO CONTRACT"}</Tag>
+							<Tag color={statusColors["NO CONTRACT"]}>
+								{"NO CONTRACT"}
+							</Tag>
 							<Button
 								onClick={() => {
 									setOpenContract(true);
@@ -158,12 +207,8 @@ const SystemTable = () => {
 					</Button>
 					<Button
 						onClick={() => {
-							setSelectedSystem(row.id);
-							setDrawerFields(row.fields);
-							setDrawerInfo(info);
-							setTimeout(() => {
-								openDrawer();
-							}, 200);
+							// setProceduresVisible(true);
+							openProcedures(row.id);
 						}}
 						type="link"
 					>
@@ -171,12 +216,8 @@ const SystemTable = () => {
 					</Button>
 					<Button
 						onClick={() => {
-							setSelectedSystem(row.id);
-							setDrawerFields(row.fields);
-							setDrawerInfo(info);
-							setTimeout(() => {
-								openDrawer();
-							}, 200);
+							openDefects(row.id);
+							// setDefectsVisible(true);
 						}}
 						type="link"
 					>
@@ -206,6 +247,66 @@ const SystemTable = () => {
 		},
 	];
 
+	const procedureColumns = [
+		{
+			title: "Code",
+			dataIndex: "code",
+		},
+		{
+			title: "Activity",
+			dataIndex: "activity",
+		},
+		{
+			title: "Procedure",
+			dataIndex: "procedure",
+		},
+		{
+			title: "AHJ",
+			dataIndex: "name",
+		},
+		{
+			title: "Next Service Date",
+			dataIndex: "next_service",
+			render: (data: any) => <>{format_time(data)}</>,
+			width: "15%",
+		},
+		{
+			title: "Frequency",
+			dataIndex: "frequency_name",
+		},
+	];
+
+	const defectsColumns = [
+		{
+			title: "Asset Tag",
+			dataIndex: "tag",
+		},
+		{
+			title: "Asset",
+			dataIndex: "name",
+		},
+		{
+			title: "Description",
+			dataIndex: "description",
+		},
+		{
+			title: "Status",
+			dataIndex: "status",
+		},
+		{
+			title: "Action Taken",
+			dataIndex: "action_taken",
+		},
+		{
+			title: "Created by",
+			dataIndex: "created_by",
+		},
+		{
+			title: "Created at",
+			dataIndex: "created_at",
+		},
+	];
+
 	const deleteRow = (id: number) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
@@ -224,7 +325,10 @@ const SystemTable = () => {
 		});
 	};
 
-	const fetchData = (curr_pagination: any = pagination, search: string = searchText) => {
+	const fetchData = (
+		curr_pagination: any = pagination,
+		search: string = searchText
+	) => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
@@ -302,6 +406,15 @@ const SystemTable = () => {
 		fetchData(newPagination);
 	};
 
+	function format_time(s: any) {
+		const options: any = {
+			year: "numeric",
+			month: "short",
+			day: "numeric",
+		};
+		return new Date(s).toLocaleDateString(undefined, options);
+	}
+
 	const GeneralInfoContent = () => (
 		<Form
 			form={GI_form}
@@ -333,9 +446,15 @@ const SystemTable = () => {
 							]}
 						>
 							{field.type === "number" ? (
-								<Input className="selected-building" disabled={!editMode} />
+								<Input
+									className="selected-building"
+									disabled={!editMode}
+								/>
 							) : (
-								<Input className="selected-building" disabled={!editMode} />
+								<Input
+									className="selected-building"
+									disabled={!editMode}
+								/>
 							)}
 						</Form.Item>
 				  ))
@@ -354,7 +473,12 @@ const SystemTable = () => {
 						onSearch={() => search()}
 						value={searchText}
 					/>
-					{showClose && <Button onClick={() => search(true)} icon={<CloseOutlined />} />}
+					{showClose && (
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
+					)}
 				</Col>
 				<Col span={6} className="table-button">
 					<Button
@@ -380,13 +504,15 @@ const SystemTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+						1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							: (pagination.current - 1) *
+									(pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -418,7 +544,12 @@ const SystemTable = () => {
 					<Form.Item
 						name="contract_id"
 						label="Select Contract"
-						rules={[{ required: true, message: "Please select a Contract" }]}
+						rules={[
+							{
+								required: true,
+								message: "Please select a Contract",
+							},
+						]}
 					>
 						<Select
 							showSearch
@@ -433,12 +564,18 @@ const SystemTable = () => {
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(optionB!.children as unknown as string).toLowerCase()
+										(
+											optionB!
+												.children as unknown as string
+										).toLowerCase()
 									)
 							}
 						>
 							{contextVariables.contracts?.map(
-								(item: { id: object; title: string }, index: number) => (
+								(
+									item: { id: object; title: string },
+									index: number
+								) => (
 									<Select.Option
 										value={item.id}
 									>{`${item.id} - ${item.title}`}</Select.Option>
@@ -483,15 +620,39 @@ const SystemTable = () => {
 				<GeneralInfoContent />
 			</Drawer>
 			<Drawer
+				onClose={() => setProceduresVisible(false)}
 				open={proceduresVisible}
+				width={1000}
 				destroyOnClose={true}
 				title="Procedures"
 				placement="right"
 			>
-				<h1>hello</h1>
+				{loadingProcedures ? (
+					<div>
+						<LoadingOutlined /> Loading
+					</div>
+				) : (
+					<Table
+						columns={procedureColumns}
+						dataSource={proceduresData}
+					/>
+				)}
 			</Drawer>
-			<Drawer open={defectsVisible} destroyOnClose={true} title="Defects" placement="right">
-				<h1>hello</h1>
+			<Drawer
+				onClose={() => setDefectsVisible(false)}
+				width={1000}
+				open={defectsVisible}
+				destroyOnClose={true}
+				title="Defects"
+				placement="right"
+			>
+				{loadingDefects ? (
+					<div>
+						<LoadingOutlined /> Loading
+					</div>
+				) : (
+					<Table columns={defectsColumns} dataSource={defectsData} />
+				)}
 			</Drawer>
 		</>
 	);
