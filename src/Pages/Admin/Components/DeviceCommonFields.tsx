@@ -2,6 +2,7 @@ import {
 	CheckOutlined,
 	CloseOutlined,
 	DeleteOutlined,
+	EditFilled,
 	PlusOutlined,
 	SaveOutlined,
 } from "@ant-design/icons";
@@ -15,22 +16,12 @@ import {
 	Space,
 	Spin,
 	Table,
+	Tooltip,
 	message,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { apiCall } from "../../../axiosConfig";
 import { AxiosError, AxiosResponse } from "axios";
-
-const mock_data = [
-	{
-		name: "Msnyfacturee Name",
-		type: "text",
-	},
-	{
-		name: "Model No.",
-		type: "number",
-	},
-];
 
 const intializer = {
 	newRow: {
@@ -48,6 +39,7 @@ const DeviceCommonFields = ({ type }: any) => {
 	const [saving, setSaving] = useState(false);
 	const [newRow, setNewRow] = useState(intializer.newRow);
 	const [orgData, setOrgData] = useState<any>([]);
+	const [editingRow, setEditingRow] = useState(-1);
 
 	useEffect(() => {
 		fetchData();
@@ -57,6 +49,7 @@ const DeviceCommonFields = ({ type }: any) => {
 		{
 			title: "Field",
 			dataIndex: "name",
+			width: "50%",
 			render: (name: any, row: any) =>
 				row.type === "NEW_ROW" ? (
 					<Input
@@ -64,6 +57,7 @@ const DeviceCommonFields = ({ type }: any) => {
 						size="small"
 						placeholder="Enter Field name"
 						onChange={changeNewRowName}
+						value={newRow.name}
 					/>
 				) : (
 					name
@@ -72,6 +66,7 @@ const DeviceCommonFields = ({ type }: any) => {
 		{
 			title: "Type",
 			dataIndex: "type",
+			width: "30%",
 			render: (type: any) =>
 				type === "NEW_ROW" ? (
 					<Select
@@ -79,6 +74,7 @@ const DeviceCommonFields = ({ type }: any) => {
 						onSelect={changeNewRowType}
 						size="small"
 						placeholder="Select type"
+						value={newRow.type || null}
 					>
 						<Select.Option value="text">text</Select.Option>
 						<Select.Option value="number">number</Select.Option>
@@ -92,7 +88,10 @@ const DeviceCommonFields = ({ type }: any) => {
 			dataIndex: "mandatory",
 			render: (mandatory: any, row: any) =>
 				row.type === "NEW_ROW" ? (
-					<Checkbox checked={newRow.mandatory} onChange={changeNewRowReq} />
+					<Checkbox
+						checked={newRow.mandatory}
+						onChange={changeNewRowReq}
+					/>
 				) : (
 					<Checkbox checked={mandatory} />
 				),
@@ -105,7 +104,9 @@ const DeviceCommonFields = ({ type }: any) => {
 					<Space>
 						<Button
 							loading={saving}
-							onClick={saveNewRow}
+							onClick={
+								editingRow === -1 ? saveNewRow : saveEditedRow
+							}
 							size="small"
 							icon={<SaveOutlined />}
 						>
@@ -120,51 +121,111 @@ const DeviceCommonFields = ({ type }: any) => {
 						</Button>
 					</Space>
 				) : (
-					<Popconfirm
-						title="Are you sure to delete?"
-						onConfirm={() => deleteField(id)}
-						// onCancel={cancel}
-						okText="Delete"
-						cancelText="Cancel"
-						placement="left"
-					>
-						<div className="delete-table-action">
-							<DeleteOutlined />
-						</div>
-					</Popconfirm>
+					<Space>
+						<Tooltip title="Edit">
+							<Button
+								style={{ padding: 0, margin: 0, height: 0 }}
+								type="link"
+								onClick={() => {
+									editRow(id);
+								}}
+							>
+								<EditFilled />
+							</Button>
+						</Tooltip>
+						<Popconfirm
+							title="Are you sure to delete?"
+							onConfirm={() => deleteField(id)}
+							// onCancel={cancel}
+							okText="Delete"
+							cancelText="Cancel"
+							placement="left"
+						>
+							<div className="delete-table-action">
+								<DeleteOutlined />
+							</div>
+						</Popconfirm>
+					</Space>
 				),
 		},
 	];
 
-	const cancelNewRow = () => {
-		setData(orgData);
-		setNewRow(intializer.newRow);
+	const editRow = (id: any) => {
+		if (!newRow.status) {
+			let ndata = [...data];
+			let idx = ndata.findIndex((x: any) => x.name === id);
+			setEditingRow(idx);
+			setNewRow({ ...ndata[idx], status: true });
+			ndata[idx].type = "NEW_ROW";
+			setData([...ndata]);
+			console.log(orgData);
+		} else message.error("Unsaved Changes");
 	};
 
-	const saveNewRow = () => {
-		setSaving(true);
-		let newData = [
-			...(orgData || []),
-			{
+	const cancelNewRow = () => {
+		console.log(orgData);
+		setData(getOrgDataCopy());
+		setNewRow(intializer.newRow);
+		setEditingRow(-1);
+	};
+
+	const saveEditedRow = () => {
+		if (!newRow.name || !newRow.type) {
+			message.error("Missing details!");
+		} else {
+			setSaving(true);
+			let newData = getOrgDataCopy();
+			newData[editingRow] = {
 				name: newRow.name,
 				type: newRow.type,
 				mandatory: newRow.mandatory,
-			},
-		];
-		apiCall({
-			method: "PUT",
-			url: "/commonfields",
-			data: { fields: newData },
-			handleResponse: (res) => {
-				setSaving(false);
-				console.log(res);
-				fetchData();
-				setNewRow(intializer.newRow);
-			},
-			handleError: (err) => {
-				setSaving(false);
-			},
-		});
+			};
+			apiCall({
+				method: "PUT",
+				url: "/commonfields",
+				data: { fields: newData },
+				handleResponse: (res) => {
+					setSaving(false);
+					console.log(res);
+					fetchData();
+					setEditingRow(-1);
+					setNewRow(intializer.newRow);
+				},
+				handleError: (err) => {
+					setSaving(false);
+				},
+			});
+		}
+	};
+
+	const saveNewRow = () => {
+		if (!newRow.name || !newRow.type) {
+			message.error("Missing details!");
+		} else {
+			setSaving(true);
+			let newData = [
+				...(getOrgDataCopy() || []),
+				{
+					name: newRow.name,
+					type: newRow.type,
+					mandatory: newRow.mandatory,
+				},
+			];
+			apiCall({
+				method: "PUT",
+				url: "/commonfields",
+				data: { fields: newData },
+				handleResponse: (res) => {
+					setSaving(false);
+					console.log(res);
+					fetchData();
+					setNewRow(intializer.newRow);
+				},
+				handleError: (err) => {
+					setSaving(false);
+				},
+			});
+		}
 	};
 
 	const changeNewRowName = (e: any) => {
@@ -191,9 +252,10 @@ const DeviceCommonFields = ({ type }: any) => {
 			method: "GET",
 			url: "/commonfields",
 			handleResponse: (res) => {
-				console.log(res);
-				setData(res.data.message?.value || []);
-				setOrgData(res.data.message?.value || []);
+				let response = [...res.data.message?.value] || [];
+				let cloned_respponse = JSON.parse(JSON.stringify(response));
+				setData(cloned_respponse);
+				setOrgData(response);
 				setLoading(false);
 			},
 			handleError: (err) => {
@@ -202,8 +264,10 @@ const DeviceCommonFields = ({ type }: any) => {
 		});
 	};
 
+	const getOrgDataCopy = () => JSON.parse(JSON.stringify(orgData));
+
 	const deleteField = (id: any) => {
-		let newData = orgData.filter((x: any) => x.name !== id);
+		let newData = getOrgDataCopy().filter((x: any) => x.name !== id);
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "PUT",
@@ -223,7 +287,8 @@ const DeviceCommonFields = ({ type }: any) => {
 
 	const closeModal = () => {
 		setOpen(false);
-		setData(orgData);
+		setData(getOrgDataCopy());
+		setEditingRow(-1);
 		setNewRow(intializer.newRow);
 	};
 
@@ -248,6 +313,8 @@ const DeviceCommonFields = ({ type }: any) => {
 				open={open}
 				title="Common Fields for Devices"
 				onCancel={closeModal}
+				width={999}
+				style={{ top: "20px" }}
 				okText="Add New"
 				okButtonProps={{ icon: <PlusOutlined /> }}
 				onOk={addNewRow}

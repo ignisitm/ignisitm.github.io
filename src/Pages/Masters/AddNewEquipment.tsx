@@ -9,6 +9,7 @@ import {
 	Input,
 	message,
 	Rate,
+	InputNumber,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { apiCall } from "../../axiosConfig";
@@ -56,8 +57,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 				onCancel();
 			}}
 			onOk={() => {
-				form
-					.validateFields()
+				form.validateFields()
 					.then((values) => {
 						onCreate(values).then(() => {
 							form.resetFields();
@@ -95,16 +95,29 @@ const NewUserForm: FC<NewUserFormProps> = ({
 							rules={[{ required: true }]}
 						>
 							<Select>
-								<Select.Option value="Spare Parts">Spare Parts</Select.Option>
-								<Select.Option value="Tools">Tools</Select.Option>
+								<Select.Option value="Spare Parts">
+									Spare Parts
+								</Select.Option>
+								<Select.Option value="Tools">
+									Tools
+								</Select.Option>
 							</Select>
+						</Form.Item>
+					</Col>
+					<Col span={24}>
+						<Form.Item
+							name="qty"
+							label="Quantity"
+							rules={[{ required: true }]}
+						>
+							<InputNumber style={{ width: "100%" }} />
 						</Form.Item>
 					</Col>
 					<Col span={24}>
 						<Form.Item
 							name="description"
 							label="Description"
-							rules={[{ required: false }]}
+							rules={[{ required: true }]}
 						>
 							<Input.TextArea rows={4} />
 						</Form.Item>

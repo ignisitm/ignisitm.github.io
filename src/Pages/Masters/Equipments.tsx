@@ -1,8 +1,27 @@
-import { Table, Row, Col, Input, Button, Popconfirm, message } from "antd";
-import React, { useEffect, useState } from "react";
+import {
+	Table,
+	Row,
+	Col,
+	Input,
+	Button,
+	Popconfirm,
+	message,
+	Space,
+	Tooltip,
+	Modal,
+	Form,
+	InputNumber,
+	Select,
+} from "antd";
+import React, { FC, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 // import AddNewClient from "./AddNewClient";
-import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+	SyncOutlined,
+	CloseOutlined,
+	DeleteOutlined,
+	EditFilled,
+} from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewUser from "./AddNewUser";
 import AddNewEquipment from "./AddNewEquipment";
@@ -13,6 +32,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
+	const [showEditModal, setShowEdit] = useState(false);
+	const [editingData, setEditingData] = useState<any>({});
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -29,6 +50,12 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		{
 			title: "Type",
 			dataIndex: "type",
+			width: "20%",
+		},
+		{
+			title: "Quantity",
+			dataIndex: "qty",
+			width: "10%",
 		},
 		{
 			title: "Description",
@@ -38,19 +65,35 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		{
 			title: "Action",
 			dataIndex: "id",
-			render: (id: number) => (
-				<Popconfirm
-					title="Are you sure to delete?"
-					onConfirm={() => deleteRow(id)}
-					// onCancel={cancel}
-					okText="Delete"
-					cancelText="Cancel"
-					placement="left"
-				>
-					<div className="delete-table-action">
-						<DeleteOutlined />
-					</div>
-				</Popconfirm>
+			render: (id: number, row: any) => (
+				<Space>
+					<Tooltip title="Edit">
+						<Button
+							style={{ padding: 0, margin: 0, height: 0 }}
+							type="link"
+							onClick={() => {
+								setEditingData({
+									...row,
+								});
+								setShowEdit(true);
+							}}
+						>
+							<EditFilled />
+						</Button>
+					</Tooltip>
+					<Popconfirm
+						title="Are you sure to delete?"
+						onConfirm={() => deleteRow(id)}
+						// onCancel={cancel}
+						okText="Delete"
+						cancelText="Cancel"
+						placement="left"
+					>
+						<div className="delete-table-action">
+							<DeleteOutlined />
+						</div>
+					</Popconfirm>
+				</Space>
 			),
 			width: "5%",
 		},
@@ -119,6 +162,117 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		fetchData(newPagination);
 	};
 
+	const EditEquipment: FC<{ data: any; open: boolean }> = ({
+		data,
+		open,
+	}) => {
+		const [form] = Form.useForm();
+		const [confirmLoading, setConfirmLoading] = useState(false);
+
+		const onEdit = (values: any) => {
+			return new Promise<any>((resolve, reject) => {
+				apiCall({
+					method: "PUT",
+					url: `/clientresources`,
+					data: { ...values, id: data.id },
+					handleResponse: (res) => {
+						resolve(res);
+					},
+					handleError: (err) => reject(err),
+				});
+			});
+		};
+		return (
+			<>
+				<Modal
+					open={open}
+					title="Edit Equipment Details"
+					okText="Save Changes"
+					maskClosable={false}
+					cancelText="Cancel"
+					destroyOnClose={true}
+					onCancel={() => {
+						form.resetFields();
+						setShowEdit(false);
+						setEditingData({});
+					}}
+					onOk={() => {
+						form.validateFields()
+							.then((values) => {
+								setConfirmLoading(true);
+								onEdit(values).then(() => {
+									form.resetFields();
+									setShowEdit(false);
+									setEditingData({});
+									setConfirmLoading(false);
+									fetchData();
+								});
+							})
+							.catch((info) => {
+								console.log("Validate Failed:", info);
+							});
+					}}
+					confirmLoading={confirmLoading}
+				>
+					<Form
+						form={form}
+						preserve={false}
+						name="editEqiupment"
+						autoComplete="off"
+						labelCol={{ span: 24, style: { paddingTop: 3 } }}
+						wrapperCol={{ span: 24 }}
+						size="small"
+						initialValues={{ ...data }}
+					>
+						<Col span={24}>
+							<Form.Item
+								name="name"
+								label="Equipment Name"
+								rules={[{ required: true }]}
+							>
+								<Input />
+							</Form.Item>
+						</Col>
+						<Col span={24}>
+							<Form.Item
+								name="type"
+								label="Equipment Type"
+								rules={[{ required: true }]}
+							>
+								<Select>
+									<Select.Option value="Spare Parts">
+										Spare Parts
+									</Select.Option>
+									<Select.Option value="Tools">
+										Tools
+									</Select.Option>
+								</Select>
+							</Form.Item>
+						</Col>
+						<Col span={24}>
+							<Form.Item
+								name="qty"
+								label="Quantity"
+								rules={[{ required: true }]}
+							>
+								<InputNumber style={{ width: "100%" }} />
+							</Form.Item>
+						</Col>
+						<Col span={24}>
+							<Form.Item
+								name="description"
+								label="Description"
+								rules={[{ required: false }]}
+							>
+								<Input.TextArea rows={4} />
+							</Form.Item>
+						</Col>
+					</Form>
+				</Modal>
+			</>
+		);
+	};
+
 	return (
 		<>
 			<h3>Equipments</h3>
@@ -132,7 +286,10 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -163,13 +320,15 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize +
+							pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
+			<EditEquipment data={editingData} open={showEditModal} />
 		</>
 	);
 };
