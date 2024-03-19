@@ -58,7 +58,7 @@ const ClientTable = () => {
 														changeClientName(
 															row.id,
 															val,
-															row.notifiation_frequency
+															row.notification_frequency
 														)
 															.then((res) => {
 																renameConfirmationModal.destroy();
@@ -97,17 +97,70 @@ const ClientTable = () => {
 					style={{ paddingLeft: 0 }}
 					type="link"
 					onClick={() =>
-						window.open(`https://www.${id}.ignisitm.com`, "_blank")
+						window.open(`https://${id}.staging.ignisitm.com`, "_blank")
 					}
 				>
-					www.{id}.ignisitm.com
+					www.{id}.staging.ignisitm.com
 				</Button>
 			),
 		},
 		{
 			title: "Notification Frequency",
-			dataIndex: "notifiation_frequency",
+			dataIndex: "notification_frequency",
 			width: "20%",
+			render: (name: any, row: any) => {
+				return (
+					<Text
+						editable={{
+							onChange: (val) => {
+								let nf = parseInt(val);
+								if (!nf) {
+									message.error("Invalid Format");
+								} else {
+									let renameConfirmationModal = modal.info({
+										icon: null,
+										footer: null,
+										content: (
+											<>
+												Are you sure you want to change notification frequency
+												to <b>{nf}</b> {" days ?"}
+												<div style={{ height: "24px" }} />
+												<Space align="end" style={{ float: "right" }}>
+													<Button
+														loading={changeNameLoading}
+														type="primary"
+														onClick={() => {
+															setChangeNameLoading(true);
+															changeClientName(row.id, row.name, nf)
+																.then((res) => {
+																	renameConfirmationModal.destroy();
+																	fetchData();
+																})
+																.finally(() => {
+																	setChangeNameLoading(false);
+																});
+														}}
+													>
+														Yes
+													</Button>
+													<Button
+														type="default"
+														onClick={() => renameConfirmationModal.destroy()}
+													>
+														No
+													</Button>
+												</Space>
+											</>
+										),
+									});
+								}
+							},
+						}}
+					>
+						{name}
+					</Text>
+				);
+			},
 		},
 		{
 			title: "Country",
@@ -140,7 +193,7 @@ const ClientTable = () => {
 			apiCall({
 				method: "PUT",
 				url: "/clients",
-				data: { id: id, name: val, notifiation_frequency: nf },
+				data: { id: id, name: val, notification_frequency: nf },
 				handleResponse: (res) => {
 					resolve(res);
 				},

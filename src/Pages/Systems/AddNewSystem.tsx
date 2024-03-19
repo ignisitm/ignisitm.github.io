@@ -516,6 +516,7 @@ const AddNewSystem: FC<props> = ({ fetchData }: props) => {
 			delete values["tag"];
 			procedureDetails = procedureDetails.map((prd: any) => {
 				let proc = { ...prd };
+				proc["last_service"] = proc.last_service_date;
 				proc["next_service"] = proc.last_service_date
 					.add(proc.frequency, "days")
 					.toISOString();

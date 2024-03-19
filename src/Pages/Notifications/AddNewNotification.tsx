@@ -1,5 +1,21 @@
-import { Button, Form, Input, message, Modal, Select } from "antd";
-import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+	Button,
+	Col,
+	Form,
+	Input,
+	message,
+	Modal,
+	Row,
+	Select,
+	Space,
+	Tabs,
+	TabsProps,
+} from "antd";
+import {
+	LoadingOutlined,
+	MinusCircleOutlined,
+	PlusOutlined,
+} from "@ant-design/icons";
 import { FC, useState, useContext, useEffect } from "react";
 import { NotificationContext } from "../../Helpers/Context";
 import { apiCall } from "../../axiosConfig";
@@ -31,6 +47,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [systems, setSystems] = useState<any[]>([]);
 	const [loadingAssets, setLoadingAssets] = useState(false);
 	const [assets, setAssets] = useState<any[]>([]);
+	const [notificationType, setNotificationType] = useState("Corrective");
 
 	useEffect(() => {
 		if (selectedBuilding) getSystems(selectedBuilding);
@@ -40,12 +57,29 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		if (selectedSystem) getAssets(selectedSystem);
 	}, [selectedSystem]);
 
+	const onTabChange = (key: string) => {
+		if (selectedSystem) getAssets(selectedSystem, key);
+		setNotificationType(key);
+	};
+
+	const items: TabsProps["items"] = [
+		{
+			key: "Corrective",
+			label: "Corrective Notification",
+		},
+		{
+			key: "ITM",
+			label: "Preventive Notification",
+		},
+	];
+
 	const resetModal = () => {
 		form.resetFields();
 		setSelectedBuilding(null);
 		setSelectedSystem(null);
 		setSystems([]);
 		setAssets([]);
+		setNotificationType("Corrective");
 	};
 
 	const getSystems = (building_id: any) => {
@@ -62,11 +96,13 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		});
 	};
 
-	const getAssets = (system_id: any) => {
+	const getAssets = (system_id: any, _nt = notificationType) => {
 		setLoadingAssets(true);
 		apiCall({
 			method: "GET",
-			url: `/dropdown/assets?system_id=${system_id}`,
+			url: `/dropdown/${
+				_nt === "Corrective" ? "assets" : "client_system_procedures"
+			}?system_id=${system_id}`,
 			handleResponse: (res) => {
 				console.log(res);
 				setAssets(res.data.message);
@@ -80,6 +116,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		<Modal
 			open={visible}
 			style={{ top: "20px" }}
+			width={900}
 			title="Add a new Notification"
 			okText="Add Notification"
 			maskClosable={false}
@@ -93,6 +130,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				form
 					.validateFields()
 					.then((values) => {
+						if (notificationType === "Corrective") {
+							values["type"] = "Corrective";
+						} else if (notificationType === "ITM") {
+							values["type"] = "ITM";
+						}
 						onCreate(values).then(() => {
 							resetModal();
 						});
@@ -103,6 +145,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
+			<Tabs
+				defaultActiveKey="Corrective"
+				items={items}
+				onChange={onTabChange}
+			/>
 			<Form
 				form={form}
 				layout="vertical"
@@ -180,45 +227,150 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				) : null}
 				{loadingAssets && (
 					<h4>
-						<LoadingOutlined /> Loading Assets...
+						<LoadingOutlined /> Loading{" "}
+						{notificationType === "Corrective" ? "Assets" : "Procedures"}...
 					</h4>
 				)}
 				{assets.length > 0 ? (
-					<Form.Item
-						name="procedure_ids"
-						label="Select Assets"
-						rules={[{ required: true, message: "Please select assets" }]}
-					>
-						<Select
-							showSearch
-							mode="multiple"
-							placeholder="Search to Select"
-							optionFilterProp="children"
-							filterOption={(input, option) =>
-								(option!.children as unknown as string)
-									.toLowerCase()
-									.includes(input)
-							}
-							filterSort={(optionA, optionB) =>
-								(optionA!.children as unknown as string)
-									.toLowerCase()
-									.localeCompare(
-										(optionB!.children as unknown as string).toLowerCase()
-									)
-							}
-						>
-							{assets?.map(
-								(
-									item: { id: number; name: string; tag: string },
-									index: number
-								) => (
-									<Select.Option
-										value={item.id}
-									>{`${item.tag} : ${item.name}`}</Select.Option>
-								)
+					notificationType === "Corrective" ? (
+						// assets?.map(
+						// 	(
+						// 		item: { id: number; name: string; tag: string },
+						// 		index: number
+						// 	) => (
+						// 		<Select.Option
+						// 			value={item.id}
+						// 		>{`${item.tag} : ${item.name}`}</Select.Option>
+						// 	)
+						// )
+						<Form.List name="procedure_ids">
+							{(fields, { add, remove }) => (
+								<>
+									<label>Defects:</label>
+									{fields.map(({ key, name, ...restField }) => (
+										<Row
+											key={key}
+											// style={{ display: "flex" }}
+											// align="baseline"
+											gutter={8}
+										>
+											<Col span={7}>
+												<Form.Item
+													{...restField}
+													name={[name, "asset_id"]}
+													rules={[{ required: true, message: "Missing Asset" }]}
+												>
+													<Select
+														showSearch
+														placeholder="Search Asset"
+														optionFilterProp="children"
+														filterOption={(input, option) =>
+															(option!.children as unknown as string)
+																.toLowerCase()
+																.includes(input)
+														}
+														filterSort={(optionA, optionB) =>
+															(optionA!.children as unknown as string)
+																.toLowerCase()
+																.localeCompare(
+																	(
+																		optionB!.children as unknown as string
+																	).toLowerCase()
+																)
+														}
+													>
+														{assets?.map(
+															(
+																item: { id: number; name: string; tag: string },
+																index: number
+															) => (
+																<Select.Option
+																	value={item.id}
+																>{`${item.tag} : ${item.name}`}</Select.Option>
+															)
+														)}
+													</Select>
+												</Form.Item>
+											</Col>
+											<Col span={16}>
+												<Form.Item
+													{...restField}
+													name={[name, "description"]}
+													rules={[
+														{ required: true, message: "Missing Description" },
+													]}
+												>
+													<Input placeholder="Description" />
+												</Form.Item>
+											</Col>
+											<Col span={1}>
+												<MinusCircleOutlined
+													onClick={() => remove(name)}
+													style={{ marginTop: "8px" }}
+												/>
+											</Col>
+											<Form.Item
+												{...restField}
+												name={[name, "status"]}
+												rules={[
+													{ required: true, message: "Missing Description" },
+												]}
+												hidden={true}
+												initialValue={"Open"}
+											/>
+										</Row>
+									))}
+									<Form.Item>
+										<Button
+											type="dashed"
+											onClick={() => add()}
+											block
+											icon={<PlusOutlined />}
+										>
+											Add Defects
+										</Button>
+									</Form.Item>
+								</>
 							)}
-						</Select>
-					</Form.Item>
+						</Form.List>
+					) : notificationType === "ITM" ? (
+						<Form.Item
+							name="procedure_ids"
+							label={`Select Procedures
+						}`}
+							rules={[{ required: true, message: "Please select assets" }]}
+						>
+							<Select
+								showSearch
+								mode="multiple"
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as string)
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as string)
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as string).toLowerCase()
+										)
+								}
+							>
+								{assets?.map(
+									(
+										item: { id: number; code: string; procedure: string },
+										index: number
+									) => (
+										<Select.Option
+											value={item.id}
+										>{`${item.code} : ${item.procedure}`}</Select.Option>
+									)
+								)}
+							</Select>
+						</Form.Item>
+					) : null
 				) : null}
 				{selectedSystem && (
 					<Form.Item name="description" label="Description">
@@ -236,7 +388,11 @@ const AddNewNotification: FC<props> = ({ fetchData }: props) => {
 
 	const onCreate = (values: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-			let responseData = { ...values, type: "CORRECTIVE", status: "OPEN" };
+			if (values?.procedure_ids?.length <= 0 && values?.type === "Corrective") {
+				message.error("Add atleast one asset");
+				reject("Add atleast one asset");
+			}
+			let responseData = { ...values, status: "OPEN" };
 			delete responseData["building_id"];
 			console.log("Received values of form: ", responseData);
 			setConfirmLoading(true);

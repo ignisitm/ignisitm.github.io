@@ -53,9 +53,15 @@ const Equipments: React.FC<any> = ({ systems }) => {
 			width: "20%",
 		},
 		{
-			title: "Quantity",
-			dataIndex: "qty",
+			title: "Available Qty",
+			dataIndex: "available_qty",
 			width: "10%",
+			render: (qty: any, row: any) => (qty ? qty : row.qty),
+		},
+		{
+			title: "Total Qty",
+			dataIndex: "qty",
+			width: "8%",
 		},
 		{
 			title: "Description",
@@ -162,10 +168,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		fetchData(newPagination);
 	};
 
-	const EditEquipment: FC<{ data: any; open: boolean }> = ({
-		data,
-		open,
-	}) => {
+	const EditEquipment: FC<{ data: any; open: boolean }> = ({ data, open }) => {
 		const [form] = Form.useForm();
 		const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -197,7 +200,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						setEditingData({});
 					}}
 					onOk={() => {
-						form.validateFields()
+						form
+							.validateFields()
 							.then((values) => {
 								setConfirmLoading(true);
 								onEdit(values).then(() => {
@@ -240,12 +244,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 								rules={[{ required: true }]}
 							>
 								<Select>
-									<Select.Option value="Spare Parts">
-										Spare Parts
-									</Select.Option>
-									<Select.Option value="Tools">
-										Tools
-									</Select.Option>
+									<Select.Option value="Spare Parts">Spare Parts</Select.Option>
+									<Select.Option value="Tools">Tools</Select.Option>
 								</Select>
 							</Form.Item>
 						</Col>
@@ -286,10 +286,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -320,8 +317,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize +
-							pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize

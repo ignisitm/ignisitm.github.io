@@ -12,6 +12,8 @@ import {
 	Spin,
 	Select,
 	Tooltip,
+	Space,
+	List,
 } from "antd";
 import { FC, Fragment, useContext, useEffect, useState } from "react";
 import { apiCall } from "../../../axiosConfig";
@@ -20,6 +22,7 @@ import {
 	CloseOutlined,
 	DeleteOutlined,
 	LoadingOutlined,
+	EditFilled,
 } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewProcedure from "./AddNewProcedure";
@@ -27,6 +30,7 @@ import DeviceTransferList from "./DeviceTransferList";
 import { sortBy } from "lodash";
 import { isEqual } from "lodash";
 import { AHJFormContext } from "../../../Helpers/Context";
+import EditProcedure from "./EditProcedures";
 const { Search } = Input;
 
 interface props {
@@ -48,81 +52,84 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
 	const [savingChanges, setSavingChanges] = useState(false);
+	const [editModal, setEditModal] = useState(false);
+	const [editingData, setEditingData] = useState<any>(null);
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
 		total: 0,
 	});
-	const [devices, setDevices] = useState([]);
+	const [devices, setDevices] = useState<any>([]);
 
-	const DeviceList: FC<DeviceProps> = ({
-		selectedDevices,
-		id,
-		savingChanges,
-	}) => {
-		const [newChangedDevices, setNewChangedDevices] =
-			useState<Array<number>>(selectedDevices);
+	// REMOVED EDIT OPTION FROM DEVICELIST
+	// const DeviceList: FC<DeviceProps> = ({
+	// 	selectedDevices,
+	// 	id,
+	// 	savingChanges,
+	// }) => {
+	// 	const [newChangedDevices, setNewChangedDevices] =
+	// 		useState<Array<number>>(selectedDevices);
 
-		useEffect(() => {
-			console.log("savingChanges");
-			// setNewChangedDevices(selectedDevices);
-		}, []);
+	// 	useEffect(() => {
+	// 		console.log("savingChanges");
+	// 		// setNewChangedDevices(selectedDevices);
+	// 	}, []);
 
-		return false ? (
-			<div style={{ height: "100px", width: "600px", paddingTop: "100px" }}>
-				<Spin tip="Loading">
-					<span />
-				</Spin>
-			</div>
-		) : (
-			<Fragment>
-				<DeviceTransferList
-					setSelectedDevices={setNewChangedDevices}
-					selectedDevices={newChangedDevices}
-					devices={devices}
-				/>
-				<div>
-					<Button
-						style={{ marginTop: 10 }}
-						type="primary"
-						disabled={isEqual(
-							sortBy(selectedDevices),
-							sortBy(newChangedDevices)
-						)}
-						onClick={
-							savingChanges
-								? () => console.log("saving Changes")
-								: () => {
-										setSavingChanges(true);
-										apiCall({
-											method: "PUT",
-											url: "/procedure",
-											data: { id, devices: newChangedDevices },
-											handleResponse: (res) => {
-												message.success(res.data.message);
-												fetchData();
-												setSavingChanges(false);
-											},
-											handleError: (err) => {
-												setSavingChanges(false);
-												console.log(err);
-											},
-										});
-								  }
-						}
-					>
-						{savingChanges ? (
-							<>
-								Saving Changes <LoadingOutlined />
-							</>
-						) : (
-							`Save Changes`
-						)}
-					</Button>
-				</div>
-			</Fragment>
-		);
-	};
+	// 	return false ? (
+	// 		<div style={{ height: "100px", width: "600px", paddingTop: "100px" }}>
+	// 			<Spin tip="Loading">
+	// 				<span />
+	// 			</Spin>
+	// 		</div>
+	// 	) : (
+	// 		<Fragment>
+	// 			<DeviceTransferList
+	// 				setSelectedDevices={setNewChangedDevices}
+	// 				selectedDevices={newChangedDevices}
+	// 				devices={devices}
+	// 			/>
+	// 			<div>
+	// 				<Button
+	// 					style={{ marginTop: 10 }}
+	// 					type="primary"
+	// 					disabled={isEqual(
+	// 						sortBy(selectedDevices),
+	// 						sortBy(newChangedDevices)
+	// 					)}
+	// 					onClick={
+	// 						savingChanges
+	// 							? () => console.log("saving Changes")
+	// 							: () => {
+	// 									setSavingChanges(true);
+	// 									apiCall({
+	// 										method: "PUT",
+	// 										url: "/procedure",
+	// 										data: { id, devices: newChangedDevices },
+	// 										handleResponse: (res) => {
+	// 											message.success(res.data.message);
+	// 											fetchData();
+	// 											setSavingChanges(false);
+	// 										},
+	// 										handleError: (err) => {
+	// 											setSavingChanges(false);
+	// 											console.log(err);
+	// 										},
+	// 									});
+	// 							  }
+	// 					}
+	// 				>
+	// 					{savingChanges ? (
+	// 						<>
+	// 							Saving Changes <LoadingOutlined />
+	// 						</>
+	// 					) : (
+	// 						`Save Changes`
+	// 					)}
+	// 				</Button>
+	// 			</div>
+	// 		</Fragment>
+	// 	);
+	// };
 
 	const columns = [
 		{
@@ -160,38 +167,60 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 			render: (id: number, row: any) => (
 				<Popover
 					content={
-						<DeviceList
-							key={id}
-							selectedDevices={row.devices}
-							id={row.id}
-							savingChanges={savingChanges}
+						// <DeviceList
+						// 	key={id}
+						// 	selectedDevices={row.devices}
+						// 	id={row.id}
+						// 	savingChanges={savingChanges}
+						// />
+						<List
+							size="small"
+							dataSource={row.devices || []}
+							renderItem={(item: any) => (
+								<List.Item>
+									{devices?.find((x: any) => x.id === item)?.name}
+								</List.Item>
+							)}
 						/>
 					}
 					trigger="click"
-					placement="bottomRight"
 					destroyTooltipOnHide={true}
 					autoAdjustOverflow={false}
 				>
-					<Button type="link">View/Edit Devices</Button>
+					<Button type="link">View Devices</Button>
 				</Popover>
 			),
 		},
 		{
 			title: "Action",
 			dataIndex: "id",
-			render: (id: number) => (
-				<Popconfirm
-					title="Are you sure to delete?"
-					onConfirm={() => deleteRow(id)}
-					// onCancel={cancel}
-					okText="Delete"
-					cancelText="Cancel"
-					placement="left"
-				>
-					<div className="delete-table-action">
-						<DeleteOutlined />
-					</div>
-				</Popconfirm>
+			render: (id: number, row: any) => (
+				<Space>
+					<Tooltip title="Edit">
+						<Button
+							style={{ padding: 0, margin: 0, height: 0 }}
+							type="link"
+							onClick={() => {
+								setEditingData(row);
+								setEditModal(true);
+							}}
+						>
+							<EditFilled />
+						</Button>
+					</Tooltip>
+					<Popconfirm
+						title="Are you sure to delete?"
+						onConfirm={() => deleteRow(id)}
+						// onCancel={cancel}
+						okText="Delete"
+						cancelText="Cancel"
+						placement="left"
+					>
+						<div className="delete-table-action">
+							<DeleteOutlined />
+						</div>
+					</Popconfirm>
+				</Space>
 			),
 			width: "5%",
 		},
@@ -323,6 +352,16 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
+			<EditProcedure
+				formData={editingData}
+				visible={editModal}
+				setVisible={setEditModal}
+				system={system}
+				activity={activity}
+				fetchData={fetchData}
+				devices={devices}
+				ahj={ahj}
+			/>
 		</>
 	);
 };

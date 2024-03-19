@@ -22,9 +22,11 @@ import {
 	DeleteOutlined,
 	ToolOutlined,
 	LoadingOutlined,
+	PlusOutlined,
 } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import CreateNewWorkOrder from "./CreateNewWorkOrder";
+import AddNotification from "./AddNotification";
 const { Search } = Input;
 const { Text } = Typography;
 
@@ -35,6 +37,7 @@ const statusColors = {
 };
 
 const NotificationTable = () => {
+	const [page, setPage] = useState("Notifications");
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -313,7 +316,12 @@ const NotificationTable = () => {
 		fetchData({ ...pagination, current: 1 }, searchText, key);
 	};
 
-	return (
+	return page === "newNotification" ? (
+		<AddNotification
+			goHome={() => setPage("Notifications")}
+			fetchData={fetchData}
+		/>
+	) : (
 		<>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={15}>
@@ -337,7 +345,7 @@ const NotificationTable = () => {
 						Refresh
 					</Button>
 					<Button
-						type="primary"
+						type="default"
 						icon={<ToolOutlined />}
 						style={{ marginRight: "5px" }}
 						onClick={() => runManualCheck()}
@@ -346,6 +354,14 @@ const NotificationTable = () => {
 						Run Manual Check
 					</Button>
 					{/* <AddNewNotification fetchData={fetchData} /> */}
+					<Button
+						icon={<PlusOutlined />}
+						style={{ marginRight: "5px" }}
+						onClick={() => setPage("newNotification")}
+						type="primary"
+					>
+						Add Notification
+					</Button>
 				</Col>
 			</Row>
 			<Row>
