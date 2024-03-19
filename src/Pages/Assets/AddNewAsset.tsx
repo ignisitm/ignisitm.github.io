@@ -44,7 +44,8 @@ interface CollectionCreateFormProps {
 	confirmLoading: boolean;
 	onCreate: (
 		values: any,
-		multi: boolean
+		multi: boolean,
+		systemTag: string
 	) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
 }
@@ -75,6 +76,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [entryType, setEntryType] = useState<string>("single");
 	const [frequency, setFrequency] = useState<any>(null);
 	const [showNFPAError, setShowNFPAError] = useState(false);
+	const [systemTag, setSystemTag] = useState("/");
 	const [commonFields, setCommonFields] = useState<any>({
 		frequency: false,
 		last_service: false,
@@ -84,6 +86,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		if (selectedBuilding) getSystems(selectedBuilding);
 		else {
 			setSelectedBuilding(null);
+			setSystemTag("/");
 			setSelectedSystem(null);
 			setSelectedAssetType(null);
 			setSystems([]);
@@ -98,6 +101,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		if (selectedSystem) getDeviceTypes(selectedSystem);
 		else {
 			setSelectedSystem(null);
+			setSystemTag("/");
 			setSelectedAssetType(null);
 			setDeviceTypes([]);
 			setGeneralInfo([]);
@@ -111,6 +115,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			if (entryType === "multiple") setShowCommonFieldsModal(true);
 		} else {
 			setSelectedSystem(null);
+			setSystemTag("/");
 			setSelectedAssetType(null);
 			generalInfo.map((info: any) => form.setFieldValue(info.name, null));
 			setGeneralInfo([]);
@@ -141,6 +146,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setSelectedSystem(null);
 		setSelectedAssetType(null);
 		setSystems([]);
+		setSystemTag("/");
 		setDeviceTypes([]);
 		setGeneralInfo([]);
 		setAssetImage(null);
@@ -336,6 +342,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								allowClear={true}
 								onChange={(e) => {
 									setSelectedSystem(e);
+									let tag = systems?.find((x: any) => x.id === e).tag;
+									setSystemTag(`${tag}/`);
 								}}
 								placeholder="Search to Select"
 								optionFilterProp="children"
@@ -417,7 +425,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									},
 								]}
 							>
-								<Input />
+								<Input prefix={systemTag} />
 							</Form.Item>
 						</>
 					)}
@@ -521,7 +529,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							<Select
 								showSearch
 								allowClear={true}
-								onChange={(e) => setSelectedSystem(e)}
+								onChange={(e) => {
+									setSelectedSystem(e);
+									let tag = systems?.find((x: any) => x.id === e).tag;
+									setSystemTag(`${tag}/`);
+								}}
 								placeholder="Search to Select"
 								optionFilterProp="children"
 								filterOption={(input, option) =>
@@ -691,7 +703,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 											},
 										]}
 									>
-										<Input />
+										<Input prefix={systemTag} />
 									</Form.Item>
 								</>
 							)}
@@ -1056,7 +1068,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							.validateFields()
 							.then((values) => {
 								values["image"] = assetImage;
-								onCreate(values, false).then(() => {
+								values["tag"] = systemTag + values["tag"];
+								onCreate(values, false, systemTag).then(() => {
 									resetModal();
 								});
 							})
@@ -1069,7 +1082,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						validateMultipleEntry(curr_assetDetails)
 							.then(() => {
 								setAssetDetails(curr_assetDetails);
-								onCreate(curr_assetDetails, true).then(() => {
+								onCreate(curr_assetDetails, true, systemTag).then(() => {
 									resetModal();
 								});
 							})
@@ -1128,7 +1141,7 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 		});
 	};
 
-	const onCreate = (values: any, multi: boolean = false) => {
+	const onCreate = (values: any, multi: boolean = false, systemTag: string) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			if (!multi) {
 				let GeneralInfoData = { ...values };
@@ -1194,12 +1207,7 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 					let finalAssetList: Array<any> = [];
 					values.forEach((value: any) => {
 						let GeneralInfoData = { ...value };
-						let {
-							system_id,
-							type_id,
-
-							tag,
-						}: any = {
+						let { system_id, type_id, tag }: any = {
 							...GeneralInfoData,
 						};
 						delete GeneralInfoData["building_id"];
@@ -1214,7 +1222,7 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 							system_id,
 							type_id,
 							// frequency,
-							tag,
+							tag: `${systemTag}${tag}`,
 							// next_service: last_service.add(frequency, "days").toISOString(),
 							general_info: GeneralInfoData,
 						};

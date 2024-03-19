@@ -62,6 +62,17 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 	const [removeImageinEdit, setRemoveImageInEdit] = useState(false);
 	const [exitModalOpen, setExitModalOpen] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
+	const [showExistingDefects, setShowExistingDefects] = useState(false);
+	const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+	const [addingED, setAddingED] = useState(false); //ED->Existing Defects
+
+	const closeExistingDefectsModal = () => {
+		setShowExistingDefects(false);
+	};
+
+	const openExistingDefectsModal = () => {
+		setShowExistingDefects(true);
+	};
 
 	const showExitModal = () => {
 		setExitModalOpen(true);
@@ -88,15 +99,12 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 	];
 
 	useEffect(() => {
-		// getExistingDefects();
-	}, []);
-
-	useEffect(() => {
 		if (selectedBuilding) getSystems(selectedBuilding);
 	}, [selectedBuilding]);
 
 	useEffect(() => {
 		if (selectedSystem) getAssets(selectedSystem);
+		if (selectedSystem) getExistingDefects(selectedSystem);
 	}, [selectedSystem]);
 
 	const onTabChange = (key: string) => {
@@ -120,10 +128,10 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 		});
 	};
 
-	const getExistingDefects = () => {
+	const getExistingDefects = (system_id: any) => {
 		apiCall({
 			method: "GET",
-			url: "/ClientDefect",
+			url: `/ClientDefect?system_id=${system_id}`,
 			handleResponse: (res) => {
 				setExistingDefects(res.data.message);
 			},
@@ -201,9 +209,21 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 							</Button>
 						</Tooltip>
 						<Popconfirm
-							title="Are you sure to delete?"
+							title={
+								<>
+									<Text>Are you sure you want to delete this defect? </Text>
+									<br />
+									<Text type="secondary">
+										To remove it from this notification, click on Remove {"("}
+										<MinusCircleOutlined />
+										{")"}
+									</Text>
+									<br />
+								</>
+							}
 							onConfirm={() =>
 								deleteDefect(id).then(() => {
+									getExistingDefects(selectedSystem);
 									let _defects = defects.filter((x: any) => x.id !== id);
 									setDefects(_defects);
 								})
@@ -213,9 +233,29 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 							cancelText="Cancel"
 							placement="left"
 						>
-							<div className="delete-table-action">
-								<DeleteOutlined />
-							</div>
+							<Tooltip title="Delete">
+								<div className="delete-table-action">
+									<DeleteOutlined />
+								</div>
+							</Tooltip>
+						</Popconfirm>
+						<Popconfirm
+							title="Are you sure to remove this defect from the notification?"
+							onConfirm={() => {
+								getExistingDefects(selectedSystem);
+								let _defects = defects.filter((x: any) => x.id !== id);
+								setDefects(_defects);
+							}}
+							// onCancel={cancel}
+							okText="Remove"
+							cancelText="Cancel"
+							placement="left"
+						>
+							<Tooltip title="Remove">
+								<div className="delete-table-action" style={{ color: "gray" }}>
+									<MinusCircleOutlined />
+								</div>
+							</Tooltip>
 						</Popconfirm>
 					</Space>
 				),
@@ -446,6 +486,40 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 			.catch((info) => {
 				console.log("Validate Failed:", info);
 			});
+	};
+
+	const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+		console.log("selectedRowKeys changed: ", newSelectedRowKeys);
+		setSelectedRowKeys(newSelectedRowKeys);
+	};
+
+	const rowSelection = {
+		selectedRowKeys,
+		onChange: onSelectChange,
+	};
+
+	const addExistingDefects = () => {
+		setAddingED(true);
+		let allDetails = selectedRowKeys.map(
+			(id: any) =>
+				new Promise<any>((resolve, reject) => {
+					apiCall({
+						method: "GET",
+						url: `/ClientDefect/${id}`,
+						handleResponse: (res) => resolve(res.data.message),
+						handleError: (err) => reject(err),
+					});
+				})
+		);
+
+		Promise.all(allDetails)
+			.then((res: any) => {
+				setDefects((curr: any) => [...curr, ...res]);
+				console.log([...defects, ...res]);
+				closeExistingDefectsModal();
+				setSelectedRowKeys([]);
+			})
+			.finally(() => setAddingED(false));
 	};
 
 	return (
@@ -694,6 +768,7 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 											dataSource={defects}
 											columns={defectCols}
 											size="small"
+											pagination={{ pageSize: 5 }}
 										/>
 									</>
 								) : notificationType === "ITM" ? (
@@ -893,7 +968,8 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 												</Button>
 											</Upload>
 										)}
-										<Divider />
+										<br />
+										<br />
 										<Row gutter={8}>
 											<Col span={12}>
 												<Button
@@ -914,6 +990,24 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 												</Button>
 											</Col>
 										</Row>
+										<Divider />
+
+										<Row gutter={6}>
+											<Col span={24}>
+												<Button
+													type="link"
+													onClick={openExistingDefectsModal}
+													icon={<PlusOutlined />}
+													style={{
+														whiteSpace: "normal",
+														height: "auto",
+														marginBottom: "10px",
+													}}
+												>
+													Or Add Existing Defects to this Notification
+												</Button>
+											</Col>
+										</Row>
 									</>
 								)
 							) : (
@@ -928,6 +1022,36 @@ const AddNotification: FC<props> = ({ goHome, fetchData }) => {
 					</Col>
 				</Row>
 			</Card>
+			<Modal
+				title="Select the Defects you want to add to this notification"
+				open={showExistingDefects}
+				onCancel={closeExistingDefectsModal}
+				onOk={addExistingDefects}
+				okText={"Add"}
+				confirmLoading={addingED}
+			>
+				<Table
+					rowKey="id"
+					size="small"
+					rowSelection={rowSelection}
+					dataSource={existingDefects.filter(
+						(ar: any) => !defects.find((rm: any) => rm.id === ar.id)
+					)}
+					columns={[
+						{
+							title: "Defective Asset",
+							dataIndex: "id",
+							ellipsis: true,
+							render: (id: any, row: any) => `${row.tag} : ${row.name}`,
+						},
+						{
+							title: "Description",
+							dataIndex: "description",
+							ellipsis: true,
+						},
+					]}
+				/>
+			</Modal>
 			<Modal
 				open={exitModalOpen}
 				onOk={handleExitOk}

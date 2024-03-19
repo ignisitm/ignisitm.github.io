@@ -116,7 +116,7 @@ const NotificationTable = () => {
 							/>
 							<Popconfirm
 								title="Are you sure to delete?"
-								onConfirm={() => deleteRow(id)}
+								onConfirm={() => deleteRow(id, row)}
 								// onCancel={cancel}
 								okText="Delete"
 								cancelText="Cancel"
@@ -231,12 +231,14 @@ const NotificationTable = () => {
 		});
 	};
 
-	const deleteRow = (id: number) => {
+	const deleteRow = (id: number, row: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			apiCall({
 				method: "DELETE",
 				url: "/clientnotifications",
-				data: { data: { id } },
+				data: {
+					data: { id, type: row.type, procedure_ids: row.procedure_ids },
+				},
 				handleResponse: (res) => {
 					message.success(res.data.message);
 					fetchData();
