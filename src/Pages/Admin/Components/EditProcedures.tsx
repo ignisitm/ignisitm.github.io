@@ -41,6 +41,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [form] = Form.useForm();
 	const cv = useContext(AHJFormContext);
 
+	useEffect(() => {
+		if (formdata) form.setFieldsValue(formdata);
+	}, [formdata]);
+
 	return (
 		<Modal
 			open={visible}
@@ -73,6 +77,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		>
 			<Form
 				form={form}
+				key={formdata?.id || 0}
 				initialValues={{ ...formdata }}
 				preserve={false}
 				layout="vertical"

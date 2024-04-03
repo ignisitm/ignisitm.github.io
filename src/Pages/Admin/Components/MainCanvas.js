@@ -1,17 +1,25 @@
 import {
+	CloseOutlined,
 	DeleteOutlined,
 	QuestionCircleOutlined,
 	SyncOutlined,
 } from "@ant-design/icons";
-import { Button, Dropdown, Space, FloatButton } from "antd";
+import { Button, Dropdown, Space, FloatButton, Typography } from "antd";
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useRefer } from "../../../Helpers/Refs";
 
-const MainCanvas = ({ pdfRef, style, width }) => {
+const MainCanvas = ({
+	pdfRef,
+	style,
+	pageNo,
+	width,
+	setAssignedFields,
+	assignedFields,
+	assigner,
+}) => {
 	const canvasRef = useRef();
 	const [divW, setDivW] = useState(width);
 	const [divH, setDivH] = useState(0);
-	const [assigned, setAssigned] = useState([]);
 
 	var cursorInCanvas = false;
 	var canvasOfDoc = canvasRef?.current;
@@ -90,6 +98,10 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 		console.log(width);
 	}, [width]);
 
+	useEffect(() => {
+		// console.log(assignedFields);
+	}, [assignedFields]);
+
 	const saveInitialCanvas = () => {
 		if (canvasOfDoc?.getContext) {
 			var canvasPic = new Image();
@@ -109,8 +121,8 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 		startY.current =
 			((e.offsetY * canvasOfDoc.width) / canvasOfDoc.clientWidth) | 0;
 
-		rectH.current = 25;
-		rectW.current = 130;
+		rectH.current = 0;
+		rectW.current = 0;
 		cursorInCanvas = true;
 	};
 
@@ -122,15 +134,22 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 				ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
 				ctx.current?.drawImage(pdf_image.current, 0, 0);
 			}
-			setAssigned((prev) => [
-				...prev,
-				{
+			if (rectH.current > 10 && rectW.current > 10) {
+				let newPointts = {
 					startX: startX.current,
 					startY: startY.current,
 					rectW: rectW.current,
 					rectH: rectH.current,
-				},
-			]);
+				};
+				setAssignedFields((prev) => ({
+					...prev,
+					...(pointExists(prev[pageNo], newPointts)
+						? {}
+						: {
+								[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
+						  }),
+				}));
+			}
 		}
 		cursorInCanvas = false;
 	};
@@ -161,6 +180,19 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 		}
 	};
 
+	const pointExists = (arr, newPoints) => {
+		if (!arr) return false;
+		let idx = arr.findIndex(
+			(x) =>
+				x.startX === newPoints.startX &&
+				x.startY === newPoints.startY &&
+				x.rectW === newPoints.rectW &&
+				x.rectH === newPoints.rectH
+		);
+		if (idx < 0) return false;
+		else return true;
+	};
+
 	const clearcanvas = () => {
 		if (ctx.current) {
 			let current_transform = ctx.current.getTransform();
@@ -189,9 +221,10 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 	};
 
 	const deleteList = (index) => {
-		setAssigned((arr) => {
-			arr.splice(index, 1);
-			return [...arr];
+		setAssignedFields((prev) => {
+			let curr_page = prev[pageNo];
+			curr_page.splice(index, 1);
+			return { ...prev, [pageNo]: [...curr_page] };
 		});
 	};
 
@@ -228,18 +261,47 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 					ref={canvasRef}
 					width={"100%"}
 				></canvas>
-				<FloatButton.Group shape="square" style={{ right: 94 }}>
+				{/* <FloatButton.Group shape="square" style={{ right: 94 }}>
 					<FloatButton onClick={zoomIn} icon={<QuestionCircleOutlined />} />
 					<FloatButton />
 					<FloatButton icon={<SyncOutlined />} />
 					<FloatButton.BackTop visibilityHeight={0} />
-				</FloatButton.Group>
-				{assigned.map((x, index) => (
+				</FloatButton.Group> */}
+				{assignedFields.map((x, index) => (
 					<Dropdown
 						trigger={["click"]}
 						key={index}
 						menu={{
 							items: [
+								{
+									key: "Field",
+									label: (
+										<>
+											<Typography.Text strong>
+												{`Field #${index + 1} - `}
+											</Typography.Text>
+											{x?.assigned ? (
+												<Typography.Text style={{ color: "green" }}>
+													Assigned
+												</Typography.Text>
+											) : (
+												<Typography.Text style={{ color: "orange" }}>
+													Unassigned
+												</Typography.Text>
+											)}
+
+											<br />
+											<Typography.Text type="secondary" italic>
+												Click to Edit
+											</Typography.Text>
+										</>
+									),
+									onClick: () => assigner(index),
+								},
+
+								{
+									type: "divider",
+								},
 								{
 									key: "delete",
 									danger: true,
@@ -249,11 +311,16 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 										deleteList(index);
 									},
 								},
+								{
+									key: "close",
+									label: "Close",
+									icon: <CloseOutlined />,
+								},
 							],
 						}}
 					>
 						<div
-							className="div-blocks"
+							className={`div-blocks${x?.assigned ? "-assigned" : ""}`}
 							style={{
 								position: "absolute",
 								left: `${x.startX * zoomScale.current}px`,
@@ -263,13 +330,17 @@ const MainCanvas = ({ pdfRef, style, width }) => {
 								cursor: "pointer",
 							}}
 						>
-							<input
-								onClick={(e) => {
-									e.stopPropagation();
-								}}
-								className="div-block-input"
-								placeholder="Enter code"
-							/>
+							{x.rectW > 25 * zoomScale.current ? (
+								<Typography.Text
+									strong
+									style={{ color: x?.assigned ? "greenyellow" : "orange" }}
+									l
+								>
+									{index + 1}
+								</Typography.Text>
+							) : (
+								"."
+							)}
 						</div>
 					</Dropdown>
 				))}

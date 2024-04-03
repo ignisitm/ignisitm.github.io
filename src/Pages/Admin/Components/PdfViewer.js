@@ -4,8 +4,12 @@ import * as pdfjsLib from "pdfjs-dist/webpack";
 import { useEffect, useRef, useState } from "react";
 import Canvas from "./Canvas";
 import MainCanvas from "./MainCanvas";
-import { Button, Space, Typography, message } from "antd";
-import { CloseOutlined, SaveOutlined } from "@ant-design/icons";
+import { Button, Space, Typography, message, Badge, Select } from "antd";
+import {
+	CloseOutlined,
+	LoadingOutlined,
+	SaveOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import { apiCall } from "../../../axiosConfig";
 
@@ -23,8 +27,10 @@ const PdfViewer = () => {
 	const [pages, setPages] = useState([]);
 	const [pdfRef, setPdfRef] = useState();
 	const [selectedPage, setSelectedPage] = useState(1);
-	const [assigned, setAssigned] = useState({});
+	const [assignedFields, setAssignedFields] = useState({});
 	const [saving, setSaving] = useState(false);
+	const [assignMode, setAssignMode] = useState(null);
+	const [systems, setSystems] = useState(null);
 
 	const makeThumb = (page) => {
 		var vp = page.getViewport({ scale: 1 });
@@ -47,8 +53,22 @@ const PdfViewer = () => {
 		);
 	};
 
+	const getSystems = () => {
+		apiCall({
+			method: "GET",
+			url: "/dropdown/systemtypes",
+			handleResponse: (res) => {
+				setSystems(res.data.message);
+			},
+		});
+	};
+
 	useEffect(() => {
-		console.log(file);
+		console.log(assignedFields);
+	}, [assignedFields]);
+
+	useEffect(() => {
+		getSystems();
 		let url = URL.createObjectURL(file);
 		pdfjsLib
 			.getDocument(url)
@@ -128,18 +148,20 @@ const PdfViewer = () => {
 		});
 	};
 
-	const savePdf = (fields) => {
-		fields = [{ test: "test" }, { test: "test" }];
-		if (ahj && fields) {
+	const saveDummy = () => {
+		console.log(assignedFields);
+	};
+
+	const savePdf = () => {
+		if (ahj && assignedFields) {
 			setSaving(true);
 			uploadfile(file).then((filepath) => {
-				console.log("filepath", fields);
 				apiCall({
 					url: "/AHJpdf",
 					method: "POST",
 					data: {
 						ahj_id: ahj,
-						fields,
+						fields: JSON.stringify(assignedFields),
 						filepath,
 					},
 					handleResponse: (res) => {
@@ -153,6 +175,136 @@ const PdfViewer = () => {
 				});
 			});
 		} else message.error("Missing Fields!");
+	};
+
+	const Assigner = () => {
+		const [system, setSystem] = useState(null);
+		const [type, setType] = useState("procedures");
+		const [procedures, setProcedures] = useState(null);
+		const [procedure, setProcedure] = useState(null);
+		const [loadingProcedures, setLoadingProcedures] = useState(false);
+
+		const getProcedures = () => {
+			setLoadingProcedures(true);
+			apiCall({
+				method: "GET",
+				url: `/dropdown/system_procedures?system_id=${system}`,
+				handleResponse: (res) => {
+					setLoadingProcedures(false);
+					setProcedures(res.data.message);
+				},
+				handleError: (err) => setLoadingProcedures(false),
+			});
+		};
+
+		const assign = () => {
+			setAssignedFields((prev) => {
+				let new_arr = prev[selectedPage];
+				new_arr[assignMode.index] = {
+					...new_arr[assignMode.index],
+					assigned: procedure,
+					type: "procedures",
+				};
+				return { ...prev, [selectedPage]: new_arr };
+			});
+			setAssignMode(null);
+		};
+
+		useEffect(() => {
+			if (type === "procedures" && system) getProcedures();
+		}, [system]);
+
+		return (
+			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
+				<Typography.Title level={5} style={{ color: "white" }}>
+					Assigning Field #{assignMode.index + 1}
+				</Typography.Title>
+				<div>
+					<label style={{ margin: "4px" }}>Select System: </label>
+					<Select
+						showSearch
+						value={system}
+						onChange={(e) => setSystem(e)}
+						placeholder="Select System"
+						style={{ width: "100%" }}
+						filterOption={(input, option) =>
+							option.children.toLowerCase().includes(input)
+						}
+						filterSort={(optionA, optionB) =>
+							optionA.children
+								.toLowerCase()
+								.localeCompare(optionB.children.toLowerCase())
+						}
+					>
+						{systems?.map((sys, index) => (
+							<Select.Option key={index} value={sys.id}>
+								{sys.name}
+							</Select.Option>
+						))}
+					</Select>
+				</div>
+				{system ? (
+					<>
+						<div>
+							<label style={{ margin: "4px" }}>Select Type:</label>
+							<Select
+								value={type}
+								onChange={(e) => setType(e)}
+								placeholder="Select Type"
+								style={{ width: "100%" }}
+							>
+								<Select.Option value="procedures">
+									Procedure Results
+								</Select.Option>
+								<Select.Option value="system_values">
+									System Values
+								</Select.Option>
+							</Select>
+						</div>
+						{type === "procedures" ? (
+							loadingProcedures ? (
+								<span>
+									<LoadingOutlined /> Loading Procedures
+								</span>
+							) : (
+								<div>
+									<label style={{ margin: "4px" }}>Select Procedure</label>
+									<Select
+										showSearch
+										value={procedure}
+										onChange={(e) => setProcedure(e)}
+										placeholder="Select System"
+										style={{ width: "100%" }}
+										filterOption={(input, option) =>
+											option.children.toLowerCase().includes(input)
+										}
+										filterSort={(optionA, optionB) =>
+											optionA.children
+												.toLowerCase()
+												.localeCompare(optionB.children.toLowerCase())
+										}
+									>
+										{procedures?.map((proc, index) => (
+											<Select.Option key={index} value={proc.id}>
+												{`${proc.code} : ${proc.procedure}`}
+											</Select.Option>
+										))}
+									</Select>
+								</div>
+							)
+						) : null}
+					</>
+				) : null}
+				<Space>
+					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
+					{procedure && (
+						<Button type="primary" onClick={assign}>
+							Assign
+						</Button>
+					)}
+				</Space>
+			</Space>
+		);
 	};
 
 	return (
@@ -216,6 +368,9 @@ const PdfViewer = () => {
 						{pages.map((page, index) => (
 							<MainCanvas
 								key={index}
+								pageNo={page.page}
+								assignedFields={assignedFields[page.page] || []}
+								setAssignedFields={setAssignedFields}
 								width={mainContent.current.clientWidth - 100}
 								style={
 									selectedPage === page.page
@@ -223,13 +378,79 @@ const PdfViewer = () => {
 										: { display: "none" }
 								}
 								pdfRef={page.canvas}
+								assigner={(index) => {
+									setAssignMode({ index });
+								}}
 							/>
 						))}
 					</div>
 				</div>
 
 				<div className="side-panel-wrapper">
-					<div className="side-panel-contents"></div>
+					<div className="side-panel-contents">
+						<Space direction="vertical" style={{ width: "100%" }}>
+							{assignMode ? (
+								<Assigner />
+							) : (
+								<>
+									<Typography.Title
+										level={5}
+										style={{ color: "white", marginBottom: 0 }}
+									>
+										Select a System for this Page:
+									</Typography.Title>
+									<Select
+										showSearch
+										value={0}
+										onChange={(e) => console.log(e)}
+										placeholder="Select System"
+										style={{ width: "100%" }}
+										filterOption={(input, option) =>
+											option.children.toLowerCase().includes(input)
+										}
+										filterSort={(optionA, optionB) =>
+											optionA.children
+												.toLowerCase()
+												.localeCompare(optionB.children.toLowerCase())
+										}
+									>
+										<Select.Option value={0}>Multiple Systems</Select.Option>
+										{systems?.map((sys, index) => (
+											<Select.Option key={index} value={sys.id}>
+												{sys.name}
+											</Select.Option>
+										))}
+									</Select>
+									<Typography.Title
+										level={5}
+										style={{ color: "white", marginBottom: 0 }}
+									>
+										Fields in this page:
+									</Typography.Title>
+									<Typography.Text style={{ color: "lightgray" }} italic>
+										{assignedFields?.[selectedPage]?.length > 0
+											? "Click on a field to assign/edit"
+											: "No fields added"}
+									</Typography.Text>
+									{assignedFields?.[selectedPage]?.map((x, index) => (
+										<div
+											onClick={() => {
+												setAssignMode({ index });
+											}}
+											key={index}
+											className="side-field-list-item"
+										>
+											<Badge
+												style={{ color: "inherit" }}
+												color={x.assigned ? "green" : "orange"}
+												text={`Field #${index + 1}`}
+											/>
+										</div>
+									))}
+								</>
+							)}
+						</Space>
+					</div>
 				</div>
 			</div>
 		</>

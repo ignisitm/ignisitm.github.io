@@ -637,8 +637,19 @@ code {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background-color: rgba(255, 99, 71, 0.9);
-	border-radius: 4px;
+	background-color: rgba(100, 100, 100, 0.9);
+	border: orange dotted 3px;
+	color: orange;
+	border-radius: 6px;
+}
+
+.div-blocks-assigned {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(100, 100, 100, 0.9);
+	border: greenyellow dotted 3px;
+	border-radius: 6px;
 }
 
 .div-block-input {
@@ -683,4 +694,14 @@ code {
 	bottom: 0;
 	overflow: scroll;
 	padding: 0px 10px;
+}
+
+.side-field-list-item {
+	padding: 4px;
+	color: white;
+}
+
+.side-field-list-item:hover {
+	cursor: pointer;
+	color: orange;
 }
