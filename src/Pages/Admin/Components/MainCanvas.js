@@ -131,7 +131,12 @@ const MainCanvas = ({
 		e.stopPropagation();
 		if (cursorInCanvas) {
 			if (ctx.current) {
-				ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
+				ctx.current?.clearRect(
+					0,
+					0,
+					canvasOfDoc.width,
+					canvasOfDoc.height
+				);
 				ctx.current?.drawImage(pdf_image.current, 0, 0);
 			}
 			if (rectH.current > 10 && rectW.current > 10) {
@@ -140,13 +145,18 @@ const MainCanvas = ({
 					startY: startY.current,
 					rectW: rectW.current,
 					rectH: rectH.current,
+					divH,
+					divW,
 				};
 				setAssignedFields((prev) => ({
 					...prev,
 					...(pointExists(prev[pageNo], newPointts)
 						? {}
 						: {
-								[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
+								[pageNo]: [
+									...(prev[pageNo] ? prev[pageNo] : []),
+									newPointts,
+								],
 						  }),
 				}));
 			}
@@ -281,17 +291,24 @@ const MainCanvas = ({
 												{`Field #${index + 1} - `}
 											</Typography.Text>
 											{x?.assigned ? (
-												<Typography.Text style={{ color: "green" }}>
+												<Typography.Text
+													style={{ color: "green" }}
+												>
 													Assigned
 												</Typography.Text>
 											) : (
-												<Typography.Text style={{ color: "orange" }}>
+												<Typography.Text
+													style={{ color: "orange" }}
+												>
 													Unassigned
 												</Typography.Text>
 											)}
 
 											<br />
-											<Typography.Text type="secondary" italic>
+											<Typography.Text
+												type="secondary"
+												italic
+											>
 												Click to Edit
 											</Typography.Text>
 										</>
@@ -320,7 +337,9 @@ const MainCanvas = ({
 						}}
 					>
 						<div
-							className={`div-blocks${x?.assigned ? "-assigned" : ""}`}
+							className={`div-blocks${
+								x?.assigned ? "-assigned" : ""
+							}`}
 							style={{
 								position: "absolute",
 								left: `${x.startX * zoomScale.current}px`,
@@ -333,7 +352,11 @@ const MainCanvas = ({
 							{x.rectW > 25 * zoomScale.current ? (
 								<Typography.Text
 									strong
-									style={{ color: x?.assigned ? "greenyellow" : "orange" }}
+									style={{
+										color: x?.assigned
+											? "greenyellow"
+											: "orange",
+									}}
 									l
 								>
 									{index + 1}

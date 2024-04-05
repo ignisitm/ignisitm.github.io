@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { apiCall } from "../../../axiosConfig";
+import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const PdfViewer = () => {
 	pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsLib.PDFWorker;
@@ -31,6 +32,7 @@ const PdfViewer = () => {
 	const [saving, setSaving] = useState(false);
 	const [assignMode, setAssignMode] = useState(null);
 	const [systems, setSystems] = useState(null);
+	const [pageSystems, setPageSystems] = useState({});
 
 	const makeThumb = (page) => {
 		var vp = page.getViewport({ scale: 1 });
@@ -42,12 +44,10 @@ const PdfViewer = () => {
 				width={width}
 				draw={(context) => {
 					var scale = Math.min(width / vp.width, height / vp.height);
-					page
-						.render({
-							canvasContext: context,
-							viewport: page.getViewport({ scale: scale }),
-						})
-						.promise.catch((err) => console.log(err));
+					page.render({
+						canvasContext: context,
+						viewport: page.getViewport({ scale: scale }),
+					}).promise.catch((err) => console.log(err));
 				}}
 			/>
 		);
@@ -67,6 +67,62 @@ const PdfViewer = () => {
 		console.log(assignedFields);
 	}, [assignedFields]);
 
+	const saveByteArray = (reportName, byte) => {
+		var blob = new Blob([byte], { type: "application/pdf" });
+		var link = document.createElement("a");
+		link.href = window.URL.createObjectURL(blob);
+		var fileName = reportName;
+		link.download = fileName;
+		link.click();
+	};
+
+	async function modifyPdf() {
+		const url = URL.createObjectURL(file);
+		const existingPdfBytes = await fetch(url).then((res) =>
+			res.arrayBuffer()
+		);
+
+		const pdfDoc = await PDFDocument.load(existingPdfBytes, {
+			ignoreEncryption: true,
+		});
+
+		const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+		const pages = pdfDoc.getPages();
+		const firstPage = pages[0];
+
+		Object.keys(assignedFields).map((page) => {
+			console.log(pages, page);
+			let curr = pages[page - 1];
+			const { width, height } = curr.getSize();
+			console.log(width, height);
+			const size = 10;
+
+			assignedFields[page].map((field) => {
+				let text = field.assigned.toString() || "-";
+				let textWidth = font.widthOfTextAtSize(text, size);
+
+				curr.drawText(text, {
+					x:
+						(field.startX + field.rectW / 2) *
+							(width / field.divW) -
+						textWidth / 2,
+					y:
+						height -
+						(field.startY + field.rectH / 2) *
+							(height / field.divH) -
+						3.5,
+					size,
+					font,
+					color: rgb(0, 0, 0),
+				});
+			});
+		});
+
+		const pdfBytes = await pdfDoc.save();
+		saveByteArray("Sample Report", pdfBytes);
+	}
+
 	useEffect(() => {
 		getSystems();
 		let url = URL.createObjectURL(file);
@@ -75,7 +131,8 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
+				while (pages.length < doc.numPages)
+					pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc
@@ -96,7 +153,8 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
+				while (pages.length < doc.numPages)
+					pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc.getPage(num).then((page) => {
@@ -150,6 +208,7 @@ const PdfViewer = () => {
 
 	const saveDummy = () => {
 		console.log(assignedFields);
+		modifyPdf();
 	};
 
 	const savePdf = () => {
@@ -177,11 +236,25 @@ const PdfViewer = () => {
 		} else message.error("Missing Fields!");
 	};
 
-	const Assigner = () => {
-		const [system, setSystem] = useState(null);
-		const [type, setType] = useState("procedures");
+	const Assigner = ({ pageSystem }) => {
+		const [system, setSystem] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.system
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.system
+				: pageSystem > 0
+				? pageSystem
+				: null
+		);
+		const [type, setType] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.type
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.type
+				: "procedures"
+		);
 		const [procedures, setProcedures] = useState(null);
-		const [procedure, setProcedure] = useState(null);
+		const [procedure, setProcedure] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
+		);
 		const [loadingProcedures, setLoadingProcedures] = useState(false);
 
 		const getProcedures = () => {
@@ -202,8 +275,9 @@ const PdfViewer = () => {
 				let new_arr = prev[selectedPage];
 				new_arr[assignMode.index] = {
 					...new_arr[assignMode.index],
+					system,
 					assigned: procedure,
-					type: "procedures",
+					type,
 				};
 				return { ...prev, [selectedPage]: new_arr };
 			});
@@ -215,7 +289,10 @@ const PdfViewer = () => {
 		}, [system]);
 
 		return (
-			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
+			<Space
+				direction="vertical"
+				style={{ width: "100%", color: "white" }}
+			>
 				<Typography.Title level={5} style={{ color: "white" }}>
 					Assigning Field #{assignMode.index + 1}
 				</Typography.Title>
@@ -246,7 +323,9 @@ const PdfViewer = () => {
 				{system ? (
 					<>
 						<div>
-							<label style={{ margin: "4px" }}>Select Type:</label>
+							<label style={{ margin: "4px" }}>
+								Select Type:
+							</label>
 							<Select
 								value={type}
 								onChange={(e) => setType(e)}
@@ -268,7 +347,9 @@ const PdfViewer = () => {
 								</span>
 							) : (
 								<div>
-									<label style={{ margin: "4px" }}>Select Procedure</label>
+									<label style={{ margin: "4px" }}>
+										Select Procedure
+									</label>
 									<Select
 										showSearch
 										value={procedure}
@@ -276,16 +357,23 @@ const PdfViewer = () => {
 										placeholder="Select System"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children.toLowerCase().includes(input)
+											option.children
+												.toLowerCase()
+												.includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(optionB.children.toLowerCase())
+												.localeCompare(
+													optionB.children.toLowerCase()
+												)
 										}
 									>
 										{procedures?.map((proc, index) => (
-											<Select.Option key={index} value={proc.id}>
+											<Select.Option
+												key={index}
+												value={proc.id}
+											>
 												{`${proc.code} : ${proc.procedure}`}
 											</Select.Option>
 										))}
@@ -299,7 +387,10 @@ const PdfViewer = () => {
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
 					{procedure && (
 						<Button type="primary" onClick={assign}>
-							Assign
+							{assignedFields?.[selectedPage]?.[assignMode?.index]
+								?.assigned
+								? "Change"
+								: "Assign"}
 						</Button>
 					)}
 				</Space>
@@ -326,7 +417,7 @@ const PdfViewer = () => {
 							loading={saving}
 							type="primary"
 							style={{ marginRight: "10px" }}
-							onClick={savePdf}
+							onClick={saveDummy}
 							icon={<SaveOutlined />}
 						>
 							Save
@@ -342,7 +433,9 @@ const PdfViewer = () => {
 								<div
 									className={
 										"thumbnail" +
-										(thumbnail.page === selectedPage ? "-selected" : "")
+										(thumbnail.page === selectedPage
+											? "-selected"
+											: "")
 									}
 									key={index}
 									onClick={() => {
@@ -390,63 +483,97 @@ const PdfViewer = () => {
 					<div className="side-panel-contents">
 						<Space direction="vertical" style={{ width: "100%" }}>
 							{assignMode ? (
-								<Assigner />
+								<Assigner
+									pageSystem={
+										pageSystems?.[selectedPage] || 0
+									}
+								/>
 							) : (
 								<>
 									<Typography.Title
 										level={5}
-										style={{ color: "white", marginBottom: 0 }}
+										style={{
+											color: "white",
+											marginBottom: 0,
+										}}
 									>
 										Select a System for this Page:
 									</Typography.Title>
 									<Select
 										showSearch
-										value={0}
-										onChange={(e) => console.log(e)}
+										value={pageSystems?.[selectedPage] || 0}
+										onChange={(e) =>
+											setPageSystems((prev) => ({
+												...prev,
+												[selectedPage]: e,
+											}))
+										}
 										placeholder="Select System"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children.toLowerCase().includes(input)
+											option.children
+												.toLowerCase()
+												.includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(optionB.children.toLowerCase())
+												.localeCompare(
+													optionB.children.toLowerCase()
+												)
 										}
 									>
-										<Select.Option value={0}>Multiple Systems</Select.Option>
+										<Select.Option value={0}>
+											Multiple Systems
+										</Select.Option>
 										{systems?.map((sys, index) => (
-											<Select.Option key={index} value={sys.id}>
+											<Select.Option
+												key={index}
+												value={sys.id}
+											>
 												{sys.name}
 											</Select.Option>
 										))}
 									</Select>
 									<Typography.Title
 										level={5}
-										style={{ color: "white", marginBottom: 0 }}
+										style={{
+											color: "white",
+											marginBottom: 0,
+										}}
 									>
 										Fields in this page:
 									</Typography.Title>
-									<Typography.Text style={{ color: "lightgray" }} italic>
-										{assignedFields?.[selectedPage]?.length > 0
+									<Typography.Text
+										style={{ color: "lightgray" }}
+										italic
+									>
+										{assignedFields?.[selectedPage]
+											?.length > 0
 											? "Click on a field to assign/edit"
 											: "No fields added"}
 									</Typography.Text>
-									{assignedFields?.[selectedPage]?.map((x, index) => (
-										<div
-											onClick={() => {
-												setAssignMode({ index });
-											}}
-											key={index}
-											className="side-field-list-item"
-										>
-											<Badge
-												style={{ color: "inherit" }}
-												color={x.assigned ? "green" : "orange"}
-												text={`Field #${index + 1}`}
-											/>
-										</div>
-									))}
+									{assignedFields?.[selectedPage]?.map(
+										(x, index) => (
+											<div
+												onClick={() => {
+													setAssignMode({ index });
+												}}
+												key={index}
+												className="side-field-list-item"
+											>
+												<Badge
+													style={{ color: "inherit" }}
+													color={
+														x.assigned
+															? "green"
+															: "orange"
+													}
+													text={`Field #${index + 1}`}
+												/>
+											</div>
+										)
+									)}
 								</>
 							)}
 						</Space>
