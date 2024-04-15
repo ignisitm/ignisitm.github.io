@@ -297,7 +297,7 @@ const MainCanvas = ({
 				</FloatButton.Group> */}
 					{assignedFields.map((x, index) => (
 						<Dropdown
-							trigger={["click", "contextMenu"]}
+							trigger={["click"]}
 							key={index}
 							menu={{
 								items: [
