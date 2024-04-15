@@ -1,9 +1,4 @@
-import {
-	CloseOutlined,
-	DeleteOutlined,
-	QuestionCircleOutlined,
-	SyncOutlined,
-} from "@ant-design/icons";
+import { CloseOutlined, DeleteOutlined, CopyOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Space, FloatButton, Typography } from "antd";
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useRefer } from "../../../Helpers/Refs";
@@ -20,6 +15,7 @@ const MainCanvas = ({
 	const canvasRef = useRef();
 	const [divW, setDivW] = useState(width);
 	const [divH, setDivH] = useState(0);
+	const [clipboard, setClipboard] = useState(null);
 
 	var cursorInCanvas = false;
 	var canvasOfDoc = canvasRef?.current;
@@ -31,6 +27,16 @@ const MainCanvas = ({
 	const rectW = useRef();
 	const pdf_image = useRef("");
 	const zoomScale = useRef(1);
+
+	const rightClickField = [
+		{
+			label: "Paste Here",
+			key: "paste",
+			disabled: clipboard === null,
+			icon: <CopyOutlined />,
+			onClick: () => pasteFromCB(),
+		},
+	];
 
 	const renderPage = useCallback(
 		(page) => {
@@ -110,6 +116,25 @@ const MainCanvas = ({
 		}
 	};
 
+	const pasteFromCB = () => {
+		let newPointts = {
+			startX: startX.current - clipboard.w / 2,
+			startY: startY.current - clipboard.h / 2,
+			rectW: clipboard.w,
+			rectH: clipboard.h,
+			divH,
+			divW,
+		};
+		setAssignedFields((prev) => ({
+			...prev,
+			...(pointExists(prev[pageNo], newPointts)
+				? {}
+				: {
+						[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
+				  }),
+		}));
+	};
+
 	const handleMouseIn = (e) => {
 		if (typeof pdf_image.current == "string") {
 			saveInitialCanvas();
@@ -131,12 +156,7 @@ const MainCanvas = ({
 		e.stopPropagation();
 		if (cursorInCanvas) {
 			if (ctx.current) {
-				ctx.current?.clearRect(
-					0,
-					0,
-					canvasOfDoc.width,
-					canvasOfDoc.height
-				);
+				ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
 				ctx.current?.drawImage(pdf_image.current, 0, 0);
 			}
 			if (rectH.current > 10 && rectW.current > 10) {
@@ -153,10 +173,7 @@ const MainCanvas = ({
 					...(pointExists(prev[pageNo], newPointts)
 						? {}
 						: {
-								[pageNo]: [
-									...(prev[pageNo] ? prev[pageNo] : []),
-									newPointts,
-								],
+								[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
 						  }),
 				}));
 			}
@@ -246,128 +263,125 @@ const MainCanvas = ({
 				...{ justifyContent: "center" },
 			}}
 		>
-			<div
-				style={{
-					position: "absolute",
-					zIndex: 3,
-					height: `${divH}px`,
-					width: `${divW}px`,
-					cursor: "crosshair",
-				}}
-			>
-				<canvas
-					onMouseDown={(e) => {
-						handleMouseIn(e);
+			<Dropdown menu={{ items: rightClickField }} trigger={["contextMenu"]}>
+				<div
+					style={{
+						position: "absolute",
+						zIndex: 3,
+						height: `${divH}px`,
+						width: `${divW}px`,
+						cursor: "crosshair",
 					}}
-					onMouseUp={(e) => {
-						handleMouseOut(e);
-					}}
-					onMouseMove={(e) => {
-						handleMouseMove(e);
-					}}
-					onMouseOut={(e) => {
-						handleMouseOut(e);
-					}}
-					ref={canvasRef}
-					width={"100%"}
-				></canvas>
-				{/* <FloatButton.Group shape="square" style={{ right: 94 }}>
+				>
+					<canvas
+						onMouseDown={(e) => {
+							handleMouseIn(e);
+						}}
+						onMouseUp={(e) => {
+							handleMouseOut(e);
+						}}
+						onMouseMove={(e) => {
+							handleMouseMove(e);
+						}}
+						onMouseOut={(e) => {
+							handleMouseOut(e);
+						}}
+						ref={canvasRef}
+						width={"100%"}
+					></canvas>
+					{/* <FloatButton.Group shape="square" style={{ right: 94 }}>
 					<FloatButton onClick={zoomIn} icon={<QuestionCircleOutlined />} />
 					<FloatButton />
 					<FloatButton icon={<SyncOutlined />} />
 					<FloatButton.BackTop visibilityHeight={0} />
 				</FloatButton.Group> */}
-				{assignedFields.map((x, index) => (
-					<Dropdown
-						trigger={["click"]}
-						key={index}
-						menu={{
-							items: [
-								{
-									key: "Field",
-									label: (
-										<>
-											<Typography.Text strong>
-												{`Field #${index + 1} - `}
-											</Typography.Text>
-											{x?.assigned ? (
-												<Typography.Text
-													style={{ color: "green" }}
-												>
-													Assigned
+					{assignedFields.map((x, index) => (
+						<Dropdown
+							trigger={["click", "contextMenu"]}
+							key={index}
+							menu={{
+								items: [
+									{
+										key: "Field",
+										label: (
+											<>
+												<Typography.Text strong>
+													{`Field #${index + 1} - `}
 												</Typography.Text>
-											) : (
-												<Typography.Text
-													style={{ color: "orange" }}
-												>
-													Unassigned
+												{x?.assigned ? (
+													<Typography.Text style={{ color: "green" }}>
+														Assigned
+													</Typography.Text>
+												) : (
+													<Typography.Text style={{ color: "orange" }}>
+														Unassigned
+													</Typography.Text>
+												)}
+
+												<br />
+												<Typography.Text type="secondary" italic>
+													Click to Edit
 												</Typography.Text>
-											)}
-
-											<br />
-											<Typography.Text
-												type="secondary"
-												italic
-											>
-												Click to Edit
-											</Typography.Text>
-										</>
-									),
-									onClick: () => assigner(index),
-								},
-
-								{
-									type: "divider",
-								},
-								{
-									key: "delete",
-									danger: true,
-									label: "Delete Field",
-									icon: <DeleteOutlined />,
-									onClick: () => {
-										deleteList(index);
+											</>
+										),
+										onClick: () => assigner(index),
 									},
-								},
-								{
-									key: "close",
-									label: "Close",
-									icon: <CloseOutlined />,
-								},
-							],
-						}}
-					>
-						<div
-							className={`div-blocks${
-								x?.assigned ? "-assigned" : ""
-							}`}
-							style={{
-								position: "absolute",
-								left: `${x.startX * zoomScale.current}px`,
-								top: `${x.startY * zoomScale.current}px`,
-								height: `${x.rectH * zoomScale.current}px`,
-								width: `${x.rectW * zoomScale.current}px`,
-								cursor: "pointer",
+
+									{
+										type: "divider",
+									},
+									{
+										key: "copy",
+										label: "Copy",
+										icon: <CopyOutlined />,
+										onClick: () => setClipboard({ h: x.rectH, w: x.rectW }),
+									},
+									{
+										key: "delete",
+										danger: true,
+										label: "Delete Field",
+										icon: <DeleteOutlined />,
+										onClick: () => {
+											deleteList(index);
+										},
+									},
+									{
+										key: "close",
+										label: "Close",
+										icon: <CloseOutlined />,
+									},
+								],
 							}}
 						>
-							{x.rectW > 25 * zoomScale.current ? (
-								<Typography.Text
-									strong
-									style={{
-										color: x?.assigned
-											? "greenyellow"
-											: "orange",
-									}}
-									l
-								>
-									{index + 1}
-								</Typography.Text>
-							) : (
-								"."
-							)}
-						</div>
-					</Dropdown>
-				))}
-			</div>
+							<div
+								className={`div-blocks${x?.assigned ? "-assigned" : ""}`}
+								style={{
+									position: "absolute",
+									left: `${x.startX * zoomScale.current}px`,
+									top: `${x.startY * zoomScale.current}px`,
+									height: `${x.rectH * zoomScale.current}px`,
+									width: `${x.rectW * zoomScale.current}px`,
+									cursor: "pointer",
+								}}
+							>
+								{x.rectW > 25 * zoomScale.current ? (
+									<Typography.Text
+										strong
+										style={{
+											color: x?.assigned ? "greenyellow" : "orange",
+										}}
+										l
+									>
+										{index + 1}
+									</Typography.Text>
+								) : (
+									"."
+								)}
+							</div>
+						</Dropdown>
+					))}
+				</div>
+			</Dropdown>
 		</div>
 	);
 };
