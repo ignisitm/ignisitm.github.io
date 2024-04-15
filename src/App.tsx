@@ -54,7 +54,7 @@ const App: FC = () => {
 		let vars = host.split(".");
 		let _client;
 		if (vars[1] === "github" || (vars[0] === "www" && vars[2] === "github")) {
-			_client = "firelink";
+			_client = "admin";
 		} else if (vars[0] === "www") _client = vars[1];
 		else _client = vars[0];
 
