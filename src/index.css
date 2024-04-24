@@ -645,6 +645,17 @@ code {
 	border-radius: 6px;
 }
 
+div-blocks-dragging {
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(100, 100, 100, 0.5);
+	border: orange dotted 3px;
+	color: orange;
+	border-radius: 6px;
+}
+
 .div-blocks-preview {
 	display: flex;
 	justify-content: center;
@@ -666,8 +677,6 @@ code {
 
 .more-options {
 	position: absolute;
-	bottom: 0;
-	right: 3px;
 	cursor: pointer;
 	color: #feeccc;
 }

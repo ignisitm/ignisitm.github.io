@@ -22,6 +22,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
 	ArrowLeftOutlined,
 	ControlOutlined,
+	DeleteOutlined,
 	FilePdfOutlined,
 	LoadingOutlined,
 	PlusOutlined,
@@ -70,7 +71,9 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 		},
 		beforeUpload: (file) => {
 			setFileList([...fileList, file]);
-			navigate("/pdfview", { state: { ahj, heading, file, editMode: false } });
+			navigate("/pdfview", {
+				state: { ahj, heading, file, editMode: false },
+			});
 
 			return false;
 		},
@@ -193,7 +196,10 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 										state: {
 											ahj,
 											heading,
-											file: { ...file, name: file.filepath.name },
+											file: {
+												...file,
+												name: file.filepath.name,
+											},
 											editMode: true,
 										},
 									});
@@ -203,20 +209,26 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 								<FilePdfOutlined />{" "}
 								<Typography.Text
 									ellipsis={{
-										tooltip: { title: file.name, placement: "bottomLeft" },
+										tooltip: {
+											title: file.name,
+											placement: "bottomLeft",
+										},
 									}}
 									style={{ width: "80%" }}
 								>
 									{file.filepath.name}
 								</Typography.Text>
-								{/* </Upload> */}
+								{/* </Uplgoad> */}
 							</div>
 						))
 					) : (
 						<div className={"system-list-item"}>
 							<Upload style={{ width: "100%" }} {...uploadProps}>
 								<PlusOutlined />{" "}
-								<Typography.Text italic style={{ width: "80%" }}>
+								<Typography.Text
+									italic
+									style={{ width: "80%" }}
+								>
 									Upload a file
 								</Typography.Text>
 							</Upload>
@@ -229,7 +241,11 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 						System Types ({items?.length})
 					</Typography.Text>
 					{isLoading ? (
-						<Typography.Text strong style={{ float: "right" }} type="secondary">
+						<Typography.Text
+							strong
+							style={{ float: "right" }}
+							type="secondary"
+						>
 							<LoadingOutlined />
 						</Typography.Text>
 					) : null}
@@ -237,7 +253,9 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				<div className="content-fixed-item">
 					<AHJSystemList
 						items={items}
-						onClick={(item: any) => setSelectedKey(parseInt(item.key))}
+						onClick={(item: any) =>
+							setSelectedKey(parseInt(item.key))
+						}
 					/>
 				</div>
 			</div>
@@ -247,12 +265,15 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				) : (
 					<div className="content-flex-empty">
 						<Card style={{ width: 400 }}>
-							<Typography.Title style={{ marginTop: "5px" }} level={5}>
+							<Typography.Title
+								style={{ marginTop: "5px" }}
+								level={5}
+							>
 								{heading}
 							</Typography.Title>
 							<Typography.Text type="secondary">
-								Select a system type from the navigation panel on the left to
-								view the procedures.
+								Select a system type from the navigation panel
+								on the left to view the procedures.
 							</Typography.Text>
 						</Card>
 					</div>

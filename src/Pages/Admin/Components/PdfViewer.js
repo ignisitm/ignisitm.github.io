@@ -4,11 +4,22 @@ import * as pdfjsLib from "pdfjs-dist/webpack";
 import { useEffect, useRef, useState } from "react";
 import Canvas from "./Canvas";
 import MainCanvas from "./MainCanvas";
-import { Button, Space, Typography, message, Badge, Select, Spin } from "antd";
+import {
+	Popconfirm,
+	Button,
+	Space,
+	Typography,
+	message,
+	Badge,
+	Select,
+	Spin,
+} from "antd";
 import {
 	CloseOutlined,
+	DeleteOutlined,
 	LoadingOutlined,
 	SaveOutlined,
+	EyeOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import { apiCall } from "../../../axiosConfig";
@@ -34,6 +45,9 @@ const PdfViewer = () => {
 	const [systems, setSystems] = useState(null);
 	const [pageSystems, setPageSystems] = useState({});
 	const [loadingPdf, setLoadingPdf] = useState(true);
+	const [fileURL, setFileURL] = useState(null);
+	const [deleting, setDeleting] = useState(false);
+	const [creatingSample, setCreatingSample] = useState(false);
 
 	const makeThumb = (page) => {
 		var vp = page.getViewport({ scale: 1 });
@@ -45,12 +59,10 @@ const PdfViewer = () => {
 				width={width}
 				draw={(context) => {
 					var scale = Math.min(width / vp.width, height / vp.height);
-					page
-						.render({
-							canvasContext: context,
-							viewport: page.getViewport({ scale: scale }),
-						})
-						.promise.catch((err) => console.log(err));
+					page.render({
+						canvasContext: context,
+						viewport: page.getViewport({ scale: scale }),
+					}).promise.catch((err) => console.log(err));
 				}}
 			/>
 		);
@@ -80,46 +92,54 @@ const PdfViewer = () => {
 	};
 
 	async function modifyPdf() {
-		const url = URL.createObjectURL(file);
-		const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
+		try {
+			const url = editMode ? fileURL : URL.createObjectURL(file);
+			const existingPdfBytes = await fetch(url).then((res) =>
+				res.arrayBuffer()
+			);
 
-		const pdfDoc = await PDFDocument.load(existingPdfBytes, {
-			ignoreEncryption: true,
-		});
+			const pdfDoc = await PDFDocument.load(existingPdfBytes, {
+				ignoreEncryption: true,
+			});
 
-		const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+			const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-		const pages = pdfDoc.getPages();
-		const firstPage = pages[0];
+			const pages = pdfDoc.getPages();
+			const firstPage = pages[0];
 
-		Object.keys(assignedFields).map((page) => {
-			console.log(pages, page);
-			let curr = pages[page - 1];
-			const { width, height } = curr.getSize();
-			console.log(width, height);
-			const size = 10;
+			Object.keys(assignedFields).map((page) => {
+				console.log(pages, page);
+				let curr = pages[page - 1];
+				const { width, height } = curr.getSize();
+				console.log(width, height);
+				const size = 10;
 
-			assignedFields[page].map((field) => {
-				let text = field.assigned.toString() || "-";
-				let textWidth = font.widthOfTextAtSize(text, size);
+				assignedFields[page].map((field) => {
+					let text = field.assigned.toString() || "-";
+					let textWidth = font.widthOfTextAtSize(text, size);
 
-				curr.drawText(text, {
-					x:
-						(field.startX + field.rectW / 2) * (width / field.divW) -
-						textWidth / 2,
-					y:
-						height -
-						(field.startY + field.rectH / 2) * (height / field.divH) -
-						3.5,
-					size,
-					font,
-					color: rgb(0, 0, 0),
+					curr.drawText(text, {
+						x:
+							(field.startX + field.rectW / 2) * width -
+							textWidth / 2,
+						y:
+							height -
+							(field.startY + field.rectH / 2) * height -
+							3.5,
+						size,
+						font,
+						color: rgb(0, 0, 0),
+					});
 				});
 			});
-		});
 
-		const pdfBytes = await pdfDoc.save();
-		saveByteArray("Sample Report", pdfBytes);
+			const pdfBytes = await pdfDoc.save();
+			saveByteArray("Sample Report", pdfBytes);
+		} catch {
+			message.error("Some fields have not been assigned values");
+		} finally {
+			setCreatingSample(false);
+		}
 	}
 
 	const loadDocuments = (url) => {
@@ -128,7 +148,8 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
+				while (pages.length < doc.numPages)
+					pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc
@@ -149,7 +170,8 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
+				while (pages.length < doc.numPages)
+					pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc.getPage(num).then((page) => {
@@ -167,11 +189,14 @@ const PdfViewer = () => {
 
 	const loadFromURL = () => {
 		apiCall({
-			method: "POST",
-			url: "/fileupload?superadmin=true",
-			data: { filepath: file.filepath.path },
+			method: "GET",
+			url: `/AHJpdf/${file.id}`,
 			handleResponse: (res) => {
-				let url = res.data.message;
+				let url = res.data.message.url;
+				let newAssignedFields = res.data.message.fields;
+				newAssignedFields = JSON.parse(newAssignedFields);
+				setAssignedFields(newAssignedFields);
+				setFileURL(url);
 				loadDocuments(url);
 			},
 			handleError: () => {
@@ -186,13 +211,6 @@ const PdfViewer = () => {
 		let url;
 		if (editMode) {
 			loadFromURL();
-			apiCall({
-				method: "GET",
-				url: `/AHJpdf/${file.id}`,
-				handleResponse: (res) => {
-					console.log(res);
-				},
-			});
 		} else {
 			url = URL.createObjectURL(file);
 			loadDocuments(url);
@@ -237,6 +255,7 @@ const PdfViewer = () => {
 	};
 
 	const saveDummy = () => {
+		setCreatingSample(true);
 		console.log(assignedFields);
 		modifyPdf();
 	};
@@ -254,7 +273,9 @@ const PdfViewer = () => {
 						filepath,
 					},
 					handleResponse: (res) => {
+						message.success(res.data.message);
 						setSaving(false);
+						navigate(-1);
 						console.log(res);
 					},
 					handleError: (err) => {
@@ -262,6 +283,66 @@ const PdfViewer = () => {
 						setSaving(false);
 					},
 				});
+			});
+		} else message.error("Missing Fields!");
+	};
+
+	const deleteFile = () => {
+		return new Promise((resolve, reject) => {
+			setDeleting(true);
+			apiCall({
+				method: "DELETE",
+				url: "/AHJpdf",
+				data: { data: { id: file.id } },
+				handleResponse: (res) => {
+					message.success(res.data.message);
+					deleteAttachment(file.filepath.path);
+					navigate(-1);
+					resolve(res);
+				},
+				handleError: (err) => {
+					reject(err);
+					setDeleting(false);
+				},
+			});
+		});
+	};
+
+	const deleteAttachment = (filepath) => {
+		return apiCall({
+			method: "DELETE",
+			url: "/fileupload?superadmin=true",
+			data: { data: { filepath } },
+			handleResponse: (res) => {
+				console.log(res.data.message);
+				setDeleting(false);
+			},
+			handleError: (err) => {
+				setDeleting(false);
+			},
+		});
+	};
+
+	const updatePdf = () => {
+		if (editMode && assignedFields) {
+			setSaving(true);
+			apiCall({
+				url: "/AHJpdf",
+				method: "PUT",
+				data: {
+					id: file.id,
+					fields: JSON.stringify(assignedFields),
+				},
+				handleResponse: (res) => {
+					message.success(res.data.message);
+					setSaving(false);
+					navigate(-1);
+					console.log(res);
+				},
+				handleError: (err) => {
+					console.log(err);
+					setSaving(false);
+				},
 			});
 		} else message.error("Missing Fields!");
 	};
@@ -319,7 +400,10 @@ const PdfViewer = () => {
 		}, [system]);
 
 		return (
-			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
+			<Space
+				direction="vertical"
+				style={{ width: "100%", color: "white" }}
+			>
 				<Typography.Title level={5} style={{ color: "white" }}>
 					Assigning Field #{assignMode.index + 1}
 				</Typography.Title>
@@ -350,7 +434,9 @@ const PdfViewer = () => {
 				{system ? (
 					<>
 						<div>
-							<label style={{ margin: "4px" }}>Select Type:</label>
+							<label style={{ margin: "4px" }}>
+								Select Type:
+							</label>
 							<Select
 								value={type}
 								onChange={(e) => setType(e)}
@@ -372,7 +458,9 @@ const PdfViewer = () => {
 								</span>
 							) : (
 								<div>
-									<label style={{ margin: "4px" }}>Select Procedure</label>
+									<label style={{ margin: "4px" }}>
+										Select Procedure
+									</label>
 									<Select
 										showSearch
 										value={procedure}
@@ -380,16 +468,23 @@ const PdfViewer = () => {
 										placeholder="Select System"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children.toLowerCase().includes(input)
+											option.children
+												.toLowerCase()
+												.includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(optionB.children.toLowerCase())
+												.localeCompare(
+													optionB.children.toLowerCase()
+												)
 										}
 									>
 										{procedures?.map((proc, index) => (
-											<Select.Option key={index} value={proc.id}>
+											<Select.Option
+												key={index}
+												value={proc.id}
+											>
 												{`${proc.code} : ${proc.procedure}`}
 											</Select.Option>
 										))}
@@ -403,7 +498,8 @@ const PdfViewer = () => {
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
 					{procedure && (
 						<Button type="primary" onClick={assign}>
-							{assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+							{assignedFields?.[selectedPage]?.[assignMode?.index]
+								?.assigned
 								? "Change"
 								: "Assign"}
 						</Button>
@@ -423,16 +519,46 @@ const PdfViewer = () => {
 							onClick={() => navigate(-1)}
 							size="small"
 							icon={<CloseOutlined />}
-							style={{ marginRight: "7px" }}
+							style={{ marginRight: "9px" }}
 						>
 							Cancel
-						</Button>{" "}
+						</Button>
+						<Button
+							loading={creatingSample}
+							onClick={saveDummy}
+							size="small"
+							icon={<EyeOutlined />}
+							style={{ marginRight: "9px" }}
+						>
+							Show Sample
+						</Button>
+						{editMode && (
+							<Popconfirm
+								title="Are you sure to delete?"
+								onConfirm={() => deleteFile()}
+								// onCancel={cancel}
+								okText="Delete"
+								cancelText="Cancel"
+								placement="left"
+							>
+								<Button
+									danger
+									type="primary"
+									// onClick={deleteFile}
+									size="small"
+									icon={<DeleteOutlined />}
+									style={{ marginRight: "9px" }}
+								>
+									Delete
+								</Button>
+							</Popconfirm>
+						)}
 						<Button
 							size="small"
 							loading={saving}
 							type="primary"
-							style={{ marginRight: "10px" }}
-							onClick={saveDummy}
+							style={{ marginRight: "9px" }}
+							onClick={editMode ? updatePdf : savePdf}
 							icon={<SaveOutlined />}
 						>
 							Save
@@ -449,7 +575,9 @@ const PdfViewer = () => {
 									<div
 										className={
 											"thumbnail" +
-											(thumbnail.page === selectedPage ? "-selected" : "")
+											(thumbnail.page === selectedPage
+												? "-selected"
+												: "")
 										}
 										key={index}
 										onClick={() => {
@@ -483,9 +611,13 @@ const PdfViewer = () => {
 								<MainCanvas
 									key={index}
 									pageNo={page.page}
-									assignedFields={assignedFields[page.page] || []}
+									assignedFields={
+										assignedFields[page.page] || []
+									}
 									setAssignedFields={setAssignedFields}
-									width={mainContent.current.clientWidth - 420}
+									width={
+										mainContent.current.clientWidth - 420
+									}
 									style={
 										selectedPage === page.page
 											? { display: "flex" }
@@ -504,9 +636,16 @@ const PdfViewer = () => {
 				{!loadingPdf && (
 					<div className="side-panel-wrapper">
 						<div className="side-panel-contents">
-							<Space direction="vertical" style={{ width: "100%" }}>
+							<Space
+								direction="vertical"
+								style={{ width: "100%" }}
+							>
 								{assignMode ? (
-									<Assigner pageSystem={pageSystems?.[selectedPage] || 0} />
+									<Assigner
+										pageSystem={
+											pageSystems?.[selectedPage] || 0
+										}
+									/>
 								) : (
 									<>
 										<Typography.Title
@@ -520,7 +659,9 @@ const PdfViewer = () => {
 										</Typography.Title>
 										<Select
 											showSearch
-											value={pageSystems?.[selectedPage] || 0}
+											value={
+												pageSystems?.[selectedPage] || 0
+											}
 											onChange={(e) =>
 												setPageSystems((prev) => ({
 													...prev,
@@ -530,17 +671,26 @@ const PdfViewer = () => {
 											placeholder="Select System"
 											style={{ width: "100%" }}
 											filterOption={(input, option) =>
-												option.children.toLowerCase().includes(input)
+												option.children
+													.toLowerCase()
+													.includes(input)
 											}
 											filterSort={(optionA, optionB) =>
 												optionA.children
 													.toLowerCase()
-													.localeCompare(optionB.children.toLowerCase())
+													.localeCompare(
+														optionB.children.toLowerCase()
+													)
 											}
 										>
-											<Select.Option value={0}>Multiple Systems</Select.Option>
+											<Select.Option value={0}>
+												Multiple Systems
+											</Select.Option>
 											{systems?.map((sys, index) => (
-												<Select.Option key={index} value={sys.id}>
+												<Select.Option
+													key={index}
+													value={sys.id}
+												>
 													{sys.name}
 												</Select.Option>
 											))}
@@ -554,26 +704,42 @@ const PdfViewer = () => {
 										>
 											Fields in this page:
 										</Typography.Title>
-										<Typography.Text style={{ color: "lightgray" }} italic>
-											{assignedFields?.[selectedPage]?.length > 0
+										<Typography.Text
+											style={{ color: "lightgray" }}
+											italic
+										>
+											{assignedFields?.[selectedPage]
+												?.length > 0
 												? "Click on a field to assign/edit"
 												: "No fields added"}
 										</Typography.Text>
-										{assignedFields?.[selectedPage]?.map((x, index) => (
-											<div
-												onClick={() => {
-													setAssignMode({ index });
-												}}
-												key={index}
-												className="side-field-list-item"
-											>
-												<Badge
-													style={{ color: "inherit" }}
-													color={x.assigned ? "green" : "orange"}
-													text={`Field #${index + 1}`}
-												/>
-											</div>
-										))}
+										{assignedFields?.[selectedPage]?.map(
+											(x, index) => (
+												<div
+													onClick={() => {
+														setAssignMode({
+															index,
+														});
+													}}
+													key={index}
+													className="side-field-list-item"
+												>
+													<Badge
+														style={{
+															color: "inherit",
+														}}
+														color={
+															x.assigned
+																? "green"
+																: "orange"
+														}
+														text={`Field #${
+															index + 1
+														}`}
+													/>
+												</div>
+											)
+										)}
 									</>
 								)}
 							</Space>

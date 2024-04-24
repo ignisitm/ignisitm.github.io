@@ -4,7 +4,14 @@ import {
 	CopyOutlined,
 	DownCircleFilled,
 } from "@ant-design/icons";
-import { Button, Dropdown, Space, FloatButton, Typography } from "antd";
+import {
+	Button,
+	Dropdown,
+	Space,
+	FloatButton,
+	Typography,
+	Tooltip,
+} from "antd";
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useRefer } from "../../../Helpers/Refs";
 import Draggable from "react-draggable";
@@ -125,19 +132,21 @@ const MainCanvas = ({
 
 	const pasteFromCB = () => {
 		let newPointts = {
-			startX: startX.current - clipboard.w / 2,
-			startY: startY.current - clipboard.h / 2,
+			startX: startX.current / divW - clipboard.w / 2,
+			startY: startY.current / divH - clipboard.h / 2,
 			rectW: clipboard.w,
 			rectH: clipboard.h,
-			divH,
-			divW,
 		};
+		console.log(newPointts);
 		setAssignedFields((prev) => ({
 			...prev,
 			...(pointExists(prev[pageNo], newPointts)
 				? {}
 				: {
-						[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
+						[pageNo]: [
+							...(prev[pageNo] ? prev[pageNo] : []),
+							newPointts,
+						],
 				  }),
 		}));
 		setRightClicked(false);
@@ -164,24 +173,30 @@ const MainCanvas = ({
 		e.stopPropagation();
 		if (cursorInCanvas) {
 			if (ctx.current) {
-				ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
+				ctx.current?.clearRect(
+					0,
+					0,
+					canvasOfDoc.width,
+					canvasOfDoc.height
+				);
 				ctx.current?.drawImage(pdf_image.current, 0, 0);
 			}
 			if (rectH.current > 10 && rectW.current > 10) {
 				let newPointts = {
-					startX: startX.current,
-					startY: startY.current,
-					rectW: rectW.current,
-					rectH: rectH.current,
-					divH,
-					divW,
+					startX: startX.current / divW,
+					startY: startY.current / divH,
+					rectW: rectW.current / divW,
+					rectH: rectH.current / divH,
 				};
 				setAssignedFields((prev) => ({
 					...prev,
 					...(pointExists(prev[pageNo], newPointts)
 						? {}
 						: {
-								[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
+								[pageNo]: [
+									...(prev[pageNo] ? prev[pageNo] : []),
+									newPointts,
+								],
 						  }),
 				}));
 			}
@@ -266,7 +281,11 @@ const MainCanvas = ({
 	const dragToPos = (idx, x, y) => {
 		setAssignedFields((prev) => {
 			let curr_page = prev[pageNo];
-			curr_page[idx] = { ...curr_page[idx], startX: x, startY: y };
+			curr_page[idx] = {
+				...curr_page[idx],
+				startX: x / divW,
+				startY: y / divH,
+			};
 			return { ...prev, [pageNo]: [...curr_page] };
 		});
 	};
@@ -318,119 +337,166 @@ const MainCanvas = ({
 					<FloatButton icon={<SyncOutlined />} />
 					<FloatButton.BackTop visibilityHeight={0} />
 				</FloatButton.Group> */}
-					{assignedFields.map((x, index) => (
-						<Draggable
-							defaultPosition={{
-								x: x.startX * zoomScale.current,
-								y: x.startY * zoomScale.current,
-							}}
-							onStop={(e, data) => {
-								console.log(data.x, data.y);
-								dragToPos(index, data.x, data.y);
-							}}
-							bounds="parent"
-						>
-							<div
-								className={`div-blocks${x?.assigned ? "-assigned" : ""}`}
-								style={{
-									position: "absolute",
-									// left: `${}px`,
-									// top: `${}px`,
-									height: `${x.rectH * zoomScale.current}px`,
-									width: `${x.rectW * zoomScale.current}px`,
-									cursor: "move",
+					{divH &&
+						assignedFields.map((x, index) => (
+							<Draggable
+								defaultClassName={`div-blocks${
+									x?.assigned ? "-assigned" : ""
+								}`}
+								defaultClassNameDragging={`div-blocks-dragging${
+									x?.assigned ? "-assigned" : ""
+								}`}
+								defaultPosition={{
+									x: x.startX * zoomScale.current * divW,
+									y: x.startY * zoomScale.current * divH,
 								}}
+								onStop={(e, data) => {
+									console.log(data.x, data.y);
+									dragToPos(index, data.x, data.y);
+								}}
+								bounds="parent"
 							>
-								{x.rectW > 25 * zoomScale.current ? (
-									<Typography.Text
-										strong
-										style={{
-											color: x?.assigned ? "greenyellow" : "orange",
-										}}
-										l
-									>
-										{index + 1}
-									</Typography.Text>
-								) : (
-									"."
-								)}
-								<Dropdown
-									trigger={["click"]}
-									key={index}
-									menu={{
-										items: [
-											{
-												key: "Field",
-												label: (
-													<>
-														<Typography.Text strong>
-															{`Field #${index + 1} - `}
-														</Typography.Text>
-														{x?.assigned ? (
-															<Typography.Text style={{ color: "green" }}>
-																Assigned
-															</Typography.Text>
-														) : (
-															<Typography.Text style={{ color: "orange" }}>
-																Unassigned
-															</Typography.Text>
-														)}
-
-														<br />
-														<Typography.Text type="secondary" italic>
-															Click to Edit
-														</Typography.Text>
-													</>
-												),
-												onClick: () => assigner(index),
-											},
-
-											{
-												type: "divider",
-											},
-											{
-												key: "copy",
-												label: "Copy",
-												icon: <CopyOutlined />,
-												onClick: () => setClipboard({ h: x.rectH, w: x.rectW }),
-											},
-											{
-												key: "delete",
-												danger: true,
-												label: "Delete Field",
-												icon: <DeleteOutlined />,
-												onClick: () => {
-													deleteList(index);
-												},
-											},
-											{
-												key: "close",
-												label: "Close",
-												icon: <CloseOutlined />,
-											},
-										],
+								<div
+									style={{
+										position: "absolute",
+										height: `${
+											x.rectH * zoomScale.current * divH
+										}px`,
+										width: `${
+											x.rectW * zoomScale.current * divW
+										}px`,
+										cursor: "move",
 									}}
 								>
-									<div className="more-options">
-										<DownCircleFilled />
-									</div>
-								</Dropdown>
-							</div>
-						</Draggable>
-					))}
+									{x.rectW * divW > 25 * zoomScale.current ? (
+										<Typography.Text
+											strong
+											style={{
+												color: x?.assigned
+													? "greenyellow"
+													: "orange",
+											}}
+											l
+										>
+											{index + 1}
+										</Typography.Text>
+									) : (
+										"."
+									)}
+									<Dropdown
+										trigger={["click"]}
+										key={index}
+										menu={{
+											items: [
+												{
+													key: "Field",
+													label: (
+														<>
+															<Typography.Text
+																strong
+															>
+																{`Field #${
+																	index + 1
+																} - `}
+															</Typography.Text>
+															{x?.assigned ? (
+																<Typography.Text
+																	style={{
+																		color: "green",
+																	}}
+																>
+																	Assigned
+																</Typography.Text>
+															) : (
+																<Typography.Text
+																	style={{
+																		color: "orange",
+																	}}
+																>
+																	Unassigned
+																</Typography.Text>
+															)}
+
+															<br />
+															<Typography.Text
+																type="secondary"
+																italic
+															>
+																Click to Edit
+															</Typography.Text>
+														</>
+													),
+													onClick: () =>
+														assigner(index),
+												},
+
+												{
+													type: "divider",
+												},
+												{
+													key: "copy",
+													label: "Copy",
+													icon: <CopyOutlined />,
+													onClick: () =>
+														setClipboard({
+															h: x.rectH,
+															w: x.rectW,
+														}),
+												},
+												{
+													key: "delete",
+													danger: true,
+													label: "Delete Field",
+													icon: <DeleteOutlined />,
+													onClick: () => {
+														deleteList(index);
+													},
+												},
+												{
+													key: "close",
+													label: "Close",
+													icon: <CloseOutlined />,
+												},
+											],
+										}}
+									>
+										<Tooltip title="Click to Edit">
+											<div
+												className="more-options"
+												style={
+													x.rectW * divW > 25
+														? { right: "5px" }
+														: {}
+												}
+											>
+												<DownCircleFilled />
+											</div>
+										</Tooltip>
+									</Dropdown>
+								</div>
+							</Draggable>
+						))}
 					{clipboard && rightClicked && (
 						<div
 							className="div-blocks-preview"
 							style={{
 								position: "absolute",
 								left: `${
-									(startX.current - clipboard.w / 2) * zoomScale.current
+									(startX.current -
+										(clipboard.w * divW) / 2) *
+									zoomScale.current
 								}px`,
 								top: `${
-									(startY.current - clipboard.h / 2) * zoomScale.current
+									(startY.current -
+										(clipboard.h * divH) / 2) *
+									zoomScale.current
 								}px`,
-								height: `${clipboard.h * zoomScale.current}px`,
-								width: `${clipboard.w * zoomScale.current}px`,
+								height: `${
+									clipboard.h * zoomScale.current * divH
+								}px`,
+								width: `${
+									clipboard.w * zoomScale.current * divW
+								}px`,
 								cursor: "pointer",
 							}}
 						/>
