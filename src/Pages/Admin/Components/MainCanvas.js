@@ -204,6 +204,8 @@ const MainCanvas = ({
 		cursorInCanvas = false;
 	};
 
+	//test
+
 	const handleMouseMove = (e) => {
 		e.preventDefault();
 		e.stopPropagation();
