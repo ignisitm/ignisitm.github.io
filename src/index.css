@@ -622,6 +622,7 @@ code {
 	background-color: #2c2c2c;
 	flex-grow: 1;
 	position: relative;
+	align-content: center;
 }
 
 .pdf-main-view {
@@ -634,6 +635,7 @@ code {
 }
 
 .div-blocks {
+	position: absolute;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -643,13 +645,31 @@ code {
 	border-radius: 6px;
 }
 
+.div-blocks-preview {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: orange dotted 3px;
+	color: orange;
+	border-radius: 6px;
+}
+
 .div-blocks-assigned {
+	position: absolute;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	background-color: rgba(100, 100, 100, 0.9);
 	border: greenyellow dotted 3px;
 	border-radius: 6px;
+}
+
+.more-options {
+	position: absolute;
+	bottom: 0;
+	right: 3px;
+	cursor: pointer;
+	color: #feeccc;
 }
 
 .div-block-input {

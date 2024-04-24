@@ -1,7 +1,13 @@
-import { CloseOutlined, DeleteOutlined, CopyOutlined } from "@ant-design/icons";
+import {
+	CloseOutlined,
+	DeleteOutlined,
+	CopyOutlined,
+	DownCircleFilled,
+} from "@ant-design/icons";
 import { Button, Dropdown, Space, FloatButton, Typography } from "antd";
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useRefer } from "../../../Helpers/Refs";
+import Draggable from "react-draggable";
 
 const MainCanvas = ({
 	pdfRef,
@@ -16,6 +22,7 @@ const MainCanvas = ({
 	const [divW, setDivW] = useState(width);
 	const [divH, setDivH] = useState(0);
 	const [clipboard, setClipboard] = useState(null);
+	const [rightClicked, setRightClicked] = useState(false);
 
 	var cursorInCanvas = false;
 	var canvasOfDoc = canvasRef?.current;
@@ -133,6 +140,7 @@ const MainCanvas = ({
 						[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
 				  }),
 		}));
+		setRightClicked(false);
 	};
 
 	const handleMouseIn = (e) => {
@@ -255,6 +263,14 @@ const MainCanvas = ({
 		});
 	};
 
+	const dragToPos = (idx, x, y) => {
+		setAssignedFields((prev) => {
+			let curr_page = prev[pageNo];
+			curr_page[idx] = { ...curr_page[idx], startX: x, startY: y };
+			return { ...prev, [pageNo]: [...curr_page] };
+		});
+	};
+
 	return (
 		<div
 			className="main-canvas"
@@ -263,7 +279,13 @@ const MainCanvas = ({
 				...{ justifyContent: "center" },
 			}}
 		>
-			<Dropdown menu={{ items: rightClickField }} trigger={["contextMenu"]}>
+			<Dropdown
+				onOpenChange={(open) => {
+					setRightClicked(open);
+				}}
+				menu={{ items: rightClickField }}
+				trigger={["contextMenu"]}
+			>
 				<div
 					style={{
 						position: "absolute",
@@ -288,6 +310,7 @@ const MainCanvas = ({
 						}}
 						ref={canvasRef}
 						width={"100%"}
+						style={{ position: "absolute" }}
 					></canvas>
 					{/* <FloatButton.Group shape="square" style={{ right: 94 }}>
 					<FloatButton onClick={zoomIn} icon={<QuestionCircleOutlined />} />
@@ -296,72 +319,26 @@ const MainCanvas = ({
 					<FloatButton.BackTop visibilityHeight={0} />
 				</FloatButton.Group> */}
 					{assignedFields.map((x, index) => (
-						<Dropdown
-							trigger={["click"]}
-							key={index}
-							menu={{
-								items: [
-									{
-										key: "Field",
-										label: (
-											<>
-												<Typography.Text strong>
-													{`Field #${index + 1} - `}
-												</Typography.Text>
-												{x?.assigned ? (
-													<Typography.Text style={{ color: "green" }}>
-														Assigned
-													</Typography.Text>
-												) : (
-													<Typography.Text style={{ color: "orange" }}>
-														Unassigned
-													</Typography.Text>
-												)}
-
-												<br />
-												<Typography.Text type="secondary" italic>
-													Click to Edit
-												</Typography.Text>
-											</>
-										),
-										onClick: () => assigner(index),
-									},
-
-									{
-										type: "divider",
-									},
-									{
-										key: "copy",
-										label: "Copy",
-										icon: <CopyOutlined />,
-										onClick: () => setClipboard({ h: x.rectH, w: x.rectW }),
-									},
-									{
-										key: "delete",
-										danger: true,
-										label: "Delete Field",
-										icon: <DeleteOutlined />,
-										onClick: () => {
-											deleteList(index);
-										},
-									},
-									{
-										key: "close",
-										label: "Close",
-										icon: <CloseOutlined />,
-									},
-								],
+						<Draggable
+							defaultPosition={{
+								x: x.startX * zoomScale.current,
+								y: x.startY * zoomScale.current,
 							}}
+							onStop={(e, data) => {
+								console.log(data.x, data.y);
+								dragToPos(index, data.x, data.y);
+							}}
+							bounds="parent"
 						>
 							<div
 								className={`div-blocks${x?.assigned ? "-assigned" : ""}`}
 								style={{
 									position: "absolute",
-									left: `${x.startX * zoomScale.current}px`,
-									top: `${x.startY * zoomScale.current}px`,
+									// left: `${}px`,
+									// top: `${}px`,
 									height: `${x.rectH * zoomScale.current}px`,
 									width: `${x.rectW * zoomScale.current}px`,
-									cursor: "pointer",
+									cursor: "move",
 								}}
 							>
 								{x.rectW > 25 * zoomScale.current ? (
@@ -377,9 +354,87 @@ const MainCanvas = ({
 								) : (
 									"."
 								)}
+								<Dropdown
+									trigger={["click"]}
+									key={index}
+									menu={{
+										items: [
+											{
+												key: "Field",
+												label: (
+													<>
+														<Typography.Text strong>
+															{`Field #${index + 1} - `}
+														</Typography.Text>
+														{x?.assigned ? (
+															<Typography.Text style={{ color: "green" }}>
+																Assigned
+															</Typography.Text>
+														) : (
+															<Typography.Text style={{ color: "orange" }}>
+																Unassigned
+															</Typography.Text>
+														)}
+
+														<br />
+														<Typography.Text type="secondary" italic>
+															Click to Edit
+														</Typography.Text>
+													</>
+												),
+												onClick: () => assigner(index),
+											},
+
+											{
+												type: "divider",
+											},
+											{
+												key: "copy",
+												label: "Copy",
+												icon: <CopyOutlined />,
+												onClick: () => setClipboard({ h: x.rectH, w: x.rectW }),
+											},
+											{
+												key: "delete",
+												danger: true,
+												label: "Delete Field",
+												icon: <DeleteOutlined />,
+												onClick: () => {
+													deleteList(index);
+												},
+											},
+											{
+												key: "close",
+												label: "Close",
+												icon: <CloseOutlined />,
+											},
+										],
+									}}
+								>
+									<div className="more-options">
+										<DownCircleFilled />
+									</div>
+								</Dropdown>
 							</div>
-						</Dropdown>
+						</Draggable>
 					))}
+					{clipboard && rightClicked && (
+						<div
+							className="div-blocks-preview"
+							style={{
+								position: "absolute",
+								left: `${
+									(startX.current - clipboard.w / 2) * zoomScale.current
+								}px`,
+								top: `${
+									(startY.current - clipboard.h / 2) * zoomScale.current
+								}px`,
+								height: `${clipboard.h * zoomScale.current}px`,
+								width: `${clipboard.w * zoomScale.current}px`,
+								cursor: "pointer",
+							}}
+						/>
+					)}
 				</div>
 			</Dropdown>
 		</div>

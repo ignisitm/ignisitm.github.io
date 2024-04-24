@@ -4,7 +4,7 @@ import * as pdfjsLib from "pdfjs-dist/webpack";
 import { useEffect, useRef, useState } from "react";
 import Canvas from "./Canvas";
 import MainCanvas from "./MainCanvas";
-import { Button, Space, Typography, message, Badge, Select } from "antd";
+import { Button, Space, Typography, message, Badge, Select, Spin } from "antd";
 import {
 	CloseOutlined,
 	LoadingOutlined,
@@ -19,7 +19,7 @@ const PdfViewer = () => {
 
 	const { state } = useLocation();
 	const navigate = useNavigate();
-	const { ahj, heading, file } = state;
+	const { ahj, heading, file, editMode } = state;
 	const { completeLoading } = useLoaderContext();
 	const mainContent = useRef();
 
@@ -33,6 +33,7 @@ const PdfViewer = () => {
 	const [assignMode, setAssignMode] = useState(null);
 	const [systems, setSystems] = useState(null);
 	const [pageSystems, setPageSystems] = useState({});
+	const [loadingPdf, setLoadingPdf] = useState(true);
 
 	const makeThumb = (page) => {
 		var vp = page.getViewport({ scale: 1 });
@@ -44,10 +45,12 @@ const PdfViewer = () => {
 				width={width}
 				draw={(context) => {
 					var scale = Math.min(width / vp.width, height / vp.height);
-					page.render({
-						canvasContext: context,
-						viewport: page.getViewport({ scale: scale }),
-					}).promise.catch((err) => console.log(err));
+					page
+						.render({
+							canvasContext: context,
+							viewport: page.getViewport({ scale: scale }),
+						})
+						.promise.catch((err) => console.log(err));
 				}}
 			/>
 		);
@@ -78,9 +81,7 @@ const PdfViewer = () => {
 
 	async function modifyPdf() {
 		const url = URL.createObjectURL(file);
-		const existingPdfBytes = await fetch(url).then((res) =>
-			res.arrayBuffer()
-		);
+		const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
 
 		const pdfDoc = await PDFDocument.load(existingPdfBytes, {
 			ignoreEncryption: true,
@@ -104,13 +105,11 @@ const PdfViewer = () => {
 
 				curr.drawText(text, {
 					x:
-						(field.startX + field.rectW / 2) *
-							(width / field.divW) -
+						(field.startX + field.rectW / 2) * (width / field.divW) -
 						textWidth / 2,
 					y:
 						height -
-						(field.startY + field.rectH / 2) *
-							(height / field.divH) -
+						(field.startY + field.rectH / 2) * (height / field.divH) -
 						3.5,
 					size,
 					font,
@@ -123,16 +122,13 @@ const PdfViewer = () => {
 		saveByteArray("Sample Report", pdfBytes);
 	}
 
-	useEffect(() => {
-		getSystems();
-		let url = URL.createObjectURL(file);
+	const loadDocuments = (url) => {
 		pdfjsLib
 			.getDocument(url)
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages)
-					pages.push(pages.length + 1);
+				while (pages.length < doc.numPages) pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc
@@ -153,8 +149,7 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages)
-					pages.push(pages.length + 1);
+				while (pages.length < doc.numPages) pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc.getPage(num).then((page) => {
@@ -164,9 +159,44 @@ const PdfViewer = () => {
 				).then((res) => {
 					setPages(res);
 					completeLoading();
+					setLoadingPdf(false);
 				});
 			})
 			.catch(console.error);
+	};
+
+	const loadFromURL = () => {
+		apiCall({
+			method: "POST",
+			url: "/fileupload?superadmin=true",
+			data: { filepath: file.filepath.path },
+			handleResponse: (res) => {
+				let url = res.data.message;
+				loadDocuments(url);
+			},
+			handleError: () => {
+				return "Error";
+			},
+		});
+	};
+
+	useEffect(() => {
+		getSystems();
+		console.log(file);
+		let url;
+		if (editMode) {
+			loadFromURL();
+			apiCall({
+				method: "GET",
+				url: `/AHJpdf/${file.id}`,
+				handleResponse: (res) => {
+					console.log(res);
+				},
+			});
+		} else {
+			url = URL.createObjectURL(file);
+			loadDocuments(url);
+		}
 	}, []);
 
 	const scrollToRef = (ref) => {
@@ -289,10 +319,7 @@ const PdfViewer = () => {
 		}, [system]);
 
 		return (
-			<Space
-				direction="vertical"
-				style={{ width: "100%", color: "white" }}
-			>
+			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
 				<Typography.Title level={5} style={{ color: "white" }}>
 					Assigning Field #{assignMode.index + 1}
 				</Typography.Title>
@@ -323,9 +350,7 @@ const PdfViewer = () => {
 				{system ? (
 					<>
 						<div>
-							<label style={{ margin: "4px" }}>
-								Select Type:
-							</label>
+							<label style={{ margin: "4px" }}>Select Type:</label>
 							<Select
 								value={type}
 								onChange={(e) => setType(e)}
@@ -347,9 +372,7 @@ const PdfViewer = () => {
 								</span>
 							) : (
 								<div>
-									<label style={{ margin: "4px" }}>
-										Select Procedure
-									</label>
+									<label style={{ margin: "4px" }}>Select Procedure</label>
 									<Select
 										showSearch
 										value={procedure}
@@ -357,23 +380,16 @@ const PdfViewer = () => {
 										placeholder="Select System"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children
-												.toLowerCase()
-												.includes(input)
+											option.children.toLowerCase().includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(
-													optionB.children.toLowerCase()
-												)
+												.localeCompare(optionB.children.toLowerCase())
 										}
 									>
 										{procedures?.map((proc, index) => (
-											<Select.Option
-												key={index}
-												value={proc.id}
-											>
+											<Select.Option key={index} value={proc.id}>
 												{`${proc.code} : ${proc.procedure}`}
 											</Select.Option>
 										))}
@@ -387,8 +403,7 @@ const PdfViewer = () => {
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
 					{procedure && (
 						<Button type="primary" onClick={assign}>
-							{assignedFields?.[selectedPage]?.[assignMode?.index]
-								?.assigned
+							{assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
 								? "Change"
 								: "Assign"}
 						</Button>
@@ -426,135 +441,125 @@ const PdfViewer = () => {
 				</Typography.Text>
 			</div>
 			<div className="pdf-view">
-				<div className="thumbnail-wrapper">
-					<div className="thumbnail-contents">
-						{thumbnails.map((thumbnail, index) => {
-							return (
-								<div
-									className={
-										"thumbnail" +
-										(thumbnail.page === selectedPage
-											? "-selected"
-											: "")
-									}
-									key={index}
-									onClick={() => {
-										setSelectedPage(thumbnail.page);
-										scrollToRef(mainContent);
-									}}
-								>
-									{thumbnail.canvas}
-									<br />
-									{thumbnail.page}
-								</div>
-							);
-						})}
+				{!loadingPdf && (
+					<div className="thumbnail-wrapper">
+						<div className="thumbnail-contents">
+							{thumbnails.map((thumbnail, index) => {
+								return (
+									<div
+										className={
+											"thumbnail" +
+											(thumbnail.page === selectedPage ? "-selected" : "")
+										}
+										key={index}
+										onClick={() => {
+											setSelectedPage(thumbnail.page);
+											scrollToRef(mainContent);
+										}}
+									>
+										{thumbnail.canvas}
+										<br />
+										{thumbnail.page}
+									</div>
+								);
+							})}
+						</div>
 					</div>
-				</div>
+				)}
 
 				<div className="pdf-main-view-wrapper">
 					<div
 						className="pdf-main-view"
 						ref={mainContent}
+						style={loadingPdf ? { alignContent: "center" } : {}}
 						onResize={(e) => console.log(e)}
 					>
-						{pages.map((page, index) => (
-							<MainCanvas
-								key={index}
-								pageNo={page.page}
-								assignedFields={assignedFields[page.page] || []}
-								setAssignedFields={setAssignedFields}
-								width={mainContent.current.clientWidth - 100}
-								style={
-									selectedPage === page.page
-										? { display: "flex" }
-										: { display: "none" }
-								}
-								pdfRef={page.canvas}
-								assigner={(index) => {
-									setAssignMode({ index });
-								}}
-							/>
-						))}
+						{loadingPdf ? (
+							<Spin size="large" tip="Loading PDF">
+								<div />
+							</Spin>
+						) : (
+							pages.map((page, index) => (
+								<MainCanvas
+									key={index}
+									pageNo={page.page}
+									assignedFields={assignedFields[page.page] || []}
+									setAssignedFields={setAssignedFields}
+									width={mainContent.current.clientWidth - 420}
+									style={
+										selectedPage === page.page
+											? { display: "flex" }
+											: { display: "none" }
+									}
+									pdfRef={page.canvas}
+									assigner={(index) => {
+										setAssignMode({ index });
+									}}
+								/>
+							))
+						)}
 					</div>
 				</div>
 
-				<div className="side-panel-wrapper">
-					<div className="side-panel-contents">
-						<Space direction="vertical" style={{ width: "100%" }}>
-							{assignMode ? (
-								<Assigner
-									pageSystem={
-										pageSystems?.[selectedPage] || 0
-									}
-								/>
-							) : (
-								<>
-									<Typography.Title
-										level={5}
-										style={{
-											color: "white",
-											marginBottom: 0,
-										}}
-									>
-										Select a System for this Page:
-									</Typography.Title>
-									<Select
-										showSearch
-										value={pageSystems?.[selectedPage] || 0}
-										onChange={(e) =>
-											setPageSystems((prev) => ({
-												...prev,
-												[selectedPage]: e,
-											}))
-										}
-										placeholder="Select System"
-										style={{ width: "100%" }}
-										filterOption={(input, option) =>
-											option.children
-												.toLowerCase()
-												.includes(input)
-										}
-										filterSort={(optionA, optionB) =>
-											optionA.children
-												.toLowerCase()
-												.localeCompare(
-													optionB.children.toLowerCase()
-												)
-										}
-									>
-										<Select.Option value={0}>
-											Multiple Systems
-										</Select.Option>
-										{systems?.map((sys, index) => (
-											<Select.Option
-												key={index}
-												value={sys.id}
-											>
-												{sys.name}
-											</Select.Option>
-										))}
-									</Select>
-									<Typography.Title
-										level={5}
-										style={{
-											color: "white",
-											marginBottom: 0,
-										}}
-									>
-										Fields in this page:
-									</Typography.Title>
-									<Typography.Text
-										style={{ color: "lightgray" }}
-										italic
-									>
-										{assignedFields?.[selectedPage]
-											?.length > 0
-											? "Click on a field to assign/edit"
-											: "No fields added"}
-									</Typography.Text>
-									{assignedFields?.[selectedPage]?.map(
-										(x, index) => (
+				{!loadingPdf && (
+					<div className="side-panel-wrapper">
+						<div className="side-panel-contents">
+							<Space direction="vertical" style={{ width: "100%" }}>
+								{assignMode ? (
+									<Assigner pageSystem={pageSystems?.[selectedPage] || 0} />
+								) : (
+									<>
+										<Typography.Title
+											level={5}
+											style={{
+												color: "white",
+												marginBottom: 0,
+											}}
+										>
+											Select a System for this Page:
+										</Typography.Title>
+										<Select
+											showSearch
+											value={pageSystems?.[selectedPage] || 0}
+											onChange={(e) =>
+												setPageSystems((prev) => ({
+													...prev,
+													[selectedPage]: e,
+												}))
+											}
+											placeholder="Select System"
+											style={{ width: "100%" }}
+											filterOption={(input, option) =>
+												option.children.toLowerCase().includes(input)
+											}
+											filterSort={(optionA, optionB) =>
+												optionA.children
+													.toLowerCase()
+													.localeCompare(optionB.children.toLowerCase())
+											}
+										>
+											<Select.Option value={0}>Multiple Systems</Select.Option>
+											{systems?.map((sys, index) => (
+												<Select.Option key={index} value={sys.id}>
+													{sys.name}
+												</Select.Option>
+											))}
+										</Select>
+										<Typography.Title
+											level={5}
+											style={{
+												color: "white",
+												marginBottom: 0,
+											}}
+										>
+											Fields in this page:
+										</Typography.Title>
+										<Typography.Text style={{ color: "lightgray" }} italic>
+											{assignedFields?.[selectedPage]?.length > 0
+												? "Click on a field to assign/edit"
+												: "No fields added"}
+										</Typography.Text>
+										{assignedFields?.[selectedPage]?.map((x, index) => (
 											<div
 												onClick={() => {
 													setAssignMode({ index });
@@ -564,21 +569,17 @@ const PdfViewer = () => {
 											>
 												<Badge
 													style={{ color: "inherit" }}
-													color={
-														x.assigned
-															? "green"
-															: "orange"
-													}
+													color={x.assigned ? "green" : "orange"}
 													text={`Field #${index + 1}`}
 												/>
 											</div>
-										)
-									)}
-								</>
-							)}
-						</Space>
+										))}
+									</>
+								)}
+							</Space>
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</>
 	);

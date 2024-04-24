@@ -52,10 +52,12 @@ interface props {
 
 const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 	const [items, setItems] = useState<MenuProps["items"]>([]);
+	const [files, setFiles] = useState<any>([]);
 	const [fileList, setFileList] = useState<UploadFile[]>([]);
 	const [systems, setSystems] = useState<any>([]);
 	const [selectedKey, setSelectedKey] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isFilesLoading, setIsFilesLoading] = useState<boolean>(true);
 	const { completeLoading } = useLoaderContext();
 	const navigate = useNavigate();
 
@@ -68,7 +70,7 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 		},
 		beforeUpload: (file) => {
 			setFileList([...fileList, file]);
-			navigate("/pdfview", { state: { ahj, heading, file } });
+			navigate("/pdfview", { state: { ahj, heading, file, editMode: false } });
 
 			return false;
 		},
@@ -96,6 +98,15 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				}
 				completeLoading();
 				setIsLoading(false);
+			},
+		});
+		apiCall({
+			method: "GET",
+			url: `/dropdown/ahj_pdf?id=${ahj}`,
+			handleResponse: (res) => {
+				setFiles(res.data.message);
+				setIsFilesLoading(false);
+				console.log(res.data.message);
 			},
 		});
 	}, []);
@@ -155,20 +166,53 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				<br />
 				<div className="content-fixed-item">
 					<Typography.Text type="secondary">
-						Files ({fileList.length})
+						Files ({files.length})
 					</Typography.Text>
 					<Typography.Text
 						strong
 						style={{ float: "right", cursor: "pointer" }}
 						type="secondary"
 					>
-						<Upload style={{ width: "100%" }} {...uploadProps}>
-							<PlusOutlined />
-						</Upload>
+						{isFilesLoading ? (
+							<LoadingOutlined />
+						) : (
+							<Upload style={{ width: "100%" }} {...uploadProps}>
+								<PlusOutlined />
+							</Upload>
+						)}
 					</Typography.Text>
 				</div>
 				<div className="content-fixed-item">
-					{fileList.length ? null : (
+					{files?.length ? (
+						files.map((file: any, index: number) => (
+							<div
+								key={index}
+								className={"system-list-item"}
+								onClick={() => {
+									navigate("/pdfview", {
+										state: {
+											ahj,
+											heading,
+											file: { ...file, name: file.filepath.name },
+											editMode: true,
+										},
+									});
+								}}
+							>
+								{/* <Upload style={{ width: "100%" }} {...uploadProps}> */}
+								<FilePdfOutlined />{" "}
+								<Typography.Text
+									ellipsis={{
+										tooltip: { title: file.name, placement: "bottomLeft" },
+									}}
+									style={{ width: "80%" }}
+								>
+									{file.filepath.name}
+								</Typography.Text>
+								{/* </Upload> */}
+							</div>
+						))
+					) : (
 						<div className={"system-list-item"}>
 							<Upload style={{ width: "100%" }} {...uploadProps}>
 								<PlusOutlined />{" "}
@@ -178,27 +222,6 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 							</Upload>
 						</div>
 					)}
-					{fileList.map((file: any, index: number) => (
-						<div
-							key={index}
-							className={"system-list-item"}
-							onClick={() => {
-								navigate("/pdfview", { state: { ahj, heading, file } });
-							}}
-						>
-							{/* <Upload style={{ width: "100%" }} {...uploadProps}> */}
-							<FilePdfOutlined />{" "}
-							<Typography.Text
-								ellipsis={{
-									tooltip: { title: file.name, placement: "bottomLeft" },
-								}}
-								style={{ width: "80%" }}
-							>
-								{file.name}
-							</Typography.Text>
-							{/* </Upload> */}
-						</div>
-					))}
 				</div>
 				<br />
 				<div className="content-fixed-item">
