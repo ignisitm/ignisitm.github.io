@@ -224,14 +224,14 @@ const PdfViewer = () => {
 		});
 	};
 
-	const uploadfile = (file) => {
+	const uploadfile = (file, id) => {
 		return new Promise((resolve, reject) => {
 			apiCall({
 				method: "PUT",
 				url: "/fileupload?superadmin=true",
 				data: {
 					type: "ahj_pdfs",
-					type_name: ahj.toString(),
+					type_name: id.toString(),
 					file_name: file.name,
 					content_type: file.type,
 				},
@@ -263,26 +263,41 @@ const PdfViewer = () => {
 	const savePdf = () => {
 		if (ahj && assignedFields) {
 			setSaving(true);
-			uploadfile(file).then((filepath) => {
-				apiCall({
-					url: "/AHJpdf",
-					method: "POST",
-					data: {
-						ahj_id: ahj,
-						fields: JSON.stringify(assignedFields),
-						filepath,
-					},
-					handleResponse: (res) => {
-						message.success(res.data.message);
-						setSaving(false);
-						navigate(-1);
-						console.log(res);
-					},
-					handleError: (err) => {
-						console.log(err);
-						setSaving(false);
-					},
-				});
+			apiCall({
+				url: "/AHJpdf",
+				method: "POST",
+				data: {
+					ahj_id: ahj,
+					fields: JSON.stringify(assignedFields),
+					filepath: {},
+				},
+				handleResponse: (res) => {
+					const id = res.data.message.id;
+					console.log(res);
+					uploadfile(file, id).then((filepath) => {
+						apiCall({
+							url: "/AHJpdf",
+							method: "PUT",
+							data: {
+								id,
+								filepath,
+							},
+							handleResponse: (res) => {
+								message.success("AHJ File added Successfully!");
+								setSaving(false);
+								navigate(-1);
+							},
+							handleError: (err) => {
+								console.log(err);
+								setSaving(false);
+							},
+						});
+					});
+				},
+				handleError: (err) => {
+					console.log(err);
+					setSaving(false);
+				},
 			});
 		} else message.error("Missing Fields!");
 	};
