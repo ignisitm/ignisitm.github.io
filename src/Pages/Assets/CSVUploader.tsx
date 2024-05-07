@@ -34,7 +34,14 @@ const CSVUploader = ({ onChange }: Props) => {
 		}
 	};
 
-	return <input type="file" accept=".csv" onChange={handleFileChange} />;
+	return (
+		<input
+			key={Date.now()}
+			type="file"
+			accept=".csv"
+			onChange={handleFileChange}
+		/>
+	);
 };
 
 export default CSVUploader;
