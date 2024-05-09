@@ -129,7 +129,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	};
 
 	const beforeUpload = (file: RcFile) => {
-		const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+		const isJpgOrPng =
+			file.type === "image/jpeg" || file.type === "image/png";
 		if (!isJpgOrPng) {
 			message.error("You can only upload JPEG/PNG file!");
 		}
@@ -215,7 +216,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		curr_assetDetails[assetPage] = form.getFieldsValue();
 		setAssetDetails(curr_assetDetails);
 		let next_asset =
-			curr_assetDetails[direction === "prev" ? assetPage - 1 : assetPage + 1];
+			curr_assetDetails[
+				direction === "prev" ? assetPage - 1 : assetPage + 1
+			];
 		if (next_asset) {
 			form.setFieldsValue(next_asset);
 			if (next_asset.frequency !== frequency) setShowNFPAError(true);
@@ -266,7 +269,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						beforeUpload={beforeUpload}
 						onChange={(e: any) => {
 							console.log(e);
-							if (e.file.type === "image/jpeg" || e.file.type === "image/png") {
+							if (
+								e.file.type === "image/jpeg" ||
+								e.file.type === "image/png"
+							) {
 								setAssetImage(e.file);
 							}
 						}}
@@ -315,7 +321,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(optionB!.children as unknown as string).toLowerCase()
+										(
+											optionB!
+												.children as unknown as string
+										).toLowerCase()
 									)
 							}
 						>
@@ -352,7 +361,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								allowClear={true}
 								onChange={(e) => {
 									setSelectedSystem(e);
-									let tag = systems?.find((x: any) => x.id === e).tag;
+									let tag = systems?.find(
+										(x: any) => x.id === e
+									).tag;
 									setSystemTag(`${tag}/`);
 								}}
 								placeholder="Search to Select"
@@ -366,13 +377,21 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									(optionA!.children as unknown as string)
 										.toLowerCase()
 										.localeCompare(
-											(optionB!.children as unknown as string).toLowerCase()
+											(
+												optionB!
+													.children as unknown as string
+											).toLowerCase()
 										)
 								}
 							>
 								{systems?.map(
-									(item: { id: object; name: string }, index: number) => (
-										<Select.Option value={item.id}>{item.name}</Select.Option>
+									(
+										item: { id: object; name: string },
+										index: number
+									) => (
+										<Select.Option value={item.id}>
+											{item.name}
+										</Select.Option>
 									)
 								)}
 							</Select>
@@ -402,9 +421,13 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									setSelectedAssetType(e);
 									form.setFieldValue(
 										"frequency",
-										deviceTypes.find((o) => o.id === e).frequency
+										deviceTypes.find((o) => o.id === e)
+											.frequency
 									);
-									setFrequency(deviceTypes.find((o) => o.id === e).frequency);
+									setFrequency(
+										deviceTypes.find((o) => o.id === e)
+											.frequency
+									);
 								}}
 								optionFilterProp="children"
 								filterOption={(input, option) =>
@@ -416,13 +439,21 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									(optionA!.children as unknown as string)
 										.toLowerCase()
 										.localeCompare(
-											(optionB!.children as unknown as string).toLowerCase()
+											(
+												optionB!
+													.children as unknown as string
+											).toLowerCase()
 										)
 								}
 							>
 								{deviceTypes?.map(
-									(item: { id: object; name: string }, index: number) => (
-										<Select.Option value={item.id}>{item.name}</Select.Option>
+									(
+										item: { id: object; name: string },
+										index: number
+									) => (
+										<Select.Option value={item.id}>
+											{item.name}
+										</Select.Option>
 									)
 								)}
 							</Select>
@@ -436,7 +467,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								rules={[
 									{
 										required: true,
-										message: "Please input the tag of Asset!",
+										message:
+											"Please input the tag of Asset!",
 									},
 								]}
 							>
@@ -467,13 +499,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									]}
 								>
 									{field.type === "number" ? (
-										<InputNumber style={{ width: "100%" }} />
+										<InputNumber
+											style={{ width: "100%" }}
+										/>
 									) : field.type === "text" ? (
 										<Input />
 									) : field.type === "boolean" ? (
 										<Select>
-											<Select.Option value={true}>YES</Select.Option>
-											<Select.Option value={false}>NO</Select.Option>
+											<Select.Option value={true}>
+												YES
+											</Select.Option>
+											<Select.Option value={false}>
+												NO
+											</Select.Option>
 										</Select>
 									) : null}
 								</Form.Item>
@@ -519,7 +557,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(optionB!.children as unknown as string).toLowerCase()
+										(
+											optionB!
+												.children as unknown as string
+										).toLowerCase()
 									)
 							}
 						>
@@ -556,7 +597,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								allowClear={true}
 								onChange={(e) => {
 									setSelectedSystem(e);
-									let tag = systems?.find((x: any) => x.id === e).tag;
+									let tag = systems?.find(
+										(x: any) => x.id === e
+									).tag;
 									setSystemTag(`${tag}/`);
 								}}
 								placeholder="Search to Select"
@@ -570,13 +613,21 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									(optionA!.children as unknown as string)
 										.toLowerCase()
 										.localeCompare(
-											(optionB!.children as unknown as string).toLowerCase()
+											(
+												optionB!
+													.children as unknown as string
+											).toLowerCase()
 										)
 								}
 							>
 								{systems?.map(
-									(item: { id: object; name: string }, index: number) => (
-										<Select.Option value={item.id}>{item.name}</Select.Option>
+									(
+										item: { id: object; name: string },
+										index: number
+									) => (
+										<Select.Option value={item.id}>
+											{item.name}
+										</Select.Option>
 									)
 								)}
 							</Select>
@@ -621,13 +672,21 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 										(optionA!.children as unknown as string)
 											.toLowerCase()
 											.localeCompare(
-												(optionB!.children as unknown as string).toLowerCase()
+												(
+													optionB!
+														.children as unknown as string
+												).toLowerCase()
 											)
 									}
 								>
 									{deviceTypes?.map(
-										(item: { id: object; name: string }, index: number) => (
-											<Select.Option value={item.id}>{item.name}</Select.Option>
+										(
+											item: { id: object; name: string },
+											index: number
+										) => (
+											<Select.Option value={item.id}>
+												{item.name}
+											</Select.Option>
 										)
 									)}
 								</Select>
@@ -641,7 +700,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			{commonFieldsSelected && (
 				<>
 					<Divider orientation="right" orientationMargin="0">
-						<Button type="link" onClick={() => setShowCommonFieldsModal(true)}>
+						<Button
+							type="link"
+							onClick={() => setShowCommonFieldsModal(true)}
+						>
 							Modify Common Fields
 						</Button>
 					</Divider>
@@ -727,7 +789,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 										rules={[
 											{
 												required: true,
-												message: "Please input the tag of Asset!",
+												message:
+													"Please input the tag of Asset!",
 											},
 										]}
 									>
@@ -737,7 +800,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							)}
 							{loadingGeneralInfo && (
 								<h4>
-									<LoadingOutlined /> Loading General Fields...
+									<LoadingOutlined /> Loading General
+									Fields...
 								</h4>
 							)}
 							{showCommonFields(false)}
@@ -869,11 +933,18 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									) : field.type === "boolean" ? (
 										<Select
 											onBlur={(e) =>
-												ModifyCommonFieldForAllAssets(field.name, e)
+												ModifyCommonFieldForAllAssets(
+													field.name,
+													e
+												)
 											}
 										>
-											<Select.Option value={true}>YES</Select.Option>
-											<Select.Option value={false}>NO</Select.Option>
+											<Select.Option value={true}>
+												YES
+											</Select.Option>
+											<Select.Option value={false}>
+												NO
+											</Select.Option>
 										</Select>
 									) : null}
 								</Form.Item>
@@ -908,7 +979,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			"type_id",
 			"tag",
 			// "frequency",
-			...generalInfo.filter((x) => x.mandatory === true).map((x) => x.name),
+			...generalInfo
+				.filter((x) => x.mandatory === true)
+				.map((x) => x.name),
 		];
 		return new Promise((resolve, reject) => {
 			if (assetDetails.length !== assetQty)
@@ -1007,7 +1080,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				)}
 				<Divider />
 				<h4>Enter No. of Assets: </h4>
-				<Input value={assetQty ? assetQty : ""} onChange={handleChangeQty} />
+				<Input
+					value={assetQty ? assetQty : ""}
+					onChange={handleChangeQty}
+				/>
 				<div style={{ width: "100%", textAlign: "center" }}>
 					<h4>OR</h4>
 				</div>
@@ -1027,10 +1103,16 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 											.trim()
 											.replace(/(\r\n|\n|\r)/gm, "");
 										let column_value =
-											data[i]?.[j]?.trim().replace(/(\r\n|\n|\r)/gm, "") ||
-											null;
+											data[i]?.[j]
+												?.trim()
+												.replace(
+													/(\r\n|\n|\r)/gm,
+													""
+												) || null;
 										new_obj[
-											header_value === "Asset tag" ? "tag" : header_value
+											header_value === "Asset tag"
+												? "tag"
+												: header_value
 										] = column_value || null;
 									}
 									if (new_obj.tag)
@@ -1070,8 +1152,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					<br /> <br />
 					<div>
 						<Typography.Text italic type="danger">
-							Download the CSV Template and fill the columns (Non-Common Fields)
-							and upload it here.
+							Download the CSV Template and fill the columns
+							(Non-Common Fields) and upload it here.
 							<br />
 							Note: Enter Asset Tags without the System Tag.
 						</Typography.Text>
@@ -1099,8 +1181,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				}}
 				onOk={() => {
 					if (entryType === "single") {
-						form
-							.validateFields()
+						form.validateFields()
 							.then((values) => {
 								values["image"] = assetImage;
 								values["tag"] = systemTag + values["tag"];
@@ -1117,7 +1198,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						validateMultipleEntry(curr_assetDetails)
 							.then(() => {
 								setAssetDetails(curr_assetDetails);
-								onCreate(curr_assetDetails, true, systemTag).then(() => {
+								onCreate(
+									curr_assetDetails,
+									true,
+									systemTag
+								).then(() => {
 									resetModal();
 								});
 							})
@@ -1180,7 +1265,11 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 		});
 	};
 
-	const onCreate = (values: any, multi: boolean = false, systemTag: string) => {
+	const onCreate = (
+		values: any,
+		multi: boolean = false,
+		systemTag: string
+	) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			if (!multi) {
 				let GeneralInfoData = { ...values };
@@ -1209,23 +1298,25 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 					handleResponse: (res) => {
 						console.log(res.data.message);
 						if (image)
-							uploadfiles(image, res.data.message.id).then((uf_res) => {
-								console.log("File Upload Res: ", uf_res);
-								apiCall({
-									method: "PUT",
-									url: "/clientassets",
-									data: {
-										id: res.data.message.id,
-										data: { image: uf_res },
-									},
-									handleResponse: (up_res) => {
-										resolve(res);
-										setConfirmLoading(false);
-										setVisible(false);
-										fetchData();
-									},
-								});
-							});
+							uploadfiles(image, res.data.message.id).then(
+								(uf_res) => {
+									console.log("File Upload Res: ", uf_res);
+									apiCall({
+										method: "PUT",
+										url: "/clientassets",
+										data: {
+											id: res.data.message.id,
+											data: { image: uf_res },
+										},
+										handleResponse: (up_res) => {
+											resolve(res);
+											setConfirmLoading(false);
+											setVisible(false);
+											fetchData();
+										},
+									});
+								}
+							);
 						else {
 							resolve(res);
 							setConfirmLoading(false);
