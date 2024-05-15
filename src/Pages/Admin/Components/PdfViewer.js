@@ -143,6 +143,7 @@ const PdfViewer = () => {
 	}
 
 	const loadDocuments = (url) => {
+		console.log("Loading From DOCS");
 		pdfjsLib
 			.getDocument(url)
 			.promise.then((doc) => {
@@ -192,6 +193,7 @@ const PdfViewer = () => {
 			method: "GET",
 			url: `/AHJpdf/${file.id}`,
 			handleResponse: (res) => {
+				console.log("res: ", res);
 				let url = res.data.message.url;
 				let newAssignedFields = res.data.message.fields;
 				newAssignedFields = JSON.parse(newAssignedFields);
@@ -199,7 +201,8 @@ const PdfViewer = () => {
 				setFileURL(url);
 				loadDocuments(url);
 			},
-			handleError: () => {
+			handleError: (err) => {
+				console.log(err);
 				return "Error";
 			},
 		});
@@ -208,6 +211,7 @@ const PdfViewer = () => {
 	useEffect(() => {
 		getSystems();
 		console.log(file);
+		console.log(editMode);
 		let url;
 		if (editMode) {
 			loadFromURL();
@@ -376,12 +380,26 @@ const PdfViewer = () => {
 				: "procedures"
 		);
 		const [procedures, setProcedures] = useState(null);
+		const [systemFields, setSystemFields] = useState(null);
+
 		const [procedure, setProcedure] = useState(
-			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type ===
+					"procedures"
 				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
 				: null
 		);
+
+		const [systemField, setSystemField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type ===
+					"system_values"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
+		);
+
 		const [loadingProcedures, setLoadingProcedures] = useState(false);
+		const [systemFieldsLoading, setSystemFieldsLoading] = useState(false);
 
 		const getProcedures = () => {
 			setLoadingProcedures(true);
@@ -396,13 +414,31 @@ const PdfViewer = () => {
 			});
 		};
 
+		const getSystemFields = () => {
+			setSystemFieldsLoading(true);
+			apiCall({
+				method: "GET",
+				url: `/dropdown/systemfields?id=${system}`,
+				handleResponse: (res) => {
+					setSystemFieldsLoading(false);
+					setSystemFields(res.data.message?.general_information);
+				},
+				handleError: (err) => setSystemFieldsLoading(false),
+			});
+		};
+
 		const assign = () => {
 			setAssignedFields((prev) => {
 				let new_arr = prev[selectedPage];
 				new_arr[assignMode.index] = {
 					...new_arr[assignMode.index],
 					system,
-					assigned: procedure,
+					assigned:
+						type === "procedures"
+							? procedure
+							: type === "system_values"
+							? systemField
+							: null,
 					type,
 				};
 				return { ...prev, [selectedPage]: new_arr };
@@ -412,7 +448,8 @@ const PdfViewer = () => {
 
 		useEffect(() => {
 			if (type === "procedures" && system) getProcedures();
-		}, [system]);
+			else if (type === "system_values" && system) getSystemFields();
+		}, [system, type]);
 
 		return (
 			<Space
@@ -480,7 +517,7 @@ const PdfViewer = () => {
 										showSearch
 										value={procedure}
 										onChange={(e) => setProcedure(e)}
-										placeholder="Select System"
+										placeholder="Select Procedure"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
 											option.children
@@ -506,12 +543,52 @@ const PdfViewer = () => {
 									</Select>
 								</div>
 							)
+						) : type === "system_values" ? (
+							systemFieldsLoading ? (
+								<span>
+									<LoadingOutlined /> Loading System Fields
+								</span>
+							) : (
+								<div>
+									<label style={{ margin: "4px" }}>
+										Select a System Field
+									</label>
+									<Select
+										showSearch
+										value={systemField}
+										onChange={(e) => setSystemField(e)}
+										placeholder="Select System Field"
+										style={{ width: "100%" }}
+										filterOption={(input, option) =>
+											option.children
+												.toLowerCase()
+												.includes(input)
+										}
+										filterSort={(optionA, optionB) =>
+											optionA.children
+												.toLowerCase()
+												.localeCompare(
+													optionB.children.toLowerCase()
+												)
+										}
+									>
+										{systemFields?.map((proc, index) => (
+											<Select.Option
+												key={index}
+												value={proc.name}
+											>
+												{proc.name}
+											</Select.Option>
+										))}
+									</Select>
+								</div>
+							)
 						) : null}
 					</>
 				) : null}
 				<Space>
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
-					{procedure && (
+					{(procedure || systemField) && (
 						<Button type="primary" onClick={assign}>
 							{assignedFields?.[selectedPage]?.[assignMode?.index]
 								?.assigned

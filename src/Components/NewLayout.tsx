@@ -212,7 +212,9 @@ const NewAppLayout: FC = () => {
 	const verify = () => {
 		apiCall({
 			method: "POST",
-			url: `/${client.client_id === "admin" ? "super" : "client"}auth/verify`,
+			url: `/${
+				client.client_id === "admin" ? "super" : "client"
+			}auth/verify`,
 			data: { user: getUser(), token: getToken() },
 			handleResponse: (res) => {
 				console.log("token Verified");
@@ -269,14 +271,17 @@ const NewAppLayout: FC = () => {
 				okButtonProps={{ style: { display: "none" } }}
 				width={"calc(100vw - 200px)"}
 				style={{ top: "20px" }}
-				bodyStyle={{ overflowY: "scroll", height: "calc(100vh - 200px)" }}
+				bodyStyle={{
+					overflowY: "scroll",
+					height: "calc(100vh - 200px)",
+				}}
 				destroyOnClose={true}
 			>
 				<Masters />
 			</Modal>
 			<Sider
 				theme="light"
-				width={"55px"}
+				width={72}
 				style={{
 					overflow: "auto",
 					height: "100vh",
@@ -287,24 +292,25 @@ const NewAppLayout: FC = () => {
 					backgroundColor: "#f9f9f9",
 					borderRight: "0.5px solid silver",
 				}}
+				className="test"
 			>
-				<div style={{ padding: "18px", paddingBottom: "12px" }}>
-					<img width={"20"} height={"40"} src="short_logo.png" />
-				</div>
-				<div
-				// style={{
-				// 	display: "flex",
-				// 	flexDirection: "column",
-				// 	justifyContent: "space-between",
-				// 	height: "calc(100% - 165px)",
-				// }}
-				>
-					<Menubar
-						items={items}
-						defaultValue={location.pathname.toLowerCase()}
-						onClick={(key: string) => navigate(key)}
-					/>
-					{/* <Menu
+				<div className="nlayout-sidebar">
+					<div
+						style={{
+							padding: "18px",
+							paddingBottom: "12px",
+							textAlign: "center",
+						}}
+					>
+						<img width={"25"} height={"45"} src="short_logo.png" />
+					</div>
+					<div className="nlayout-sidebar-items-wrapper">
+						<Menubar
+							items={items}
+							defaultValue={location.pathname.toLowerCase()}
+							onClick={(key: string) => navigate(key)}
+						/>
+						{/* <Menu
 						theme="light"
 						mode="inline"
 						defaultSelectedKeys={[location.pathname.toLowerCase()]}
@@ -334,12 +340,13 @@ const NewAppLayout: FC = () => {
 							}}
 						/>
 					</span> */}
+					</div>
 				</div>
 			</Sider>
 			<Layout
 				className="main-background"
 				style={{
-					marginLeft: 55,
+					marginLeft: 72,
 					minHeight: "100vh",
 				}}
 			>
@@ -359,7 +366,11 @@ const NewAppLayout: FC = () => {
 					</Space>
 					<div className="user-full-name">
 						<span>{userdetails?.name}&nbsp;&nbsp;</span>
-						<Avatar style={{ top: "-2px" }} shape="square" size={28}>
+						<Avatar
+							style={{ top: "-2px" }}
+							shape="square"
+							size={28}
+						>
 							{userdetails?.name.split(" ")[0][0] +
 								(userdetails?.name.split(" ")?.[1]?.[0] || "")}
 						</Avatar>
@@ -379,7 +390,9 @@ const NewAppLayout: FC = () => {
 						className="site-layout-background"
 						style={{
 							height: "100%",
-							padding: location.pathname.includes("/pdfview") ? "0px" : "5px",
+							padding: location.pathname.includes("/pdfview")
+								? "0px"
+								: "5px",
 						}}
 					>
 						<Outlet context={{ completeLoading }} />
@@ -397,7 +410,8 @@ const NewAppLayout: FC = () => {
 						fontSize: "10px",
 					}}
 				>
-					{capitalizeFirstLetter(client.client_name)} ©2024 powered by IgnisITM
+					{capitalizeFirstLetter(client.client_name)} ©2024 powered by
+					IgnisITM
 				</Footer>
 			</Layout>
 		</Layout>
