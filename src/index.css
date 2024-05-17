@@ -1,4 +1,4 @@
-/* @import url("https://fonts.googleapis.com/css2?family=Montserrat"); */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat");
 @import url("https://fonts.googleapis.com/css2?family=Poppins");
 body {
 	margin: 0;
@@ -30,7 +30,7 @@ code {
 	width: 100%;
 	text-align: center;
 	padding: 1px 3px;
-	font-size: 14px;
+	font-size: 18px;
 	color: gray;
 }
 
@@ -41,7 +41,7 @@ code {
 	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 35px;
+	height: 38px;
 }
 
 .nlayout-menu-icon-wrapper {
@@ -50,7 +50,7 @@ code {
 	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 35px;
+	height: 38px;
 }
 
 .nlayout-menu-icon-wrapper:hover {

@@ -389,10 +389,12 @@ const NewAppLayout2: FC = () => {
 								style={{
 									paddingTop: "12px",
 									textAlign: "center",
+									marginLeft: "-5px",
+									paddingBottom: "10px",
 								}}
 							>
 								<img
-									width={"85"}
+									width={"88"}
 									height={"55"}
 									src="logo.png"
 								/>
