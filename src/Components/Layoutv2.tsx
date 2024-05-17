@@ -392,9 +392,9 @@ const NewAppLayout2: FC = () => {
 								}}
 							>
 								<img
-									width={"20"}
-									height={"40"}
-									src="short_logo.png"
+									width={"75"}
+									height={"50"}
+									src="logo.png"
 								/>
 							</div>
 							<div className="nlayout-sidebar-items-wrapper">
@@ -440,7 +440,7 @@ const NewAppLayout2: FC = () => {
 				<Layout
 					className="main-background"
 					style={{
-						marginLeft: 45,
+						marginLeft: 126,
 						minHeight: "100vh",
 					}}
 				>

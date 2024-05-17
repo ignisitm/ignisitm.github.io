@@ -34,7 +34,6 @@ const Menubar: FC<props> = ({ items, defaultValue, onClick }) => {
 				item.type === "group" ? (
 					<div key={index} className="hide-text-overflow">
 						<Typography.Text
-							strong
 							style={{
 								display: "inline-block",
 								whiteSpace: "nowrap",
@@ -59,24 +58,25 @@ const Menubar: FC<props> = ({ items, defaultValue, onClick }) => {
 						>
 							<div
 								style={{
-									width: "38px",
-									maxWidth: "38px",
-									minWidth: "38px",
+									width: "30px",
+									maxWidth: "30px",
+									minWidth: "30px",
 									textAlign: "center",
 								}}
 							>
 								{item.icon}
 							</div>
-							<Typography.Text
-								strong
+							<span
 								style={{
 									wordBreak: "unset",
 									whiteSpace: "nowrap",
 									overflow: "hidden",
+									fontSize: "11px",
+									color: "black",
 								}}
 							>
 								{item.label}
-							</Typography.Text>
+							</span>
 						</div>
 					</div>
 				)
