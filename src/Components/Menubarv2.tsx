@@ -71,7 +71,7 @@ const Menubar: FC<props> = ({ items, defaultValue, onClick }) => {
 									wordBreak: "unset",
 									whiteSpace: "nowrap",
 									overflow: "hidden",
-									fontSize: "11px",
+									fontSize: "12px",
 									color: "black",
 								}}
 							>

@@ -41,7 +41,7 @@ code {
 	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 30px;
+	height: 35px;
 }
 
 .nlayout-menu-icon-wrapper {
@@ -50,7 +50,7 @@ code {
 	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 30px;
+	height: 35px;
 }
 
 .nlayout-menu-icon-wrapper:hover {
@@ -70,7 +70,7 @@ code {
 }
 
 .nlayout-main-sider {
-	width: 126px !important;
+	width: 130px !important;
 	z-index: 3;
 	overflow-x: hidden;
 	height: 100vh;
@@ -117,10 +117,10 @@ code {
 .nlayout-header {
 	position: absolute;
 	top: 0;
-	width: calc(100% - 126px);
+	width: calc(100% - 130px);
 	background-color: #f9f9f9;
 	padding: 0 15px;
-	margin-left: 126px;
+	margin-left: 130px;
 	height: 45px;
 	z-index: 2;
 	border-bottom: 0.5px solid silver;
