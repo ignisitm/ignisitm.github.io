@@ -30,7 +30,7 @@ code {
 	width: 100%;
 	text-align: center;
 	padding: 1px 3px;
-	font-size: 22px;
+	font-size: 20px;
 	color: gray;
 }
 
@@ -38,23 +38,19 @@ code {
 	border-radius: 8px;
 	background-color: #e9e9e9;
 	color: #f9992e;
-	justify-content: center;
-	flex-direction: column;
+	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 50px;
-	padding-top: 6px;
+	height: 40px;
 }
 
 .nlayout-menu-icon-wrapper {
 	border-radius: 8px;
 	cursor: pointer;
-	justify-content: center;
-	flex-direction: column;
+	justify-content: start;
 	display: flex;
 	align-items: center;
-	height: 50px;
-	padding-top: 6px;
+	height: 40px;
 }
 
 .nlayout-menu-icon-wrapper:hover {
@@ -67,22 +63,77 @@ code {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	gap: 3px;
 }
 
 .nlayout-sidebar-wrapper div:last-child {
 	margin-top: auto;
 }
 
-.nlayout-header {
+.nlayout-main-sider {
+	width: 45px !important;
+	z-index: 3;
+	overflow-x: hidden;
+	height: 100vh;
 	position: fixed;
+	left: 0;
 	top: 0;
-	width: calc(100% - 72px);
+	bottom: 0;
+	transition-timing-function: ease-in;
+	transition: width 0.05s;
+}
+
+.nlayout-main-sider :focus {
+	outline: none;
+}
+
+.nlayout-main-sider:hover {
+	width: 136px !important;
+	z-index: 3;
+	overflow-x: hidden;
+	height: 100vh;
+	position: fixed;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	transition-timing-function: ease-in;
+	transition: width 0.15s;
+}
+
+.nlayout-main-sider .hide-text-overflow {
+	padding-left: 5px;
+	padding-bottom: 1px;
+	color: transparent;
+	transition-timing-function: ease-in-out;
+	transition: color 0.1s;
+}
+.nlayout-main-sider:hover .hide-text-overflow {
+	padding-left: 5px;
+	padding-bottom: 1px;
+	color: slategray;
+	transition-timing-function: ease-in-out;
+	transition: color 0.2s;
+}
+
+.nlayout-header {
+	position: absolute;
+	top: 0;
+	width: calc(100% - 45px);
 	background-color: #f9f9f9;
 	padding: 0 15px;
+	margin-left: 45px;
 	height: 45px;
 	z-index: 2;
 	border-bottom: 0.5px solid silver;
+}
+
+.nlayout-header-v2 {
+	position: fixed;
+	top: 56px;
+	width: calc(100% - 72px);
+	background-color: #f9f9f9;
+	padding: 20px 15px;
+	height: 45px;
+	z-index: 2;
 }
 
 /* .nlayout-menu-bar-icons:hover {
@@ -480,6 +531,7 @@ code {
 	float: right;
 	height: 100%;
 	margin-top: -5px;
+	cursor: pointer;
 }
 
 .team-menu {

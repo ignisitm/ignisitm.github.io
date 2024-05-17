@@ -35,12 +35,18 @@ const Dashboard = () => {
 				completeLoading();
 				setLoading(false);
 				let systems_wo_contracts =
-					data?.["sys_co"]?.find((x: any) => x.current_contract === null)
-						?.count || 0;
+					data?.["sys_co"]?.find(
+						(x: any) => x.current_contract === null
+					)?.count || 0;
 				let systems_wo_teams =
-					data?.["sys_team"]?.find((x: any) => x.team === null)?.count || 0;
+					data?.["sys_team"]?.find((x: any) => x.team === null)
+						?.count || 0;
 				let alerts = [];
-				console.log("Counts : ", systems_wo_contracts, systems_wo_teams);
+				console.log(
+					"Counts : ",
+					systems_wo_contracts,
+					systems_wo_teams
+				);
 				if (systems_wo_contracts == 1)
 					alerts.push({
 						label: `There is ${systems_wo_contracts} system without contract assigned to it`,
@@ -95,16 +101,27 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>
+								<span
+									style={{
+										color: "#353535",
+										fontSize: "20px",
+									}}
+								>
 									{loading ? (
-										<Skeleton.Button active={true} size="small" />
+										<Skeleton.Button
+											active={true}
+											size="small"
+										/>
 									) : (
-										data?.["contract"]?.find((x: any) => x.status === "ACTIVE")
-											?.count || 0
+										data?.["contract"]?.find(
+											(x: any) => x.status === "ACTIVE"
+										)?.count || 0
 									)}
 								</span>
 								<br />
-								<span style={{ color: "#353535" }}>Active Contracts</span>
+								<span style={{ color: "#353535" }}>
+									Active Contracts
+								</span>
 							</Col>
 						</Row>
 
@@ -126,7 +143,12 @@ const Dashboard = () => {
 							justify="center"
 						>
 							<Col span={6}>
-								<div style={{ alignItems: "center", height: "100%" }}>
+								<div
+									style={{
+										alignItems: "center",
+										height: "100%",
+									}}
+								>
 									<div className="circle_card">
 										<ReconciliationOutlined
 											style={{
@@ -140,9 +162,17 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>
+								<span
+									style={{
+										color: "#353535",
+										fontSize: "20px",
+									}}
+								>
 									{loading ? (
-										<Skeleton.Button active={true} size="small" />
+										<Skeleton.Button
+											active={true}
+											size="small"
+										/>
 									) : (
 										data?.["notification"]?.find(
 											(x: any) => x.status === "OPEN"
@@ -151,7 +181,8 @@ const Dashboard = () => {
 								</span>
 								<br />
 								<span style={{ color: "#353535" }}>
-									Notifications pending for work order creation
+									Notifications pending for work order
+									creation
 								</span>
 							</Col>
 						</Row>
@@ -188,12 +219,21 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>
+								<span
+									style={{
+										color: "#353535",
+										fontSize: "20px",
+									}}
+								>
 									{loading ? (
-										<Skeleton.Button active={true} size="small" />
+										<Skeleton.Button
+											active={true}
+											size="small"
+										/>
 									) : (
-										data?.["wo"]?.find((x: any) => x.status === "Pending")
-											?.count || 0
+										data?.["wo"]?.find(
+											(x: any) => x.status === "Pending"
+										)?.count || 0
 									)}
 								</span>
 								<br />
@@ -235,12 +275,21 @@ const Dashboard = () => {
 							</Col>
 							<Col span={18}>
 								{" "}
-								<span style={{ color: "#353535", fontSize: "20px" }}>
+								<span
+									style={{
+										color: "#353535",
+										fontSize: "20px",
+									}}
+								>
 									{loading ? (
-										<Skeleton.Button active={true} size="small" />
+										<Skeleton.Button
+											active={true}
+											size="small"
+										/>
 									) : (
-										data?.["wo"]?.find((x: any) => x.status === "Completed")
-											?.count || 0
+										data?.["wo"]?.find(
+											(x: any) => x.status === "Completed"
+										)?.count || 0
 									)}
 								</span>
 								<br />
@@ -268,7 +317,12 @@ const Dashboard = () => {
 									borderRadius: "8px",
 								}}
 							>
-								<span style={{ color: "#353535", fontWeight: "bold" }}>
+								<span
+									style={{
+										color: "#353535",
+										fontWeight: "bold",
+									}}
+								>
 									Work Status
 								</span>
 							</div>
@@ -277,7 +331,7 @@ const Dashboard = () => {
 					<Row style={{ height: "400px", padding: "0px 2px" }}>
 						<Col span={24}>
 							<MapContainer
-								style={{ height: "100%" }}
+								style={{ height: "100%", zIndex: "2" }}
 								center={[25.3548, 51.1839]}
 								zoom={9}
 							>
@@ -287,7 +341,8 @@ const Dashboard = () => {
 								/>
 								<Marker position={[25.3548, 51.1839]}>
 									<Popup>
-										A pretty CSS3 popup. <br /> Easily customizable.
+										A pretty CSS3 popup. <br /> Easily
+										customizable.
 									</Popup>
 								</Marker>
 							</MapContainer>
@@ -317,7 +372,9 @@ const Dashboard = () => {
 								dataSource={alerts}
 								pagination={false}
 								locale={{ emptyText: "No Alerts" }}
-								columns={[{ dataIndex: "label", title: `Alerts` }]}
+								columns={[
+									{ dataIndex: "label", title: `Alerts` },
+								]}
 							/>
 						</div>
 					</div>

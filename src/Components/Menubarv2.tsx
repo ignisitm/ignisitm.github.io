@@ -4,7 +4,7 @@ import {
 	NodeExpandOutlined,
 	PoweroffOutlined,
 } from "@ant-design/icons";
-import { Space, Tooltip, Typography } from "antd";
+import { Divider, Space, Tooltip, Typography } from "antd";
 import { FC, useState } from "react";
 import { resetUserSession } from "../Auth/Auth";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const items = [
 	{ label: "AHJ Forms", key: "ahj_forms", icon: <FormOutlined /> },
 ];
 
-const Menubarv2: FC<props> = ({ items, defaultValue, onClick }) => {
+const Menubar: FC<props> = ({ items, defaultValue, onClick }) => {
 	const [selected, setSelected] = useState(defaultValue || "/");
 	let navigate = useNavigate();
 
@@ -30,15 +30,26 @@ const Menubarv2: FC<props> = ({ items, defaultValue, onClick }) => {
 	};
 	return (
 		<>
-			{items.map((item: any, index: any) => (
-				<Tooltip
-					key={index}
-					mouseEnterDelay={0}
-					mouseLeaveDelay={0}
-					title={item.label}
-					placement="right"
-				>
-					<div className="nlayout-menu-bar-icons">
+			{items.map((item: any, index: any) =>
+				item.type === "group" ? (
+					<div key={index} className="hide-text-overflow">
+						<Typography.Text
+							strong
+							style={{
+								display: "inline-block",
+								whiteSpace: "nowrap",
+								color: "unset",
+							}}
+						>
+							{item.label}
+						</Typography.Text>
+					</div>
+				) : item.type === "divider" ? (
+					<div key={index} style={{ padding: " 6px 10px" }}>
+						<Divider style={{ margin: 0 }} />
+					</div>
+				) : (
+					<div key={index} className="nlayout-menu-bar-icons">
 						<div
 							onClick={() => onMenuItemClick(item.key)}
 							className={
@@ -46,35 +57,32 @@ const Menubarv2: FC<props> = ({ items, defaultValue, onClick }) => {
 								(selected === item.key ? "-selected" : "")
 							}
 						>
-							{item.icon}
+							<div
+								style={{
+									width: "38px",
+									maxWidth: "38px",
+									minWidth: "38px",
+									textAlign: "center",
+								}}
+							>
+								{item.icon}
+							</div>
+							<Typography.Text
+								strong
+								style={{
+									wordBreak: "unset",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+								}}
+							>
+								{item.label}
+							</Typography.Text>
 						</div>
 					</div>
-				</Tooltip>
-			))}
-			<Tooltip
-				key={"logout"}
-				mouseEnterDelay={0}
-				mouseLeaveDelay={0}
-				title={"Sign Out"}
-				placement="right"
-			>
-				<div
-					className="nlayout-menu-bar-icons"
-					style={{ position: "absolute", bottom: "0px" }}
-				>
-					<div
-						onClick={() => {
-							resetUserSession();
-							navigate("/login");
-						}}
-						className={"nlayout-menu-icon-wrapper"}
-					>
-						<PoweroffOutlined />
-					</div>
-				</div>
-			</Tooltip>
+				)
+			)}
 		</>
 	);
 };
 
-export default Menubarv2;
+export default Menubar;

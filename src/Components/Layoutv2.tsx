@@ -26,12 +26,19 @@ import {
 	UserOutlined,
 	BarsOutlined,
 	DatabaseOutlined,
+	StopOutlined,
+	DeleteRowOutlined,
+	UserSwitchOutlined,
+	InboxOutlined,
+	IssuesCloseOutlined,
 } from "@ant-design/icons";
 import {
 	Avatar,
 	Divider,
+	Dropdown,
 	Layout,
 	Menu,
+	MenuProps,
 	Modal,
 	Space,
 	Tooltip,
@@ -143,11 +150,21 @@ const NewAppLayout2: FC = () => {
 			icon: <ReconciliationOutlined />,
 			label: "Work Orders",
 		},
+		{
+			key: "/workorders",
+			icon: <BarsOutlined />,
+			label: "Procedures",
+		},
+		{
+			key: "/workorders",
+			icon: <IssuesCloseOutlined />,
+			label: "Defects",
+		},
 		{ key: "Divider", type: "divider" },
 		{
-			key: "Resources",
+			key: "data",
 			type: "group",
-			label: "Resources",
+			label: "Data",
 		},
 		{
 			key: "/contracts",
@@ -169,10 +186,32 @@ const NewAppLayout2: FC = () => {
 			icon: <ClusterOutlined />,
 			label: "Assets",
 		},
+
+		{ key: "Divider", type: "divider" },
+		{
+			key: "Resources",
+			type: "group",
+			label: "Resources",
+		},
 		{
 			key: "/teams",
-			icon: <ClusterOutlined />,
+			icon: <TeamOutlined />,
 			label: "Teams",
+		},
+		{
+			key: "/teams",
+			icon: <UserSwitchOutlined />,
+			label: "Users",
+		},
+		{
+			key: "/teams",
+			icon: <UserOutlined />,
+			label: "Employees",
+		},
+		{
+			key: "/teams",
+			icon: <InboxOutlined />,
+			label: "Equipments",
 		},
 		// {
 		// 	key: "/workorders",
@@ -213,7 +252,9 @@ const NewAppLayout2: FC = () => {
 	const verify = () => {
 		apiCall({
 			method: "POST",
-			url: `/${client.client_id === "admin" ? "super" : "client"}auth/verify`,
+			url: `/${
+				client.client_id === "admin" ? "super" : "client"
+			}auth/verify`,
 			data: { user: getUser(), token: getToken() },
 			handleResponse: (res) => {
 				console.log("token Verified");
@@ -240,10 +281,65 @@ const NewAppLayout2: FC = () => {
 		console.log(getUser());
 	}, []);
 
+	const items1: MenuProps["items"] = ["1", "2", "3"].map((key) => ({
+		key,
+		label: `nav ${key}`,
+	}));
+
+	const userItems: MenuProps["items"] = [
+		{
+			key: "1",
+			label: "Change Password",
+			disabled: true,
+		},
+		{
+			key: "2",
+			label: "Sign Out",
+			onClick: () => {
+				resetUserSession();
+				navigate("/login");
+			},
+		},
+	];
+
 	return (
-		<Layout hasSider>
-			<LoadingBar color="orange" height={4} ref={loaderRef} />
-			{/* <Tooltip title="Settings" placement="leftBottom">
+		<Layout>
+			<Header className="nlayout-header">
+				<Space>
+					<Typography.Title style={{ margin: 0 }} level={3}>
+						{
+							headings[
+								location.pathname.includes("/building/")
+									? "/building/"
+									: location.pathname.includes("/ahj/")
+									? "/ahjforms"
+									: location.pathname.toLowerCase()
+							]
+						}
+					</Typography.Title>
+				</Space>
+				<Dropdown
+					menu={{ items: userItems }}
+					placement="bottomRight"
+					arrow
+					trigger={["click"]}
+				>
+					<div className="user-full-name">
+						<span>{userdetails?.name}&nbsp;&nbsp;</span>
+						<Avatar
+							style={{ top: "-2px" }}
+							shape="square"
+							size={28}
+						>
+							{userdetails?.name.split(" ")[0][0] +
+								(userdetails?.name.split(" ")?.[1]?.[0] || "")}
+						</Avatar>
+					</div>
+				</Dropdown>
+			</Header>
+			<Layout hasSider>
+				<LoadingBar color="orange" height={4} ref={loaderRef} />
+				{/* <Tooltip title="Settings" placement="leftBottom">
 				<div
 					style={{
 						position: "absolute",
@@ -258,54 +354,56 @@ const NewAppLayout2: FC = () => {
 				</div>
 			</Tooltip> */}
 
-			<Modal
-				title={
-					<span style={{ marginLeft: "200px", fontSize: "18px" }}>
-						Admin Panel
-					</span>
-				}
-				open={isModalOpen}
-				onCancel={handleCancel}
-				cancelText="Done"
-				okButtonProps={{ style: { display: "none" } }}
-				width={"calc(100vw - 200px)"}
-				style={{ top: "20px" }}
-				bodyStyle={{ overflowY: "scroll", height: "calc(100vh - 200px)" }}
-				destroyOnClose={true}
-			>
-				<Masters />
-			</Modal>
-			<Sider
-				theme="light"
-				width={"55px"}
-				style={{
-					overflow: "auto",
-					height: "100vh",
-					position: "fixed",
-					left: 0,
-					top: 0,
-					bottom: 0,
-					backgroundColor: "#f9f9f9",
-					borderRight: "0.5px solid silver",
-				}}
-			>
-				<div style={{ padding: "18px", paddingBottom: "12px" }}>
-					<img width={"20"} height={"40"} src="short_logo.png" />
-				</div>
-				<div
-				// style={{
-				// 	display: "flex",
-				// 	flexDirection: "column",
-				// 	justifyContent: "space-between",
-				// 	height: "calc(100% - 165px)",
-				// }}
+				<Modal
+					title={
+						<span style={{ marginLeft: "200px", fontSize: "18px" }}>
+							Admin Panel
+						</span>
+					}
+					open={isModalOpen}
+					onCancel={handleCancel}
+					cancelText="Done"
+					okButtonProps={{ style: { display: "none" } }}
+					width={"calc(100vw - 200px)"}
+					style={{ top: "20px" }}
+					bodyStyle={{
+						overflowY: "scroll",
+						height: "calc(100vh - 200px)",
+					}}
+					destroyOnClose={true}
 				>
-					<Menubarv2
-						items={items}
-						defaultValue={location.pathname.toLowerCase()}
-						onClick={(key: string) => navigate(key)}
-					/>
-					{/* <Menu
+					<Masters />
+				</Modal>
+				<div className="nlayout-main-sider" tabIndex={-1}>
+					<Sider
+						theme="light"
+						width={"100%"}
+						style={{
+							backgroundColor: "#f9f9f9",
+							borderRight: "0.5px solid silver",
+							height: "100%",
+						}}
+					>
+						<div className="nlayout-sidebar">
+							<div
+								style={{
+									paddingTop: "12px",
+									textAlign: "center",
+								}}
+							>
+								<img
+									width={"20"}
+									height={"40"}
+									src="short_logo.png"
+								/>
+							</div>
+							<div className="nlayout-sidebar-items-wrapper">
+								<Menubarv2
+									items={items}
+									defaultValue={location.pathname.toLowerCase()}
+									onClick={(key: string) => navigate(key)}
+								/>
+								{/* <Menu
 						theme="light"
 						mode="inline"
 						defaultSelectedKeys={[location.pathname.toLowerCase()]}
@@ -335,71 +433,55 @@ const NewAppLayout2: FC = () => {
 							}}
 						/>
 					</span> */}
+							</div>
+						</div>
+					</Sider>
 				</div>
-			</Sider>
-			<Layout
-				className="main-background"
-				style={{
-					marginLeft: 55,
-					minHeight: "100vh",
-				}}
-			>
-				<Header className="nlayout-header">
-					<Space>
-						<Typography.Title style={{ margin: 0 }} level={3}>
-							{
-								headings[
-									location.pathname.includes("/building/")
-										? "/building/"
-										: location.pathname.includes("/ahj/")
-										? "/ahjforms"
-										: location.pathname.toLowerCase()
-								]
-							}
-						</Typography.Title>
-					</Space>
-					<div className="user-full-name">
-						<span>{userdetails?.name}&nbsp;&nbsp;</span>
-						<Avatar style={{ top: "-2px" }} shape="square" size={28}>
-							{userdetails?.name.split(" ")[0][0] +
-								(userdetails?.name.split(" ")?.[1]?.[0] || "")}
-						</Avatar>
-					</div>
-				</Header>
-				<Content
-					style={{
-						margin: location.pathname.includes("/pdfview")
-							? "12px 0px 0px 0px"
-							: "12px 10px 0px 10px",
-						paddingTop: "33px",
-						backgroundColor: "transparent",
-						height: "100%",
-					}}
-				>
-					<div
-						className="site-layout-background"
-						style={{
-							height: "100%",
-							padding: location.pathname.includes("/pdfview") ? "0px" : "5px",
-						}}
-					>
-						<Outlet context={{ completeLoading }} />
-					</div>
-				</Content>
-				<Footer
+				<Layout
 					className="main-background"
 					style={{
-						width: "calc(100% - 55px)",
-						borderTop: "0.5px solid silver",
-						textAlign: "left",
-						padding: "3px 5px",
-						position: "fixed",
-						bottom: "0px",
-						fontSize: "10px",
+						marginLeft: 45,
+						minHeight: "100vh",
 					}}
 				>
-					{capitalizeFirstLetter(client.client_name)} ©2024 powered by IgnisITM
-				</Footer>
+					<Content
+						style={{
+							margin: location.pathname.includes("/pdfview")
+								? "12px 0px 0px 0px"
+								: "12px 10px 0px 10px",
+							paddingTop: "33px",
+							backgroundColor: "transparent",
+							height: "100%",
+						}}
+					>
+						<div
+							className="site-layout-background"
+							style={{
+								height: "100%",
+								padding: location.pathname.includes("/pdfview")
+									? "0px"
+									: "25px 5px 5px 5px",
+							}}
+						>
+							<Outlet context={{ completeLoading }} />
+						</div>
+					</Content>
+					<Footer
+						className="main-background"
+						style={{
+							width: "calc(100% - 55px)",
+							borderTop: "0.5px solid silver",
+							textAlign: "left",
+							padding: "3px 5px",
+							position: "fixed",
+							bottom: "0px",
+							fontSize: "10px",
+						}}
+					>
+						{capitalizeFirstLetter(client.client_name)} ©2024
+						powered by IgnisITM
+					</Footer>
+				</Layout>
 			</Layout>
 		</Layout>
 	);
