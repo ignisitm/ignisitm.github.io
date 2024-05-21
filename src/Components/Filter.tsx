@@ -78,7 +78,7 @@ const Filter: FC<props> = ({ children, onApply, items }) => {
 						form={form}
 						layout="vertical"
 						size="small"
-						style={{ maxWidth: "100%" }}
+						style={{ width: "100%", maxWidth: "100%" }}
 					>
 						{items.map((item) =>
 							item.type === "dropdown" ? (
