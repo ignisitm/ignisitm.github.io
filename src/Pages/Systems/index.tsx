@@ -4,6 +4,7 @@ import { apiCall } from "../../axiosConfig";
 import { useLoaderContext } from "../../Components/Layout";
 import { SystemContext } from "../../Helpers/Context";
 import SystemTable from "./SystemTable";
+import Filter from "../../Components/Filter";
 const { Search } = Input;
 
 const SuperUser: FC = () => {
@@ -60,11 +61,7 @@ const SuperUser: FC = () => {
 				contracts: contracts,
 			}}
 		>
-			<Row>
-				<Col span={24}>
-					<SystemTable />
-				</Col>
-			</Row>
+			<SystemTable />
 		</SystemContext.Provider>
 	);
 };

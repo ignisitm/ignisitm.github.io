@@ -26,6 +26,7 @@ import {
 } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import { SystemContext } from "../../Helpers/Context";
+import Filter from "../../Components/Filter";
 const { Search } = Input;
 const { Text } = Typography;
 
@@ -463,198 +464,277 @@ const SystemTable = () => {
 	);
 
 	return (
-		<>
-			<Row style={{ marginBottom: 10 }}>
-				<Col span={18}>
-					<Search
-						className="table-search"
-						placeholder="Search using Column Values"
-						onChange={(e) => setSearchText(e.target.value)}
-						onSearch={() => search()}
-						value={searchText}
-					/>
-					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
-					)}
-				</Col>
-				<Col span={6} className="table-button">
-					<Button
-						icon={<SyncOutlined />}
-						style={{ marginRight: "5px" }}
-						onClick={() => search()}
-					>
-						Refresh
-					</Button>
-					<AddNewClient fetchData={fetchData} />
-				</Col>
-			</Row>
+		<Filter
+			onApply={(filterValues: any) => console.log(filterValues)}
+			items={[
+				{
+					key: "name",
+					label: "System Name",
+					placeholder: "Filter by System Name",
+					type: "search",
+				},
+				{
+					key: "tag",
+					label: "System Tag",
+					type: "search",
+				},
+				{
+					key: "type",
+					label: "System Types",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					multi: true,
+					searchable: true,
+					options: contextVariables.systemTypes.map(
+						(type: { id: number; name: string }) => ({
+							value: type.id,
+							label: type.name,
+						})
+					),
+				},
+				{
+					key: "building",
+					label: "Buildings",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					multi: true,
+					searchable: true,
+					options: contextVariables.buildings.map(
+						(bldg: { id: number; building_name: string }) => ({
+							value: bldg.id,
+							label: bldg.building_name,
+						})
+					),
+				},
+				{
+					key: "contract",
+					label: "Contracts",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					multi: true,
+					searchable: true,
+					options: contextVariables.contracts.map(
+						(contract: { id: number; title: string }) => ({
+							value: contract.id,
+							label: `${contract.id} - ${contract.title} `,
+						})
+					),
+				},
+				{
+					key: "status",
+					label: "Contract Status",
+					type: "checkbox",
+					options: [
+						{ label: "Active", value: "active" },
+						{ label: "Expired", value: "expired" },
+					],
+				},
+			]}
+		>
 			<Row>
 				<Col span={24}>
-					<Table
-						columns={columns}
-						rowKey={(record) => record.id}
-						dataSource={data}
-						pagination={pagination}
-						loading={loading}
-						onChange={handleTableChange}
-						size="small"
-						bordered
-					/>
-					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
-					} - ${
-						pagination.total <
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-							(pagination.pageSize || 10)
-							? pagination.total
-							: (pagination.current - 1) *
+					<Row style={{ marginBottom: 10 }}>
+						<Col span={18}>
+							<Search
+								className="table-search"
+								placeholder="Search using Column Values"
+								onChange={(e) => setSearchText(e.target.value)}
+								onSearch={() => search()}
+								value={searchText}
+							/>
+							{showClose && (
+								<Button
+									onClick={() => search(true)}
+									icon={<CloseOutlined />}
+								/>
+							)}
+						</Col>
+						<Col span={6} className="table-button">
+							<Button
+								icon={<SyncOutlined />}
+								style={{ marginRight: "5px" }}
+								onClick={() => search()}
+							>
+								Refresh
+							</Button>
+							<AddNewClient fetchData={fetchData} />
+						</Col>
+					</Row>
+					<Row>
+						<Col span={24}>
+							<Table
+								columns={columns}
+								rowKey={(record) => record.id}
+								dataSource={data}
+								pagination={pagination}
+								loading={loading}
+								onChange={handleTableChange}
+								size="small"
+								bordered
+							/>
+							<div className="table-result-label">{`Showing ${
+								(pagination.current - 1) *
 									(pagination.pageSize || 10) +
-							  (pagination.pageSize || 10)
-					} out of ${pagination.total} records`}</div>
+								1
+							} - ${
+								pagination.total <
+								(pagination.current - 1) *
+									(pagination.pageSize || 10) +
+									(pagination.pageSize || 10)
+									? pagination.total
+									: (pagination.current - 1) *
+											(pagination.pageSize || 10) +
+									  (pagination.pageSize || 10)
+							} out of ${pagination.total} records`}</div>
+						</Col>
+					</Row>
+					<Modal
+						open={openContract}
+						title="Assign Contract"
+						okText="Assign"
+						maskClosable={false}
+						cancelText="Cancel"
+						onCancel={() => {
+							form.resetFields();
+							onCancel();
+						}}
+						onOk={() => {
+							form.validateFields()
+								.then((values) => {
+									onCreate(values).then(() => {
+										form.resetFields();
+									});
+								})
+								.catch((info) => {
+									console.log("Validate Failed:", info);
+								});
+						}}
+						confirmLoading={confirmLoading}
+					>
+						<Form
+							form={form}
+							layout="vertical"
+							name="form_in_modal"
+						>
+							<Form.Item
+								name="contract_id"
+								label="Select Contract"
+								rules={[
+									{
+										required: true,
+										message: "Please select a Contract",
+									},
+								]}
+							>
+								<Select
+									showSearch
+									placeholder="Search to Select"
+									optionFilterProp="children"
+									filterOption={(input, option) =>
+										(option!.children as unknown as string)
+											.toLowerCase()
+											.includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										(optionA!.children as unknown as string)
+											.toLowerCase()
+											.localeCompare(
+												(
+													optionB!
+														.children as unknown as string
+												).toLowerCase()
+											)
+									}
+								>
+									{contextVariables.contracts?.map(
+										(
+											item: { id: object; title: string },
+											index: number
+										) => (
+											<Select.Option
+												value={item.id}
+											>{`${item.id} - ${item.title}`}</Select.Option>
+										)
+									)}
+								</Select>
+							</Form.Item>
+						</Form>
+					</Modal>
+					<Drawer
+						destroyOnClose={true}
+						title="General Information"
+						placement="right"
+						onClose={closeDrawer}
+						open={drawerVisible}
+						extra={
+							editMode ? (
+								<Space>
+									<Button
+										onClick={() => {
+											closeEditMode();
+											GI_form.resetFields();
+										}}
+									>
+										Cancel
+									</Button>
+									<Button
+										loading={confirmLoading}
+										onClick={() => {
+											GI_form.submit();
+										}}
+										type="primary"
+									>
+										Save
+									</Button>
+								</Space>
+							) : (
+								<Button onClick={openEditMode}>Edit</Button>
+							)
+						}
+					>
+						<GeneralInfoContent />
+					</Drawer>
+					<Drawer
+						onClose={() => setProceduresVisible(false)}
+						open={proceduresVisible}
+						width={1000}
+						destroyOnClose={true}
+						title="Procedures"
+						placement="right"
+					>
+						{loadingProcedures ? (
+							<div>
+								<LoadingOutlined /> Loading
+							</div>
+						) : (
+							<Table
+								columns={procedureColumns}
+								dataSource={proceduresData}
+							/>
+						)}
+					</Drawer>
+					<Drawer
+						onClose={() => setDefectsVisible(false)}
+						width={1000}
+						open={defectsVisible}
+						destroyOnClose={true}
+						title="Defects"
+						placement="right"
+					>
+						{loadingDefects ? (
+							<div>
+								<LoadingOutlined /> Loading
+							</div>
+						) : (
+							<Table
+								columns={defectsColumns}
+								dataSource={defectsData}
+							/>
+						)}
+					</Drawer>
 				</Col>
 			</Row>
-			<Modal
-				open={openContract}
-				title="Assign Contract"
-				okText="Assign"
-				maskClosable={false}
-				cancelText="Cancel"
-				onCancel={() => {
-					form.resetFields();
-					onCancel();
-				}}
-				onOk={() => {
-					form.validateFields()
-						.then((values) => {
-							onCreate(values).then(() => {
-								form.resetFields();
-							});
-						})
-						.catch((info) => {
-							console.log("Validate Failed:", info);
-						});
-				}}
-				confirmLoading={confirmLoading}
-			>
-				<Form form={form} layout="vertical" name="form_in_modal">
-					<Form.Item
-						name="contract_id"
-						label="Select Contract"
-						rules={[
-							{
-								required: true,
-								message: "Please select a Contract",
-							},
-						]}
-					>
-						<Select
-							showSearch
-							placeholder="Search to Select"
-							optionFilterProp="children"
-							filterOption={(input, option) =>
-								(option!.children as unknown as string)
-									.toLowerCase()
-									.includes(input)
-							}
-							filterSort={(optionA, optionB) =>
-								(optionA!.children as unknown as string)
-									.toLowerCase()
-									.localeCompare(
-										(
-											optionB!
-												.children as unknown as string
-										).toLowerCase()
-									)
-							}
-						>
-							{contextVariables.contracts?.map(
-								(
-									item: { id: object; title: string },
-									index: number
-								) => (
-									<Select.Option
-										value={item.id}
-									>{`${item.id} - ${item.title}`}</Select.Option>
-								)
-							)}
-						</Select>
-					</Form.Item>
-				</Form>
-			</Modal>
-			<Drawer
-				destroyOnClose={true}
-				title="General Information"
-				placement="right"
-				onClose={closeDrawer}
-				open={drawerVisible}
-				extra={
-					editMode ? (
-						<Space>
-							<Button
-								onClick={() => {
-									closeEditMode();
-									GI_form.resetFields();
-								}}
-							>
-								Cancel
-							</Button>
-							<Button
-								loading={confirmLoading}
-								onClick={() => {
-									GI_form.submit();
-								}}
-								type="primary"
-							>
-								Save
-							</Button>
-						</Space>
-					) : (
-						<Button onClick={openEditMode}>Edit</Button>
-					)
-				}
-			>
-				<GeneralInfoContent />
-			</Drawer>
-			<Drawer
-				onClose={() => setProceduresVisible(false)}
-				open={proceduresVisible}
-				width={1000}
-				destroyOnClose={true}
-				title="Procedures"
-				placement="right"
-			>
-				{loadingProcedures ? (
-					<div>
-						<LoadingOutlined /> Loading
-					</div>
-				) : (
-					<Table
-						columns={procedureColumns}
-						dataSource={proceduresData}
-					/>
-				)}
-			</Drawer>
-			<Drawer
-				onClose={() => setDefectsVisible(false)}
-				width={1000}
-				open={defectsVisible}
-				destroyOnClose={true}
-				title="Defects"
-				placement="right"
-			>
-				{loadingDefects ? (
-					<div>
-						<LoadingOutlined /> Loading
-					</div>
-				) : (
-					<Table columns={defectsColumns} dataSource={defectsData} />
-				)}
-			</Drawer>
-		</>
+		</Filter>
 	);
 };
 
