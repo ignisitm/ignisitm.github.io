@@ -50,6 +50,7 @@ const Filter: FC<props> = ({ children, onApply, items }) => {
 	const applyFilter = () => {
 		form.validateFields().then((values) => {
 			onApply(values);
+			console.log("Filter Applied");
 		});
 	};
 
