@@ -92,7 +92,7 @@ const App: FC = () => {
 				algorithm: theme.compactAlgorithm,
 				token: {
 					colorPrimary: "#F9992E",
-					fontFamily: `'Poppins', sans-serif`,
+					fontFamily: `'Ubuntu', sans-serif`,
 				},
 			}}
 		>

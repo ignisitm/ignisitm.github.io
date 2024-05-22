@@ -38,7 +38,7 @@ interface filterItemSearch extends filterItem {
 
 type props = {
 	children: ReactNode | Array<ReactNode>;
-	onApply: Function;
+	onApply: (values: Record<string, any>) => void;
 	items: Array<filterItemWithOptions | filterItemSearch>;
 };
 
