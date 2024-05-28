@@ -10,6 +10,7 @@ import {
 	Select,
 	Typography,
 } from "antd";
+import { isEmpty } from "lodash";
 
 //TYPES
 
@@ -22,6 +23,7 @@ interface filterItem {
 	key: string;
 	label: string;
 	placeholder?: string;
+	group: string;
 }
 
 interface filterItemWithOptions extends filterItem {
@@ -38,7 +40,7 @@ interface filterItemSearch extends filterItem {
 
 type props = {
 	children: ReactNode | Array<ReactNode>;
-	onApply: (values: Record<string, any>) => void;
+	onApply: (values: object | null) => void;
 	items: Array<filterItemWithOptions | filterItemSearch>;
 };
 
@@ -49,9 +51,35 @@ const Filter: FC<props> = ({ children, onApply, items }) => {
 
 	const applyFilter = () => {
 		form.validateFields().then((values) => {
-			onApply(values);
-			console.log("Filter Applied");
+			let filterValues: Record<string, any> = {};
+			Object.keys(values).map((key) => {
+				if (
+					values[key] === "" ||
+					typeof values[key] === "undefined" ||
+					(Array.isArray(values[key]) && values[key].length === 0)
+				)
+					delete values[key];
+				else {
+					filterValues[
+						items.find((x) => x.key === key)?.group || "undefined"
+					] = {
+						...filterValues[
+							items.find((x) => x.key === key)?.group ||
+								"undefined"
+						],
+						[key]: values[key],
+					};
+				}
+			});
+			console.log("filterValues", filterValues);
+			if (isEmpty(filterValues)) onApply(null);
+			else onApply(filterValues);
 		});
+	};
+
+	const resetFilters = () => {
+		form.resetFields();
+		onApply(null);
 	};
 
 	return (
@@ -70,7 +98,7 @@ const Filter: FC<props> = ({ children, onApply, items }) => {
 						</Button>
 					</Col>
 					<Col span={12}>
-						<Button size="small" block>
+						<Button size="small" block onClick={resetFilters}>
 							Reset
 						</Button>
 					</Col>

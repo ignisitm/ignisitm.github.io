@@ -64,6 +64,7 @@ const SystemTable = () => {
 		pageSize: 10,
 		total: 0,
 	});
+	const [filters, setFilters] = useState<object | null>(null);
 
 	const openDrawer = () => {
 		setDrawerVisible(true);
@@ -333,10 +334,10 @@ const SystemTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientsystems?page=${curr_pagination.current}&limit=${
-				curr_pagination.pageSize
-			}&searchText=${search || ""}`,
+			method: "POST",
+			url: `/clientfilters/systems?page=${
+				curr_pagination.current
+			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -348,6 +349,7 @@ const SystemTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -398,6 +400,11 @@ const SystemTable = () => {
 	useEffect(() => {
 		search();
 	}, []);
+
+	useEffect(() => {
+		console.log(filters);
+		fetchData();
+	}, [filters]);
 
 	const onCancel = () => {
 		setOpenContract(false);
@@ -465,24 +472,30 @@ const SystemTable = () => {
 
 	return (
 		<Filter
-			onApply={(filterValues: any) => console.log(filterValues)}
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
 			items={[
 				{
 					key: "name",
 					label: "System Name",
 					placeholder: "Filter by System Name",
 					type: "search",
+					group: "system",
 				},
 				{
 					key: "tag",
 					label: "System Tag",
 					type: "search",
+					group: "system",
 				},
 				{
 					key: "type",
 					label: "System Types",
 					type: "dropdown",
 					placeholder: "Select one or more",
+					group: "system",
 					multi: true,
 					searchable: true,
 					options: contextVariables.systemTypes.map(
@@ -493,10 +506,11 @@ const SystemTable = () => {
 					),
 				},
 				{
-					key: "building",
+					key: "building_id",
 					label: "Buildings",
 					type: "dropdown",
 					placeholder: "Select one or more",
+					group: "system",
 					multi: true,
 					searchable: true,
 					options: contextVariables.buildings.map(
@@ -507,9 +521,10 @@ const SystemTable = () => {
 					),
 				},
 				{
-					key: "contract",
+					key: "current_contract",
 					label: "Contracts",
 					type: "dropdown",
+					group: "system",
 					placeholder: "Select one or more",
 					multi: true,
 					searchable: true,
@@ -522,11 +537,12 @@ const SystemTable = () => {
 				},
 				{
 					key: "status",
+					group: "contract",
 					label: "Contract Status",
 					type: "checkbox",
 					options: [
-						{ label: "Active", value: "active" },
-						{ label: "Expired", value: "expired" },
+						{ label: "Active", value: "ACTIVE" },
+						{ label: "Expired", value: "EXPIRED" },
 					],
 				},
 			]}
