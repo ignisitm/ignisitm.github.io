@@ -7,11 +7,17 @@ export let NotificationContext = createContext({
 	leadExecutors: [],
 	resources: [],
 	employees: [],
+	systemTypes: [],
+	contracts: [],
 });
 
 export let TeamContext = createContext({ teams: [], users: [] });
 
-export let AssetContext = createContext({ buildings: [], frequency: [] });
+export let AssetContext = createContext({
+	buildings: [],
+	frequency: [],
+	systemTypes: [],
+});
 
 export let BCcontext = createContext({ users: [] });
 

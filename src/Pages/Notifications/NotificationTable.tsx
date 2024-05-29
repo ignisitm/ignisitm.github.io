@@ -13,7 +13,7 @@ import {
 	Tabs,
 	Drawer,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 import AddNewNotification from "./AddNewNotification";
 import {
@@ -27,6 +27,8 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import CreateNewWorkOrder from "./CreateNewWorkOrder";
 import AddNotification from "./AddNotification";
+import Filter from "../../Components/Filter";
+import { NotificationContext } from "../../Helpers/Context";
 const { Search } = Input;
 const { Text } = Typography;
 
@@ -38,6 +40,7 @@ const statusColors = {
 
 const NotificationTable = () => {
 	const [page, setPage] = useState("Notifications");
+	const contextVariables = useContext(NotificationContext);
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -48,6 +51,7 @@ const NotificationTable = () => {
 	const [drawerDetails, setDrawerDetails] = useState<any>(null);
 	const [loadingDrawer, setLoadingDrawer] = useState(false);
 	const [drawerTitle, setDrawerTitle] = useState("Procedure");
+	const [filters, setFilters] = useState<object | null>(null);
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -78,6 +82,10 @@ const NotificationTable = () => {
 		{
 			title: "Building",
 			dataIndex: "building_name",
+		},
+		{
+			title: "Contract",
+			dataIndex: "contract_id",
 		},
 		{
 			title: "Status",
@@ -237,7 +245,11 @@ const NotificationTable = () => {
 				method: "DELETE",
 				url: "/clientnotifications",
 				data: {
-					data: { id, type: row.type, procedure_ids: row.procedure_ids },
+					data: {
+						id,
+						type: row.type,
+						procedure_ids: row.procedure_ids,
+					},
 				},
 				handleResponse: (res) => {
 					message.success(res.data.message);
@@ -259,8 +271,8 @@ const NotificationTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientnotifications?status=${n_status}&page=${
+			method: "POST",
+			url: `/clientfilters/notifications?page=${
 				curr_pagination.current
 			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -274,6 +286,7 @@ const NotificationTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -292,6 +305,10 @@ const NotificationTable = () => {
 	useEffect(() => {
 		search();
 	}, []);
+
+	useEffect(() => {
+		fetchData();
+	}, [filters]);
 
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
@@ -324,7 +341,102 @@ const NotificationTable = () => {
 			fetchData={fetchData}
 		/>
 	) : (
-		<>
+		<Filter
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
+			items={[
+				{
+					key: "type",
+					group: "notification",
+					displayInRows: true,
+					label: "Notification Type",
+					type: "checkbox",
+					options: [
+						{ label: "ITM", value: "ITM" },
+						{ label: "Corrective", value: "Corrective" },
+					],
+				},
+				{
+					key: "status",
+					group: "notification",
+					label: "Notification Status",
+					type: "checkbox",
+					displayInRows: true,
+					options: [
+						{ label: "Open", value: "OPEN" },
+						{ label: "Closed", value: "CLOSE" },
+						{ label: "WO Created", value: "WO CREATED" },
+					],
+				},
+				{
+					key: "id",
+					label: "Notification No.",
+					type: "search",
+					isNumber: true,
+					group: "notification",
+				},
+				{
+					key: "current_contract",
+					label: "Contracts",
+					type: "dropdown",
+					group: "system",
+					placeholder: "Select one or more",
+					multi: true,
+					searchable: true,
+					options: contextVariables.contracts.map(
+						(contract: { id: number; title: string }) => ({
+							value: contract.id,
+							label: `${contract.id} - ${contract.title} `,
+						})
+					),
+				},
+				{
+					key: "building_id",
+					label: "Buildings",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					group: "system",
+					multi: true,
+					searchable: true,
+					options: contextVariables.buildings.map(
+						(bldg: { id: number; building_name: string }) => ({
+							value: bldg.id,
+							label: bldg.building_name,
+						})
+					),
+				},
+
+				{
+					key: "#type",
+					label: "System Types",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					group: "system",
+					multi: true,
+					searchable: true,
+					options: contextVariables.systemTypes.map(
+						(type: { id: number; name: string }) => ({
+							value: type.id,
+							label: type.name,
+						})
+					),
+				},
+				{
+					key: "name",
+					label: "System Name",
+					type: "search",
+					group: "system",
+				},
+				{
+					key: "tag",
+					label: "System Tag",
+					type: "search",
+					group: "system",
+				},
+			]}
+		>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={15}>
 					<Search
@@ -335,7 +447,10 @@ const NotificationTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={9} className="table-button">
@@ -368,7 +483,7 @@ const NotificationTable = () => {
 			</Row>
 			<Row>
 				<Col span={24}>
-					<Tabs
+					{/* <Tabs
 						defaultActiveKey={status}
 						onChange={onTabChange}
 						items={[
@@ -389,7 +504,7 @@ const NotificationTable = () => {
 								key: "CLOSED",
 							},
 						]}
-					/>
+					/> */}
 					<Table
 						columns={columns}
 						rowKey={(record) => record.id}
@@ -401,13 +516,15 @@ const NotificationTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+						1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							: (pagination.current - 1) *
+									(pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -420,7 +537,7 @@ const NotificationTable = () => {
 			>
 				<DrawerRender />
 			</Drawer>
-		</>
+		</Filter>
 	);
 };
 

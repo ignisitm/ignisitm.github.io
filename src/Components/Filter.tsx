@@ -16,7 +16,7 @@ import { isEmpty } from "lodash";
 
 interface filterOption {
 	label: string | ReactNode;
-	value: string | number;
+	value: string | number | null;
 }
 
 interface filterItem {
@@ -36,6 +36,7 @@ interface filterItemWithOptions extends filterItem {
 
 interface filterItemSearch extends filterItem {
 	type: "search";
+	isNumber?: boolean;
 }
 
 type props = {
@@ -60,14 +61,15 @@ const Filter: FC<props> = ({ children, onApply, items }) => {
 				)
 					delete values[key];
 				else {
-					filterValues[
-						items.find((x) => x.key === key)?.group || "undefined"
-					] = {
-						...filterValues[
-							items.find((x) => x.key === key)?.group ||
-								"undefined"
-						],
-						[key]: values[key],
+					let curr_item = items.find((x) => x.key === key);
+					filterValues[curr_item?.group || "undefined"] = {
+						...filterValues[curr_item?.group || "undefined"],
+						[key.split("#").join("")]:
+							curr_item?.type === "search"
+								? curr_item?.isNumber
+									? parseInt(values[key])
+									: values[key]
+								: values[key],
 					};
 				}
 			});

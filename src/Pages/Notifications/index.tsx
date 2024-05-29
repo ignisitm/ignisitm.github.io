@@ -10,6 +10,8 @@ const SuperUser: FC = () => {
 	const [buildings, setBuildings] = useState([]);
 	const [leadExecutors, setLeadExecutors] = useState([]);
 	const [resources, setResources] = useState([]);
+	const [systemTypes, setSystemTypes] = useState([]);
+	const [contracts, setContracts] = useState([]);
 	const [employees, setEmployees] = useState([]);
 	const { completeLoading } = useLoaderContext();
 
@@ -20,6 +22,17 @@ const SuperUser: FC = () => {
 			handleResponse: (res) => {
 				console.log(res);
 				setBuildings(res.data.message);
+			},
+		});
+	};
+
+	const getSystemTypes = () => {
+		apiCall({
+			method: "GET",
+			url: "/dropdown/systemtypes",
+			handleResponse: (res) => {
+				console.log(res);
+				setSystemTypes(res.data.message);
 			},
 		});
 	};
@@ -57,8 +70,26 @@ const SuperUser: FC = () => {
 		});
 	};
 
+	const getContracts = () => {
+		apiCall({
+			method: "GET",
+			url: "/dropdown/contracts",
+			handleResponse: (res) => {
+				console.log(res);
+				setContracts(res.data.message);
+			},
+		});
+	};
+
 	useEffect(() => {
-		let promises = [getBuildings(), getLEs(), getEmployees(), getResources()];
+		let promises = [
+			getBuildings(),
+			getLEs(),
+			getEmployees(),
+			getResources(),
+			getSystemTypes(),
+			getContracts(),
+		];
 
 		Promise.all(promises).then(() => {
 			completeLoading();
@@ -67,7 +98,14 @@ const SuperUser: FC = () => {
 
 	return (
 		<NotificationContext.Provider
-			value={{ buildings, leadExecutors, resources, employees }}
+			value={{
+				buildings,
+				leadExecutors,
+				resources,
+				employees,
+				systemTypes,
+				contracts,
+			}}
 		>
 			<Row>
 				<Col span={24}>

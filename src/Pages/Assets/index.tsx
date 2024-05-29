@@ -8,10 +8,12 @@ import AssetTable from "./AssetTable";
 const SuperUser: FC = () => {
 	const [buildings, setBuildings] = useState([]);
 	const [frequency, setFrequency] = useState([]);
+	const [systemTypes, setSystemTypes] = useState([]);
+
 	const { completeLoading } = useLoaderContext();
 
 	useEffect(() => {
-		let promises = [getBuildings(), getFrequency()];
+		let promises = [getBuildings(), getFrequency(), getSystemTypes()];
 		Promise.all(promises).then(() => {
 			completeLoading();
 		});
@@ -28,6 +30,17 @@ const SuperUser: FC = () => {
 		});
 	};
 
+	const getSystemTypes = () => {
+		apiCall({
+			method: "GET",
+			url: "/dropdown/systemtypes",
+			handleResponse: (res) => {
+				console.log(res);
+				setSystemTypes(res.data.message);
+			},
+		});
+	};
+
 	const getFrequency = () => {
 		apiCall({
 			method: "GET",
@@ -40,7 +53,7 @@ const SuperUser: FC = () => {
 	};
 
 	return (
-		<AssetContext.Provider value={{ buildings, frequency }}>
+		<AssetContext.Provider value={{ buildings, frequency, systemTypes }}>
 			<Row>
 				<Col span={24}>
 					<AssetTable />

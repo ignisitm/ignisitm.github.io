@@ -540,9 +540,11 @@ const SystemTable = () => {
 					group: "contract",
 					label: "Contract Status",
 					type: "checkbox",
+					displayInRows: true,
 					options: [
 						{ label: "Active", value: "ACTIVE" },
 						{ label: "Expired", value: "EXPIRED" },
+						{ label: "No Contract", value: null },
 					],
 				},
 			]}

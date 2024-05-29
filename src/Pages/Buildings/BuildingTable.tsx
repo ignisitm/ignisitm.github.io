@@ -20,6 +20,7 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewBuilding from "./AddNewBuilding";
 import { Link } from "react-router-dom";
+import Filter from "../../Components/Filter";
 const { Search } = Input;
 
 const BuildingTable = () => {
@@ -27,6 +28,7 @@ const BuildingTable = () => {
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
+	const [filters, setFilters] = useState<object | null>(null);
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -55,11 +57,11 @@ const BuildingTable = () => {
 			dataIndex: "building_area",
 			ellipsis: true,
 		},
-		{
-			title: "Certificate No.",
-			dataIndex: "building_completion_certificate_number",
-			ellipsis: true,
-		},
+		// {
+		// 	title: "Certificate No.",
+		// 	dataIndex: "building_completion_certificate_number",
+		// 	ellipsis: true,
+		// },
 		{
 			title: "Action",
 			dataIndex: "id",
@@ -124,10 +126,10 @@ const BuildingTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientbuildings?page=${curr_pagination.current}&limit=${
-				curr_pagination.pageSize
-			}&searchText=${search || ""}`,
+			method: "POST",
+			url: `/clientfilters/buildings?page=${
+				curr_pagination.current
+			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -139,6 +141,7 @@ const BuildingTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -158,12 +161,35 @@ const BuildingTable = () => {
 		search();
 	}, []);
 
+	useEffect(() => {
+		fetchData();
+	}, [filters]);
+
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
 	};
 
 	return (
-		<>
+		<Filter
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
+			items={[
+				{
+					key: "building_name",
+					label: "Building Name",
+					type: "search",
+					group: "building",
+				},
+				{
+					key: "building_area",
+					label: "Area",
+					type: "search",
+					group: "building",
+				},
+			]}
+		>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -174,7 +200,10 @@ const BuildingTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -204,14 +233,15 @@ const BuildingTable = () => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize +
+							pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
-		</>
+		</Filter>
 	);
 };
 

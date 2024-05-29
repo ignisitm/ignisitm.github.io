@@ -14,7 +14,7 @@ import {
 	Divider,
 	Upload,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
 import {
 	SyncOutlined,
@@ -26,11 +26,15 @@ import {
 import axios, { AxiosError, AxiosResponse } from "axios";
 import AddNewAsset from "./AddNewAsset";
 import { RcFile } from "antd/es/upload";
+import Filter from "../../Components/Filter";
+import { AssetContext } from "../../Helpers/Context";
 const { Search } = Input;
 const { Text } = Typography;
 
 const AssetTable = () => {
+	const contextVariables = useContext(AssetContext);
 	const [data, setData] = useState();
+	const [filters, setFilters] = useState<object | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
@@ -157,8 +161,8 @@ const AssetTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientassets?page=${curr_pagination.current}&limit=${
+			method: "POST",
+			url: `/clientfilters/assets?page=${curr_pagination.current}&limit=${
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
@@ -172,6 +176,7 @@ const AssetTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -190,6 +195,10 @@ const AssetTable = () => {
 	useEffect(() => {
 		search();
 	}, []);
+
+	useEffect(() => {
+		fetchData();
+	}, [filters]);
 
 	const openDrawer = () => {
 		setDrawerVisible(true);
@@ -242,50 +251,56 @@ const AssetTable = () => {
 	};
 
 	const onCreate = (values: any) => {
-		return new Promise<AxiosResponse | AxiosError>(async (resolve, reject) => {
-			setConfirmLoading(true);
-			console.log("Received values of form: ", values);
-			let responseData;
-			responseData = {
-				data: { general_info: { ...values } },
-				id: selectedAsset,
-			};
-			if (newAssetImage === null) {
+		return new Promise<AxiosResponse | AxiosError>(
+			async (resolve, reject) => {
+				setConfirmLoading(true);
+				console.log("Received values of form: ", values);
+				let responseData;
 				responseData = {
-					...responseData,
-					data: { ...responseData.data, image: null },
+					data: { general_info: { ...values } },
+					id: selectedAsset,
 				};
-				setAssetImage(null);
-			} else if (assetImage !== newAssetImage) {
-				let filepath = await uploadfiles(newAssetImage, selectedAsset);
-				console.log(filepath);
-				responseData = {
-					...responseData,
-					data: { ...responseData.data, image: filepath },
-				};
-			}
-			console.log(responseData);
+				if (newAssetImage === null) {
+					responseData = {
+						...responseData,
+						data: { ...responseData.data, image: null },
+					};
+					setAssetImage(null);
+				} else if (assetImage !== newAssetImage) {
+					let filepath = await uploadfiles(
+						newAssetImage,
+						selectedAsset
+					);
+					console.log(filepath);
+					responseData = {
+						...responseData,
+						data: { ...responseData.data, image: filepath },
+					};
+				}
+				console.log(responseData);
 
-			apiCall({
-				method: "PUT",
-				url: "/clientassets",
-				data: responseData,
-				handleResponse: (res) => {
-					resolve(res);
-					setConfirmLoading(false);
-					fetchData();
-					message.success(res.data.message);
-				},
-				handleError: (err) => {
-					reject(err);
-					setConfirmLoading(false);
-				},
-			});
-		});
+				apiCall({
+					method: "PUT",
+					url: "/clientassets",
+					data: responseData,
+					handleResponse: (res) => {
+						resolve(res);
+						setConfirmLoading(false);
+						fetchData();
+						message.success(res.data.message);
+					},
+					handleError: (err) => {
+						reject(err);
+						setConfirmLoading(false);
+					},
+				});
+			}
+		);
 	};
 
 	const beforeUpload = (file: RcFile) => {
-		const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+		const isJpgOrPng =
+			file.type === "image/jpeg" || file.type === "image/png";
 		if (!isJpgOrPng) {
 			message.error("You can only upload JPEG/PNG file!");
 		}
@@ -312,7 +327,9 @@ const AssetTable = () => {
 			onFinish={(values) => {
 				onCreate(values).then(() => {
 					closeEditMode();
-					setAssetImage(URL.createObjectURL(newAssetImage.originFileObj));
+					setAssetImage(
+						URL.createObjectURL(newAssetImage.originFileObj)
+					);
 					setNewAssetImage((file: any) =>
 						URL.createObjectURL(file.originFileObj)
 					);
@@ -332,7 +349,9 @@ const AssetTable = () => {
 						editMode
 							? newAssetImage === assetImage
 								? assetImage
-								: URL.createObjectURL(newAssetImage.originFileObj)
+								: URL.createObjectURL(
+										newAssetImage.originFileObj
+								  )
 							: assetImage
 					}
 				/>
@@ -397,9 +416,15 @@ const AssetTable = () => {
 							]}
 						>
 							{field.type === "number" ? (
-								<Input className="selected-building" disabled={!editMode} />
+								<Input
+									className="selected-building"
+									disabled={!editMode}
+								/>
 							) : (
-								<Input className="selected-building" disabled={!editMode} />
+								<Input
+									className="selected-building"
+									disabled={!editMode}
+								/>
 							)}
 						</Form.Item>
 				  ))
@@ -408,7 +433,68 @@ const AssetTable = () => {
 	);
 
 	return (
-		<>
+		<Filter
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
+			items={[
+				{
+					key: "name",
+					label: "Asset Name",
+					type: "search",
+					group: "devtype",
+				},
+				{
+					key: "tag",
+					label: "Asset Tag",
+					type: "search",
+					group: "asset",
+				},
+				{
+					key: "building_id",
+					label: "Buildings",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					group: "system",
+					multi: true,
+					searchable: true,
+					options: contextVariables.buildings.map(
+						(bldg: { id: number; building_name: string }) => ({
+							value: bldg.id,
+							label: bldg.building_name,
+						})
+					),
+				},
+				{
+					key: "type",
+					label: "System Type",
+					type: "dropdown",
+					placeholder: "Select one or more",
+					group: "system",
+					multi: true,
+					searchable: true,
+					options: contextVariables.systemTypes.map(
+						(type: { id: number; name: string }) => ({
+							value: type.id,
+							label: type.name,
+						})
+					),
+				},
+				{
+					key: "#name",
+					label: "System Name",
+					type: "search",
+					group: "system",
+				},
+				{
+					key: "#tag",
+					label: "System Tag",
+					type: "search",
+					group: "system",
+				},
+			]}
+		>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -419,7 +505,10 @@ const AssetTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -446,13 +535,15 @@ const AssetTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+						1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							: (pagination.current - 1) *
+									(pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -498,7 +589,7 @@ const AssetTable = () => {
 			>
 				<GeneralInfoContent />
 			</Drawer>
-		</>
+		</Filter>
 	);
 };
 

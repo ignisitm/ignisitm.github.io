@@ -21,6 +21,7 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewContract from "./AddNewContract";
 import { Link } from "react-router-dom";
+import Filter from "../../Components/Filter";
 const { Search } = Input;
 
 const statusColors = {
@@ -35,6 +36,7 @@ const ContractsTable = () => {
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
 	const [showClose, setShowClose] = useState(false);
+	const [filters, setFilters] = useState<object | null>(null);
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -136,10 +138,10 @@ const ContractsTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientcontracts?page=${curr_pagination.current}&limit=${
-				curr_pagination.pageSize
-			}&searchText=${search || ""}`,
+			method: "POST",
+			url: `/clientfilters/contracts?page=${
+				curr_pagination.current
+			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -151,6 +153,7 @@ const ContractsTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -170,12 +173,45 @@ const ContractsTable = () => {
 		search();
 	}, []);
 
+	useEffect(() => {
+		fetchData();
+	}, [filters]);
+
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
 	};
 
 	return (
-		<>
+		<Filter
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
+			items={[
+				{
+					key: "id",
+					label: "Contract No",
+					type: "search",
+					group: "contract",
+				},
+				{
+					key: "title",
+					label: "Contract Title",
+					type: "search",
+					group: "contract",
+				},
+				{
+					key: "status",
+					group: "contract",
+					label: "Contract Status",
+					type: "checkbox",
+					options: [
+						{ label: "Active", value: "ACTIVE" },
+						{ label: "Expired", value: "EXPIRED" },
+					],
+				},
+			]}
+		>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -186,7 +222,10 @@ const ContractsTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -216,14 +255,15 @@ const ContractsTable = () => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize +
+							pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
-		</>
+		</Filter>
 	);
 };
 
