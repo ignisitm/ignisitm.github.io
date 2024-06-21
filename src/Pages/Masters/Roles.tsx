@@ -13,6 +13,7 @@ import {
 import type { TransferDirection } from "antd/es/transfer";
 import { apiCall } from "../../axiosConfig";
 import { DeleteOutlined, LoadingOutlined } from "@ant-design/icons";
+import { useLoaderContext } from "../../Components/Layoutv2";
 
 interface props {
 	data: any;
@@ -25,6 +26,7 @@ interface RecordType {
 }
 
 const Roles: React.FC = () => {
+	const { completeLoading } = useLoaderContext();
 	const [targetKeys, setTargetKeys] = useState<string[]>([]);
 	const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
 	const [data, setData] = useState<RecordType[]>([]);
@@ -55,6 +57,7 @@ const Roles: React.FC = () => {
 			method: "GET",
 			url: "/dropdown/clientRoles",
 			handleResponse: (res) => {
+				completeLoading();
 				setRoles(res.data.message);
 				setTimeout(() => {
 					setLoadingRoles(false);
@@ -62,6 +65,7 @@ const Roles: React.FC = () => {
 			},
 			handleError: () => {
 				setLoadingRoles(false);
+				completeLoading();
 			},
 		});
 	};
@@ -192,11 +196,10 @@ const Roles: React.FC = () => {
 	};
 
 	return (
-		<>
+		<div style={{ height: "calc(100vh - 80px)" }}>
 			{contextHolder}
-			<Row>
+			<Row style={{ marginBottom: "12px" }}>
 				<Col span={8}>
-					<h3>Roles</h3>
 					<Select
 						value={selectedRole}
 						dropdownRender={(menu) =>
@@ -217,7 +220,9 @@ const Roles: React.FC = () => {
 						}}
 					>
 						{roles.map((role: any) => (
-							<Select.Option value={role.id}>{role.role}</Select.Option>
+							<Select.Option value={role.id}>
+								{role.role}
+							</Select.Option>
 						))}
 					</Select>
 				</Col>
@@ -225,7 +230,7 @@ const Roles: React.FC = () => {
 				<Col span={2}>
 					<div
 						className="delete-table-action"
-						style={{ padding: "61px 0px 16px 10px" }}
+						style={{ padding: "12px 0px 16px 10px" }}
 					>
 						{selectedRole && (
 							<Popconfirm
@@ -242,11 +247,11 @@ const Roles: React.FC = () => {
 					</div>
 				</Col>
 
-				<Col span={14} style={{ margin: "10px 0" }}>
+				<Col span={14} style={{ margin: "5px 0" }}>
 					<Button
 						type="primary"
 						style={{
-							margin: "46px 10px 0 0",
+							margin: "0px 10px 0 0",
 							display: "flex",
 							float: "right",
 						}}
@@ -301,9 +306,12 @@ const Roles: React.FC = () => {
 				onOk={createNewRole}
 				confirmLoading={creatingNewRole}
 			>
-				<Input value={newRole} onChange={(e) => setNewRole(e.target.value)} />
+				<Input
+					value={newRole}
+					onChange={(e) => setNewRole(e.target.value)}
+				/>
 			</Modal>
-		</>
+		</div>
 	);
 };
 

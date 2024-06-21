@@ -25,9 +25,12 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewUser from "./AddNewUser";
 import AddNewEmployee from "./AddNewEmployee";
+import { useLoaderContext } from "../../Components/Layoutv2";
 const { Search } = Input;
 
 const Employees: React.FC<any> = ({ systems }) => {
+	const { completeLoading } = useLoaderContext();
+
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -123,6 +126,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
+				completeLoading();
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
 					setPagination({ ...curr_pagination, total });
@@ -130,6 +134,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 			},
 			handleError: () => {
 				setLoading(false);
+				completeLoading();
 			},
 		});
 	};
@@ -239,7 +244,6 @@ const Employees: React.FC<any> = ({ systems }) => {
 
 	return (
 		<>
-			<h3>Employees</h3>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search

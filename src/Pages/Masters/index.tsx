@@ -103,7 +103,11 @@ const App: React.FC = () => {
 				/>
 			</Sider>
 			<Layout
-				style={{ marginLeft: 200, background: "transparent", height: "100%" }}
+				style={{
+					marginLeft: 200,
+					background: "transparent",
+					height: "100%",
+				}}
 			>
 				{page === "1" ? (
 					<Employees />
@@ -112,7 +116,7 @@ const App: React.FC = () => {
 				) : page === "3" ? (
 					<Roles />
 				) : page === "4" ? (
-					<User systems={systems} />
+					<User />
 				) : page === "5" ? (
 					<MasterBuildings />
 				) : page === "6" ? (

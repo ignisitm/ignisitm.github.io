@@ -5,13 +5,11 @@ import { apiCall } from "../../axiosConfig";
 import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewUser from "./AddNewUser";
+import { useLoaderContext } from "../../Components/Layoutv2";
 const { Search } = Input;
 
-interface props {
-	systems: any;
-}
-
-const ClientTable: React.FC<props> = ({ systems }) => {
+const User: React.FC = () => {
+	const { completeLoading } = useLoaderContext();
 	const [data, setData] = useState();
 	const [employees, setEmployees] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -42,7 +40,9 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 			title: "Status",
 			dataIndex: "status",
 			render: (status: string) => (
-				<Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
+				<Tag color={status === "ACTIVE" ? "green" : "red"}>
+					{status}
+				</Tag>
 			),
 		},
 		{
@@ -66,12 +66,16 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						} this user?`}
 						onConfirm={() => deleteRow(id, row.status)}
 						// onCancel={cancel}
-						okText={row.status === "ACTIVE" ? "deactivate" : "activate"}
+						okText={
+							row.status === "ACTIVE" ? "deactivate" : "activate"
+						}
 						cancelText="Cancel"
 						placement="left"
 					>
 						<Button danger={row.status === "ACTIVE"} type="link">
-							{row.status === "ACTIVE" ? "Deactivate" : "Activate"}
+							{row.status === "ACTIVE"
+								? "Deactivate"
+								: "Activate"}
 						</Button>
 					</Popconfirm>
 				</>
@@ -132,6 +136,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 				curr_pagination.pageSize
 			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
+				completeLoading();
 				setData(res.data.message);
 				setLoading(false);
 				if (res.data.message.length > 0) {
@@ -140,6 +145,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 				}
 			},
 			handleError: () => {
+				completeLoading();
 				setLoading(false);
 			},
 		});
@@ -190,7 +196,6 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 
 	return (
 		<>
-			<h3>Users</h3>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -201,7 +206,10 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -215,7 +223,7 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 					<AddNewUser
 						employees={employees}
 						fetchData={fetchData}
-						systems={systems}
+						systems={[]}
 						userRoles={userRoles}
 					/>
 				</Col>
@@ -233,13 +241,15 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+						1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							: (pagination.current - 1) *
+									(pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -248,4 +258,4 @@ const ClientTable: React.FC<props> = ({ systems }) => {
 	);
 };
 
-export default ClientTable;
+export default User;

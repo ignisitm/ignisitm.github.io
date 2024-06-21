@@ -35,6 +35,12 @@ import Systems from "./Pages/Systems";
 import Assets from "./Pages/Assets";
 import TeamPage from "./Pages/Teams";
 import PdfViewer from "./Pages/Admin/Components/PdfViewer";
+import Employees from "./Pages/Masters/Employees";
+import User from "./Pages/Masters/User";
+import Equipments from "./Pages/Masters/Equipments";
+import Roles from "./Pages/Masters/Roles";
+import Procedures from "./Pages/Procedures";
+import Reports from "./Pages/Reports";
 
 let DefaultIcon = L.icon({
 	iconUrl: icon,
@@ -145,6 +151,10 @@ const App: FC = () => {
 								<Route path="/systems" element={<Systems />} />
 								<Route path="/assets" element={<Assets />} />
 								<Route
+									path="/procedures"
+									element={<Procedures />}
+								/>
+								<Route
 									path="/notifications"
 									element={<Notifications />}
 								/>
@@ -161,7 +171,21 @@ const App: FC = () => {
 								/>
 								<Route path="/ahj/:id" element={<AHJForm />} />
 								<Route path="/masters" element={<Masters />} />
+								<Route
+									path="/employees"
+									element={<Employees />}
+								/>
+								<Route
+									path="/equipments"
+									element={<Equipments />}
+								/>
+								<Route path="/roles" element={<Roles />} />
+								<Route path="/users" element={<User />} />
 								<Route path="/teams" element={<TeamPage />} />
+								<Route
+									path="/generate-report"
+									element={<Reports />}
+								/>
 								<Route
 									path="/pdfview"
 									element={<PdfViewer />}

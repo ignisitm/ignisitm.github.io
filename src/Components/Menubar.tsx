@@ -31,44 +31,39 @@ const Menubar: FC<props> = ({ items, defaultValue, onClick }) => {
 	return (
 		<>
 			{items.map((item: any, index: any) => (
-				<div key={index} className="nlayout-menu-bar-icons">
+				<Tooltip title={item.label} placement="right">
+					<div key={index} className="nlayout-menu-bar-icons-v1">
+						<div
+							onClick={() => onMenuItemClick(item.key)}
+							className={
+								"nlayout-menu-icon-wrapper-v1" +
+								(selected === item.key ? "-selected" : "")
+							}
+						>
+							{item.icon}
+						</div>
+					</div>
+				</Tooltip>
+			))}
+			<Tooltip title={"Sign Out"} placement="right">
+				<div
+					className="nlayout-menu-bar-icons-v1"
+					style={{ marginTop: "auto" }}
+				>
 					<div
-						onClick={() => onMenuItemClick(item.key)}
-						className={
-							"nlayout-menu-icon-wrapper" +
-							(selected === item.key ? "-selected" : "")
-						}
+						onClick={() => {
+							resetUserSession();
+							navigate("/login");
+						}}
+						className={"nlayout-menu-icon-wrapper-v1"}
+						style={{
+							bottom: "0px",
+						}}
 					>
-						{item.icon}
-						<Typography.Text strong style={{ fontSize: 9.7 }}>
-							{item.label}
-						</Typography.Text>
+						<PoweroffOutlined />
 					</div>
 				</div>
-			))}
-
-			<div
-				className="nlayout-menu-bar-icons"
-				style={{ marginTop: "auto" }}
-			>
-				<div
-					onClick={() => {
-						resetUserSession();
-						navigate("/login");
-					}}
-					className={"nlayout-menu-icon-wrapper"}
-					style={{
-						bottom: "0px",
-						justifyContent: "end",
-						padding: "3px 0px",
-					}}
-				>
-					<PoweroffOutlined />
-					<Typography.Text strong style={{ fontSize: 9.7 }}>
-						Sign Out
-					</Typography.Text>
-				</div>
-			</div>
+			</Tooltip>
 		</>
 	);
 };

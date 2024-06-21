@@ -159,8 +159,7 @@ const NewUserForm: FC<NewUserFormProps> = ({
 				onCancel();
 			}}
 			onOk={() => {
-				form
-					.validateFields()
+				form.validateFields()
 					.then((values) => {
 						onCreate(values).then(() => {
 							form.resetFields();
@@ -184,7 +183,8 @@ const NewUserForm: FC<NewUserFormProps> = ({
 				onValuesChange={(changedValues, AllValues) => {
 					console.log(AllValues);
 
-					if (changedValues.role === "technician") setIsTechnician(true);
+					if (changedValues.role === "technician")
+						setIsTechnician(true);
 					else if (changedValues.role) setIsTechnician(false);
 				}}
 			>
@@ -229,7 +229,10 @@ const NewUserForm: FC<NewUserFormProps> = ({
 										.toString()
 										.toLowerCase()
 										.localeCompare(
-											(optionB!.children as unknown as number).toString()
+											(
+												optionB!
+													.children as unknown as number
+											).toString()
 										)
 								}
 							>
@@ -254,87 +257,151 @@ const NewUserForm: FC<NewUserFormProps> = ({
 								<Form.List name="system_rating">
 									{(fields, { add, remove }) => (
 										<>
-											{fields.map(({ key, name, ...restField }) => (
-												<>
-													<Row>
-														<Col span={10} style={{ marginRight: "10px" }}>
-															<Form.Item
-																{...restField}
-																name={[name, "system"]}
-																// label="System"
-																rules={[
-																	{
-																		required: true,
-																		message: "Missing System",
-																	},
-																]}
+											{fields.map(
+												({
+													key,
+													name,
+													...restField
+												}) => (
+													<>
+														<Row>
+															<Col
+																span={10}
+																style={{
+																	marginRight:
+																		"10px",
+																}}
 															>
-																<Select placeholder="System">
-																	{systems.map((option: any) => (
-																		<Option value={option.id}>
-																			{option.name}
-																		</Option>
-																	))}
-																</Select>
-															</Form.Item>
-														</Col>
-														<Col span={10}>
-															<Form.Item
-																{...restField}
-																name={[name, "itm"]}
-																// label="System"
-																rules={[
-																	{
-																		required: true,
-																		message: "Missing Type",
-																	},
-																]}
-															>
-																<Select
-																	mode="multiple"
-																	placeholder="ITM"
-																	size="small"
+																<Form.Item
+																	{...restField}
+																	name={[
+																		name,
+																		"system",
+																	]}
+																	// label="System"
+																	rules={[
+																		{
+																			required:
+																				true,
+																			message:
+																				"Missing System",
+																		},
+																	]}
 																>
-																	<Option value="Inspection">Inspection</Option>
-																	<Option value="Testing">Testing</Option>
-																	<Option value="Maintenance">
-																		Maintenance
-																	</Option>
-																</Select>
-															</Form.Item>
-														</Col>
+																	<Select placeholder="System">
+																		{systems.map(
+																			(
+																				option: any
+																			) => (
+																				<Option
+																					value={
+																						option.id
+																					}
+																				>
+																					{
+																						option.name
+																					}
+																				</Option>
+																			)
+																		)}
+																	</Select>
+																</Form.Item>
+															</Col>
+															<Col span={10}>
+																<Form.Item
+																	{...restField}
+																	name={[
+																		name,
+																		"itm",
+																	]}
+																	// label="System"
+																	rules={[
+																		{
+																			required:
+																				true,
+																			message:
+																				"Missing Type",
+																		},
+																	]}
+																>
+																	<Select
+																		mode="multiple"
+																		placeholder="ITM"
+																		size="small"
+																	>
+																		<Option value="Inspection">
+																			Inspection
+																		</Option>
+																		<Option value="Testing">
+																			Testing
+																		</Option>
+																		<Option value="Maintenance">
+																			Maintenance
+																		</Option>
+																	</Select>
+																</Form.Item>
+															</Col>
 
-														<Col span={3} style={{ paddingLeft: "10px" }}>
-															<MinusCircleOutlined
-																onClick={() => remove(name)}
-															/>
-														</Col>
-													</Row>
-													<Row>
-														<Col span={4}>
-															<label>Rating:</label>
-														</Col>
-
-														<Col span={18} style={{ paddingLeft: "10px" }}>
-															<Form.Item
-																{...restField}
-																name={[name, "rating"]}
-																rules={[
-																	{
-																		required: true,
-																		message: "Missing Rating",
-																	},
-																]}
+															<Col
+																span={3}
+																style={{
+																	paddingLeft:
+																		"10px",
+																}}
 															>
-																<Rate
-																	tooltips={desc}
-																	style={{ marginTop: "-10px" }}
+																<MinusCircleOutlined
+																	onClick={() =>
+																		remove(
+																			name
+																		)
+																	}
 																/>
-															</Form.Item>
-														</Col>
-													</Row>
-												</>
-											))}
+															</Col>
+														</Row>
+														<Row>
+															<Col span={4}>
+																<label>
+																	Rating:
+																</label>
+															</Col>
+
+															<Col
+																span={18}
+																style={{
+																	paddingLeft:
+																		"10px",
+																}}
+															>
+																<Form.Item
+																	{...restField}
+																	name={[
+																		name,
+																		"rating",
+																	]}
+																	rules={[
+																		{
+																			required:
+																				true,
+																			message:
+																				"Missing Rating",
+																		},
+																	]}
+																>
+																	<Rate
+																		tooltips={
+																			desc
+																		}
+																		style={{
+																			marginTop:
+																				"-10px",
+																		}}
+																	/>
+																</Form.Item>
+															</Col>
+														</Row>
+													</>
+												)
+											)}
 											<Form.Item>
 												<Button
 													type="dashed"
@@ -369,7 +436,11 @@ const AddNewUser: FC<props> = ({
 	const onCreate = (values: any) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			let emp_data = JSON.parse(values.username);
-			let data = { ...values, username: emp_data.id, name: emp_data.full_name };
+			let data = {
+				...values,
+				username: emp_data.id,
+				name: emp_data.full_name,
+			};
 			console.log("Received values of form: ", data);
 			setConfirmLoading(true);
 			apiCall({

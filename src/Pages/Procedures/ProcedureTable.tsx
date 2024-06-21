@@ -17,10 +17,11 @@ import {
 } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
-import AddNewClient from "./AddNewSystem";
 import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
 import { SystemContext } from "../../Helpers/Context";
+import AddNewProcedure from "./AddNewProcedure";
+import Filter from "../../Components/Filter";
 const { Search } = Input;
 const { Text } = Typography;
 
@@ -32,7 +33,7 @@ const statusColors = {
 	"NO CONTRACT": "gold",
 };
 
-const SystemTable = () => {
+const ProcedureTable = () => {
 	const contextVariables = useContext(SystemContext);
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
@@ -46,6 +47,7 @@ const SystemTable = () => {
 	const [drawerVisible, setDrawerVisible] = useState(false);
 	const [form] = Form.useForm();
 	const [GI_form] = Form.useForm();
+	const [filters, setFilters] = useState<object | null>(null);
 	const [editMode, setEditMode] = useState(false);
 	const [pagination, setPagination] = useState({
 		current: 1,
@@ -99,7 +101,13 @@ const SystemTable = () => {
 				if (text === "EXPIRED")
 					return (
 						<>
-							<Tag color={statusColors[text as keyof typeof statusColors]}>
+							<Tag
+								color={
+									statusColors[
+										text as keyof typeof statusColors
+									]
+								}
+							>
 								{text}
 							</Tag>{" "}
 							<Button
@@ -116,14 +124,20 @@ const SystemTable = () => {
 					);
 				else if (text)
 					return (
-						<Tag color={statusColors[text as keyof typeof statusColors]}>
+						<Tag
+							color={
+								statusColors[text as keyof typeof statusColors]
+							}
+						>
 							{text}
 						</Tag>
 					);
 				else
 					return (
 						<>
-							<Tag color={statusColors["NO CONTRACT"]}>{"NO CONTRACT"}</Tag>
+							<Tag color={statusColors["NO CONTRACT"]}>
+								{"NO CONTRACT"}
+							</Tag>
 							<Button
 								onClick={() => {
 									setOpenContract(true);
@@ -205,10 +219,10 @@ const SystemTable = () => {
 		setLoading(true);
 		setShowClose(search ? true : false);
 		apiCall({
-			method: "GET",
-			url: `/clientsystems?page=${curr_pagination.current}&limit=${
-				curr_pagination.pageSize
-			}&searchText=${search || ""}`,
+			method: "POST",
+			url: `/clientfilters/procedures?page=${
+				curr_pagination.current
+			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -220,6 +234,7 @@ const SystemTable = () => {
 			handleError: () => {
 				setLoading(false);
 			},
+			...(filters ? { data: filters } : {}),
 		});
 	};
 
@@ -279,49 +294,28 @@ const SystemTable = () => {
 		fetchData(newPagination);
 	};
 
-	const GeneralInfoContent = () => (
-		<Form
-			form={GI_form}
-			layout="vertical"
-			name="GI_Form"
-			preserve={false}
-			initialValues={drawerInfo}
-			onFinish={(values) => {
-				onCreate(values).then(() => {
-					closeEditMode();
-					setDrawerInfo(values);
-				});
-			}}
-		>
-			{drawerFields?.length
-				? drawerFields.map((field: any) => (
-						<Form.Item
-							name={field.name}
-							label={field.name}
-							rules={[
-								...(field.mandatory
-									? [
-											{
-												required: true,
-												message: `Please provide ${field.name}`,
-											},
-									  ]
-									: []),
-							]}
-						>
-							{field.type === "number" ? (
-								<Input className="selected-building" disabled={!editMode} />
-							) : (
-								<Input className="selected-building" disabled={!editMode} />
-							)}
-						</Form.Item>
-				  ))
-				: null}
-		</Form>
-	);
-
 	return (
-		<>
+		<Filter
+			onApply={(filterValues: any) => {
+				setFilters(filterValues);
+				console.log(filterValues);
+			}}
+			items={[
+				{
+					key: "name",
+					label: "System Name",
+					placeholder: "Filter by System Name",
+					type: "search",
+					group: "system",
+				},
+				{
+					key: "tag",
+					label: "System Tag",
+					type: "search",
+					group: "system",
+				},
+			]}
+		>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -332,7 +326,10 @@ const SystemTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -343,7 +340,7 @@ const SystemTable = () => {
 					>
 						Refresh
 					</Button>
-					<AddNewClient fetchData={fetchData} />
+					<AddNewProcedure fetchData={fetchData} />
 				</Col>
 			</Row>
 			<Row>
@@ -359,13 +356,15 @@ const SystemTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) + 1
+						(pagination.current - 1) * (pagination.pageSize || 10) +
+						1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) * (pagination.pageSize || 10) +
+							: (pagination.current - 1) *
+									(pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -381,8 +380,7 @@ const SystemTable = () => {
 					onCancel();
 				}}
 				onOk={() => {
-					form
-						.validateFields()
+					form.validateFields()
 						.then((values) => {
 							onCreate(values).then(() => {
 								form.resetFields();
@@ -398,7 +396,12 @@ const SystemTable = () => {
 					<Form.Item
 						name="contract_id"
 						label="Select Contract"
-						rules={[{ required: true, message: "Please select a Contract" }]}
+						rules={[
+							{
+								required: true,
+								message: "Please select a Contract",
+							},
+						]}
 					>
 						<Select
 							showSearch
@@ -413,12 +416,18 @@ const SystemTable = () => {
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(optionB!.children as unknown as string).toLowerCase()
+										(
+											optionB!
+												.children as unknown as string
+										).toLowerCase()
 									)
 							}
 						>
 							{contextVariables.contracts?.map(
-								(item: { id: object; title: string }, index: number) => (
+								(
+									item: { id: object; title: string },
+									index: number
+								) => (
 									<Select.Option
 										value={item.id}
 									>{`${item.id} - ${item.title}`}</Select.Option>
@@ -459,11 +468,9 @@ const SystemTable = () => {
 						<Button onClick={openEditMode}>Edit</Button>
 					)
 				}
-			>
-				<GeneralInfoContent />
-			</Drawer>
-		</>
+			></Drawer>
+		</Filter>
 	);
 };
 
-export default SystemTable;
+export default ProcedureTable;

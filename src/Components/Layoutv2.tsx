@@ -97,6 +97,11 @@ const NewAppLayout2: FC = () => {
 		"/superuser": "Clients",
 		"/teams": "Teams",
 		"/pdfview": "Form Builder",
+		"/employees": "Employees",
+		"/roles": "Roles",
+		"/equipments": "Equipments",
+		"/users": "Users",
+		"/generate-report": "Reports",
 		...(client.client_id === "admin" ? { "/": "Master Data" } : {}),
 	};
 
@@ -144,18 +149,18 @@ const NewAppLayout2: FC = () => {
 			icon: <ReconciliationOutlined />,
 			label: "Work Orders",
 		},
+		// {
+		// 	key: "/procedures",
+		// 	icon: <BarsOutlined />,
+		// 	label: "Procedures",
+		// },
+		// {
+		// 	key: "/workorders",
+		// 	icon: <IssuesCloseOutlined />,
+		// 	label: "Defects",
+		// },
 		{
-			key: "/workorders",
-			icon: <BarsOutlined />,
-			label: "Procedures",
-		},
-		{
-			key: "/workorders",
-			icon: <IssuesCloseOutlined />,
-			label: "Defects",
-		},
-		{
-			key: "/workorders",
+			key: "/generate-report",
 			icon: <FileTextOutlined />,
 			label: "Reports",
 		},
@@ -198,22 +203,22 @@ const NewAppLayout2: FC = () => {
 			label: "Teams",
 		},
 		{
-			key: "/teams",
+			key: "/users",
 			icon: <UserSwitchOutlined />,
 			label: "Users",
 		},
 		{
-			key: "/teams",
+			key: "/roles",
 			icon: <UnlockOutlined />,
 			label: "Roles",
 		},
 		{
-			key: "/teams",
+			key: "/employees",
 			icon: <UserOutlined />,
 			label: "Employees",
 		},
 		{
-			key: "/teams",
+			key: "/equipments",
 			icon: <SlidersOutlined />,
 			label: "Equipments",
 		},

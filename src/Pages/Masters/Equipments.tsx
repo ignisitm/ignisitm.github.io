@@ -25,9 +25,11 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import AddNewUser from "./AddNewUser";
 import AddNewEquipment from "./AddNewEquipment";
+import { useLoaderContext } from "../../Components/Layoutv2";
 const { Search } = Input;
 
 const Equipments: React.FC<any> = ({ systems }) => {
+	const { completeLoading } = useLoaderContext();
 	const [data, setData] = useState();
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -137,12 +139,14 @@ const Equipments: React.FC<any> = ({ systems }) => {
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
+				completeLoading();
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
 					setPagination({ ...curr_pagination, total });
 				}
 			},
 			handleError: () => {
+				completeLoading();
 				setLoading(false);
 			},
 		});
@@ -168,7 +172,10 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		fetchData(newPagination);
 	};
 
-	const EditEquipment: FC<{ data: any; open: boolean }> = ({ data, open }) => {
+	const EditEquipment: FC<{ data: any; open: boolean }> = ({
+		data,
+		open,
+	}) => {
 		const [form] = Form.useForm();
 		const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -200,8 +207,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						setEditingData({});
 					}}
 					onOk={() => {
-						form
-							.validateFields()
+						form.validateFields()
 							.then((values) => {
 								setConfirmLoading(true);
 								onEdit(values).then(() => {
@@ -244,8 +250,12 @@ const Equipments: React.FC<any> = ({ systems }) => {
 								rules={[{ required: true }]}
 							>
 								<Select>
-									<Select.Option value="Spare Parts">Spare Parts</Select.Option>
-									<Select.Option value="Tools">Tools</Select.Option>
+									<Select.Option value="Spare Parts">
+										Spare Parts
+									</Select.Option>
+									<Select.Option value="Tools">
+										Tools
+									</Select.Option>
 								</Select>
 							</Form.Item>
 						</Col>
@@ -275,7 +285,6 @@ const Equipments: React.FC<any> = ({ systems }) => {
 
 	return (
 		<>
-			<h3>Equipments</h3>
 			<Row style={{ marginBottom: 10 }}>
 				<Col span={18}>
 					<Search
@@ -286,7 +295,10 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
+						<Button
+							onClick={() => search(true)}
+							icon={<CloseOutlined />}
+						/>
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -317,7 +329,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize +
+							pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize

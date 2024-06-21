@@ -2,11 +2,11 @@ import { FC, createContext, useState, useEffect } from "react";
 import { Input, Row, Col } from "antd";
 import { apiCall } from "../../axiosConfig";
 import { useLoaderContext } from "../../Components/Layout";
-import { SystemContext } from "../../Helpers/Context";
-import SystemTable from "./SystemTable";
+import { ProcedureContext } from "../../Helpers/Context";
+import ProcedureTable from "./ProcedureTable";
 const { Search } = Input;
 
-const SuperUser: FC = () => {
+const Procedures: FC = () => {
 	const [systemTypes, setSystemTypes] = useState([]);
 	const [buildings, setBuildings] = useState([]);
 	const [contracts, setContracts] = useState([]);
@@ -53,7 +53,7 @@ const SuperUser: FC = () => {
 	}, []);
 
 	return (
-		<SystemContext.Provider
+		<ProcedureContext.Provider
 			value={{
 				systemTypes: systemTypes,
 				buildings: buildings,
@@ -62,11 +62,11 @@ const SuperUser: FC = () => {
 		>
 			<Row>
 				<Col span={24}>
-					<SystemTable />
+					<ProcedureTable />
 				</Col>
 			</Row>
-		</SystemContext.Provider>
+		</ProcedureContext.Provider>
 	);
 };
 
-export default SuperUser;
+export default Procedures;

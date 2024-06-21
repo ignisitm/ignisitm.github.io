@@ -281,7 +281,7 @@ const NewAppLayout: FC = () => {
 			</Modal>
 			<Sider
 				theme="light"
-				width={72}
+				width={55}
 				style={{
 					overflow: "auto",
 					height: "100vh",
@@ -298,6 +298,7 @@ const NewAppLayout: FC = () => {
 					<div
 						style={{
 							padding: "18px",
+							paddingRight: "15px",
 							paddingBottom: "12px",
 							textAlign: "center",
 						}}
@@ -346,11 +347,11 @@ const NewAppLayout: FC = () => {
 			<Layout
 				className="main-background"
 				style={{
-					marginLeft: 72,
+					marginLeft: 55,
 					minHeight: "100vh",
 				}}
 			>
-				<Header className="nlayout-header">
+				<Header className="nlayout-header-v2">
 					<Space>
 						<Typography.Title style={{ margin: 0 }} level={3}>
 							{

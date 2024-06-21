@@ -27,6 +27,14 @@ export let SystemContext = createContext({
 	contracts: [],
 });
 
+export let ProcedureContext = createContext({
+	systemTypes: [],
+	buildings: [],
+	contracts: [],
+});
+
 export let ClientContext = createContext({ client_id: "", client_name: "" });
 
 export let AHJFormContext = createContext<any>({ frequencies: [] });
+
+export let ReportContext = createContext<any>({ ahj_pdfs: [], buildings: [] });
