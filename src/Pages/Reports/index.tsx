@@ -3,10 +3,12 @@ import { useLoaderContext } from "../../Components/Layoutv2";
 import { ReportContext } from "../../Helpers/Context";
 import GenerateReport from "./GenerateReport";
 import { apiCall } from "../../axiosConfig";
+import GeneratedPdfViewer from "./PDFViewer/GeneratedPdfViewer";
 
 const Reports: FC = () => {
 	const [ahj_pdfs, setAhj_pdfs] = useState<Array<any>>([]);
 	const [buildings, setBuildings] = useState<Array<any>>([]);
+	const [generatedPDF, setGeneratedPDF] = useState<any>(null);
 	const { completeLoading } = useLoaderContext();
 
 	const loadAll = () => {
@@ -43,7 +45,15 @@ const Reports: FC = () => {
 
 	return (
 		<ReportContext.Provider value={{ ahj_pdfs, buildings }}>
-			<GenerateReport />
+			{generatedPDF ? (
+				<GeneratedPdfViewer
+					file={generatedPDF?.URL || ""}
+					heading={generatedPDF?.heading || ""}
+					filename={generatedPDF?.filename || "Report"}
+					close={() => setGeneratedPDF(null)}
+				/>
+			) : null}
+			<GenerateReport PDF={generatedPDF} setGeneratedPDF={setGeneratedPDF} />
 		</ReportContext.Provider>
 	);
 };

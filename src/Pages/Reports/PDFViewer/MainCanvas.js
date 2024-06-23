@@ -10,11 +10,17 @@ import {
 	Space,
 	FloatButton,
 	Typography,
+	Row,
+	Col,
 	Tooltip,
+	Divider,
+	theme,
 } from "antd";
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState, cloneElement } from "react";
 import { useRefer } from "../../../Helpers/Refs";
 import Draggable from "react-draggable";
+
+const { useToken } = theme;
 
 const MainCanvas = ({
 	pdfRef,
@@ -41,6 +47,18 @@ const MainCanvas = ({
 	const rectW = useRef();
 	const pdf_image = useRef("");
 	const zoomScale = useRef(1);
+
+	const { token } = useToken();
+
+	const contentStyle = {
+		backgroundColor: token.colorBgElevated,
+		borderRadius: token.borderRadiusLG,
+		boxShadow: token.boxShadowSecondary,
+	};
+
+	const menuStyle = {
+		boxShadow: "none",
+	};
 
 	const rightClickField = [
 		{
@@ -132,10 +150,12 @@ const MainCanvas = ({
 
 	const pasteFromCB = () => {
 		let newPointts = {
-			startX: startX.current / divW - clipboard.w / 2,
-			startY: startY.current / divH - clipboard.h / 2,
+			startX: startX.current / divW,
+			startY: (startY.current - (0.03 * divH) / 2) / divH,
 			rectW: clipboard.w,
 			rectH: clipboard.h,
+			fontSize: clipboard.fontSize,
+			text: clipboard.text,
 		};
 		console.log(newPointts);
 		setAssignedFields((prev) => ({
@@ -143,10 +163,7 @@ const MainCanvas = ({
 			...(pointExists(prev[pageNo], newPointts)
 				? {}
 				: {
-						[pageNo]: [
-							...(prev[pageNo] ? prev[pageNo] : []),
-							newPointts,
-						],
+						[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
 				  }),
 		}));
 		setRightClicked(false);
@@ -173,30 +190,25 @@ const MainCanvas = ({
 		e.stopPropagation();
 		if (cursorInCanvas) {
 			if (ctx.current) {
-				ctx.current?.clearRect(
-					0,
-					0,
-					canvasOfDoc.width,
-					canvasOfDoc.height
-				);
+				ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
 				ctx.current?.drawImage(pdf_image.current, 0, 0);
 			}
-			if (rectH.current > 10 && rectW.current > 10) {
+			if (e.detail === 1) document.activeElement.blur();
+			else if (e.detail === 2) {
 				let newPointts = {
 					startX: startX.current / divW,
-					startY: startY.current / divH,
-					rectW: rectW.current / divW,
-					rectH: rectH.current / divH,
+					startY: (startY.current - (0.03 * divH) / 2) / divH,
+					rectW: 0.15,
+					rectH: 0.03,
+					fontSize: 12 / divH,
+					text: null,
 				};
 				setAssignedFields((prev) => ({
 					...prev,
 					...(pointExists(prev[pageNo], newPointts)
 						? {}
 						: {
-								[pageNo]: [
-									...(prev[pageNo] ? prev[pageNo] : []),
-									newPointts,
-								],
+								[pageNo]: [...(prev[pageNo] ? prev[pageNo] : []), newPointts],
 						  }),
 				}));
 			}
@@ -221,15 +233,15 @@ const MainCanvas = ({
 		var height = mouseY - startY.current;
 		rectW.current = width;
 		rectH.current = height;
-		if (ctx.current) {
-			ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
-			ctx.current?.drawImage(pdf_image.current, 0, 0);
-			ctx.current.beginPath();
-			ctx.current.rect(startX.current, startY.current, width, height);
-			ctx.current.strokeStyle = "rgba(255, 99, 71, 0.9)";
-			ctx.current.lineWidth = 1;
-			ctx.current.stroke();
-		}
+		// if (ctx.current) {
+		// 	ctx.current?.clearRect(0, 0, canvasOfDoc.width, canvasOfDoc.height);
+		// 	ctx.current?.drawImage(pdf_image.current, 0, 0);
+		// 	ctx.current.beginPath();
+		// 	ctx.current.rect(startX.current, startY.current, width, height);
+		// 	ctx.current.strokeStyle = "rgba(255, 99, 71, 0.9)";
+		// 	ctx.current.lineWidth = 1;
+		// 	ctx.current.stroke();
+		// }
 	};
 
 	const pointExists = (arr, newPoints) => {
@@ -292,6 +304,40 @@ const MainCanvas = ({
 		});
 	};
 
+	const increaseFont = (idx) => {
+		setAssignedFields((prev) => {
+			let curr_page = prev[pageNo];
+			curr_page[idx] = {
+				...curr_page[idx],
+				fontSize: curr_page[idx].fontSize + 1 / divH,
+			};
+			return { ...prev, [pageNo]: [...curr_page] };
+		});
+	};
+
+	const decreaseFont = (idx) => {
+		setAssignedFields((prev) => {
+			let curr_page = prev[pageNo];
+			curr_page[idx] = {
+				...curr_page[idx],
+				fontSize: curr_page[idx].fontSize - 1 / divH,
+			};
+			return { ...prev, [pageNo]: [...curr_page] };
+		});
+	};
+
+	const addTextToObj = (idx, text) => {
+		setAssignedFields((prev) => {
+			let curr_page = prev[pageNo];
+			curr_page[idx] = {
+				...curr_page[idx],
+				text,
+			};
+			return { ...prev, [pageNo]: [...curr_page] };
+		});
+		console.log(assignedFields);
+	};
+
 	return (
 		<div
 			className="main-canvas"
@@ -313,7 +359,7 @@ const MainCanvas = ({
 						zIndex: 3,
 						height: `${divH}px`,
 						width: `${divW}px`,
-						cursor: "crosshair",
+						cursor: "pointer",
 					}}
 				>
 					<canvas
@@ -342,9 +388,7 @@ const MainCanvas = ({
 					{divH &&
 						assignedFields.map((x, index) => (
 							<Draggable
-								defaultClassName={`div-blocks${
-									x?.assigned ? "-assigned" : ""
-								}`}
+								defaultClassName={`div-blocks-input`}
 								defaultClassNameDragging={`div-blocks-dragging${
 									x?.assigned ? "-assigned" : ""
 								}`}
@@ -361,80 +405,35 @@ const MainCanvas = ({
 								<div
 									style={{
 										position: "absolute",
-										height: `${
-											x.rectH * zoomScale.current * divH
-										}px`,
-										width: `${
-											x.rectW * zoomScale.current * divW
-										}px`,
+										height: `${x.rectH * zoomScale.current * divH}px`,
 										cursor: "move",
 									}}
 								>
-									{x.rectW * divW > 25 * zoomScale.current ? (
-										<Typography.Text
-											strong
-											style={{
-												color: x?.assigned
-													? "greenyellow"
-													: "orange",
-											}}
-											l
-										>
-											{index + 1}
-										</Typography.Text>
-									) : (
-										"."
-									)}
 									<Dropdown
 										trigger={["click"]}
+										dropdownRender={(menu) => (
+											<div style={contentStyle}>
+												<Row
+													gutter={2}
+													style={{ padding: "5px", paddingBottom: "0px" }}
+												>
+													<Col span={12}>
+														<Button onClick={() => increaseFont(index)} block>
+															A+
+														</Button>
+													</Col>
+													<Col span={12}>
+														<Button onClick={() => decreaseFont(index)} block>
+															A-
+														</Button>
+													</Col>
+												</Row>
+												{cloneElement(menu, { style: menuStyle })}
+											</div>
+										)}
 										key={index}
 										menu={{
 											items: [
-												{
-													key: "Field",
-													label: (
-														<>
-															<Typography.Text
-																strong
-															>
-																{`Field #${
-																	index + 1
-																} - `}
-															</Typography.Text>
-															{x?.assigned ? (
-																<Typography.Text
-																	style={{
-																		color: "green",
-																	}}
-																>
-																	Assigned
-																</Typography.Text>
-															) : (
-																<Typography.Text
-																	style={{
-																		color: "orange",
-																	}}
-																>
-																	Unassigned
-																</Typography.Text>
-															)}
-
-															<br />
-															<Typography.Text
-																type="secondary"
-																italic
-															>
-																Click to Edit
-															</Typography.Text>
-														</>
-													),
-													onClick: () =>
-														assigner(index),
-												},
-
-												{
-													type: "divider",
-												},
 												{
 													key: "copy",
 													label: "Copy",
@@ -443,6 +442,8 @@ const MainCanvas = ({
 														setClipboard({
 															h: x.rectH,
 															w: x.rectW,
+															text: x.text,
+															fontSize: x.fontSize,
 														}),
 												},
 												{
@@ -463,18 +464,20 @@ const MainCanvas = ({
 										}}
 									>
 										<Tooltip title="Click to Edit">
-											<div
-												className="more-options"
-												style={
-													x.rectW * divW > 25
-														? { right: "5px" }
-														: {}
-												}
-											>
+											<span className="more-options-input">
 												<DownCircleFilled />
-											</div>
+											</span>
 										</Tooltip>
 									</Dropdown>
+									<span
+										style={{ fontSize: `${x.fontSize * divH}px` }}
+										contentEditable
+										tabIndex={-1}
+										onBlur={(e) => addTextToObj(index, e.target.innerText)}
+										placeholder="Add Text..."
+									>
+										{x.text}
+									</span>
 								</div>
 							</Draggable>
 						))}
@@ -483,22 +486,12 @@ const MainCanvas = ({
 							className="div-blocks-preview"
 							style={{
 								position: "absolute",
-								left: `${
-									(startX.current -
-										(clipboard.w * divW) / 2) *
-									zoomScale.current
-								}px`,
+								left: `${startX.current * zoomScale.current}px`,
 								top: `${
-									(startY.current -
-										(clipboard.h * divH) / 2) *
-									zoomScale.current
+									(startY.current - (0.03 * divH) / 2) * zoomScale.current
 								}px`,
-								height: `${
-									clipboard.h * zoomScale.current * divH
-								}px`,
-								width: `${
-									clipboard.w * zoomScale.current * divW
-								}px`,
+								height: `${clipboard.h * zoomScale.current * divH}px`,
+								width: `${clipboard.w * zoomScale.current * divW}px`,
 								cursor: "pointer",
 							}}
 						/>

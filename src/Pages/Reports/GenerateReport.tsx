@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { FC, useContext, useEffect, useState } from "react";
 import {
 	Button,
 	Card,
@@ -18,7 +18,12 @@ import { filter } from "lodash";
 import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { LoadingOutlined } from "@ant-design/icons";
 
-const GenerateReport = () => {
+interface props {
+	setGeneratedPDF: Function;
+	PDF: any;
+}
+
+const GenerateReport: FC<props> = ({ setGeneratedPDF, PDF }) => {
 	const [form] = Form.useForm();
 	const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
 	const [selectedSystem, setSelectedSystem] = useState<any>(null);
@@ -39,8 +44,10 @@ const GenerateReport = () => {
 				console.log(selectedBuilding);
 				console.log(selectedSystem);
 
+				let sys_type = systems.find((x) => x.id === selectedSystem).type;
+
 				let ahjs = filter(contextVariables.ahj_pdfs, (o) => {
-					return selectedSystem.includes(o.systemtype);
+					return [sys_type].includes(o.systemtype);
 				});
 				console.log(ahjs);
 				setAhj_pdfs(ahjs);
@@ -63,15 +70,15 @@ const GenerateReport = () => {
 		});
 	};
 
-	const generatePDF = (sys: number, pdf: number, date: any) =>
+	const generatePDF = (pdf: number, date: any, item: any) =>
 		new Promise((resolve, reject) => {
 			apiCall({
 				method: "GET",
-				url: `/ClientReports?system_id=${sys}&report_id=${pdf}&date=${date}`,
+				url: `/ClientReports?system_id=${selectedSystem}&report_id=${pdf}&date=${date}`,
 				handleResponse: (res) => {
 					console.log(res);
 					let { URL, fields } = res.data.message;
-					modifyPdf(URL, fields, resolve);
+					modifyPdf(URL, fields, resolve, item);
 				},
 				handleError: (err) => {
 					resolve(err);
@@ -79,16 +86,11 @@ const GenerateReport = () => {
 			});
 		});
 
-	const generate = (sys: number, pdf: number, index: number) => {
+	const generate = (pdf: number, index: number, item: any) => {
 		form.validateFields().then((values) => {
 			setGenerating(index);
 			let date = values.generateDate.toISOString();
-			let available_sys = systems.filter((x) => x.type === sys);
-			let promises: Array<Promise<any>> = [];
-			available_sys.map((system) => {
-				promises.push(generatePDF(system.id, pdf, date));
-			});
-			Promise.all(promises).then((res) => {
+			generatePDF(pdf, date, item).then(() => {
 				setGenerating(-1);
 			});
 		});
@@ -103,7 +105,12 @@ const GenerateReport = () => {
 		link.click();
 	};
 
-	async function modifyPdf(fileURL: any, assignedFields: any, resolve: any) {
+	async function modifyPdf(
+		fileURL: any,
+		assignedFields: any,
+		resolve: any,
+		item: any
+	) {
 		try {
 			const url = fileURL;
 			const existingPdfBytes = await fetch(url).then((res) =>
@@ -131,13 +138,8 @@ const GenerateReport = () => {
 					let textWidth = font.widthOfTextAtSize(text, size);
 
 					curr.drawText(text, {
-						x:
-							(field.startX + field.rectW / 2) * width -
-							textWidth / 2,
-						y:
-							height -
-							(field.startY + field.rectH / 2) * height -
-							3.5,
+						x: (field.startX + field.rectW / 2) * width - textWidth / 2,
+						y: height - (field.startY + field.rectH / 2) * height - 3.5,
 						size,
 						font,
 						color: rgb(0, 0, 0),
@@ -146,7 +148,15 @@ const GenerateReport = () => {
 			});
 
 			const pdfBytes = await pdfDoc.save();
-			saveByteArray("Report", pdfBytes);
+			var blob = new Blob([pdfBytes], { type: "application/pdf" });
+			let generatedURL = window.URL.createObjectURL(blob);
+			// saveByteArray("Report", pdfBytes);
+			let generated = {
+				URL: generatedURL,
+				heading: `${item.name} / ${item.filepath.name}`,
+				filename: item.filepath.name,
+			};
+			setGeneratedPDF(generated);
 		} catch (err) {
 			console.error(err);
 			message.error("Some Error Occured!");
@@ -156,7 +166,7 @@ const GenerateReport = () => {
 	}
 
 	return (
-		<>
+		<div style={PDF ? { display: "none" } : {}}>
 			<Card title="Generate a New Report">
 				<Form
 					form={form}
@@ -178,10 +188,7 @@ const GenerateReport = () => {
 									},
 								]}
 							>
-								<DatePicker
-									format={"DD/MM/YYYY"}
-									style={{ width: "100%" }}
-								/>
+								<DatePicker format={"DD/MM/YYYY"} style={{ width: "100%" }} />
 							</Form.Item>
 						</Col>
 						<Col span={12}>
@@ -210,10 +217,7 @@ const GenerateReport = () => {
 										(optionA!.children as unknown as string)
 											.toLowerCase()
 											.localeCompare(
-												(
-													optionB!
-														.children as unknown as string
-												).toLowerCase()
+												(optionB!.children as unknown as string).toLowerCase()
 											)
 									}
 								>
@@ -236,7 +240,7 @@ const GenerateReport = () => {
 					</Row>
 					<Form.Item
 						name="system_id"
-						label="Select System(s)"
+						label="Select System"
 						rules={[
 							{
 								required: true,
@@ -247,11 +251,9 @@ const GenerateReport = () => {
 						<Select
 							showSearch
 							allowClear={true}
-							mode="multiple"
 							loading={loadingSystems}
 							onChange={(e) => {
-								if (Array.isArray(e) && e?.length > 0)
-									setSelectedSystem(e);
+								if (e) setSelectedSystem(e);
 								else setSelectedSystem(null);
 							}}
 							placeholder="Search to Select"
@@ -265,10 +267,7 @@ const GenerateReport = () => {
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(
-											optionB!
-												.children as unknown as string
-										).toLowerCase()
+										(optionB!.children as unknown as string).toLowerCase()
 									)
 							}
 						>
@@ -282,7 +281,7 @@ const GenerateReport = () => {
 									},
 									index: number
 								) => (
-									<Select.Option value={item.type}>
+									<Select.Option value={item.id}>
 										{`${item.name} - ${item.tag}`}
 									</Select.Option>
 								)
@@ -290,13 +289,13 @@ const GenerateReport = () => {
 						</Select>
 					</Form.Item>
 					<Typography.Title level={5}>
-						Available Reports:
+						Available Report Formats:
 					</Typography.Title>
 					{selectedBuilding && selectedSystem ? (
 						ahj_pdfs && ahj_pdfs?.length > 0 ? (
 							<>
 								<Typography.Text type="secondary">
-									{`Click on a report to Generate it`}
+									{`Click on a report format to Generate it`}
 								</Typography.Text>
 								<Divider />
 								<List
@@ -312,10 +311,7 @@ const GenerateReport = () => {
 									dataSource={ahj_pdfs}
 									renderItem={(item, index) => (
 										<List.Item>
-											<Card
-												style={{ minHeight: "100px" }}
-												title={item.name}
-											>
+											<Card style={{ minHeight: "100px" }} title={item.name}>
 												{generating === index ? (
 													// <>
 													// 	<Typography.Text type="secondary">
@@ -323,22 +319,13 @@ const GenerateReport = () => {
 													// 		<LoadingOutlined />
 													// 	</Typography.Text>
 													// </>
-													<Button
-														type="link"
-														loading={true}
-													>
+													<Button type="link" loading={true}>
 														Generating
 													</Button>
 												) : (
 													<Button
 														type="link"
-														onClick={() =>
-															generate(
-																item.systemtype,
-																item.id,
-																index
-															)
-														}
+														onClick={() => generate(item.id, index, item)}
 													>
 														{item.filepath.name}
 													</Button>
@@ -350,17 +337,17 @@ const GenerateReport = () => {
 							</>
 						) : (
 							<Typography.Text type="secondary">
-								{`No available reports for the selected system`}
+								{`No available report formats for the selected system`}
 							</Typography.Text>
 						)
 					) : (
 						<Typography.Text type="secondary">
-							{`Select building and system(s) to view available reports`}
+							{`Select building and system to view available report formats`}
 						</Typography.Text>
 					)}
 				</Form>
 			</Card>
-		</>
+		</div>
 	);
 };
 

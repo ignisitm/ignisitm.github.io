@@ -757,6 +757,38 @@ code {
 	border-radius: 6px;
 }
 
+.div-blocks-input {
+	position: absolute;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+}
+
+.div-blocks-input input {
+	border: transparent;
+	min-width: 100%;
+}
+
+.div-blocks-input span[contenteditable="true"] {
+	cursor: text;
+}
+
+.div-blocks-input span[contenteditable="true"]:empty:before {
+	content: attr(placeholder);
+	color: gray;
+}
+/* found this online --- it prevents the user from being able to make a (visible) newline */
+.div-blocks-input span[contenteditable="true"] br {
+	display: none;
+}
+
+.more-options-input {
+	position: absolute;
+	cursor: pointer;
+	left: -15px;
+	color: orange;
+}
+
 div-blocks-dragging {
 	position: absolute;
 	display: flex;
@@ -799,16 +831,6 @@ div-blocks-dragging {
 	background-color: transparent;
 	border: unset;
 	color: white;
-}
-
-.div-block-input::placeholder {
-	color: #e8e8e8;
-	opacity: 1; /* Firefox */
-}
-
-.div-block-input::-ms-input-placeholder {
-	/* Edge 12 -18 */
-	color: #e8e8e8;
 }
 
 .pdf-header {
