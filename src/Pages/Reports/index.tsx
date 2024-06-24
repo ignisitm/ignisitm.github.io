@@ -4,6 +4,8 @@ import { ReportContext } from "../../Helpers/Context";
 import GenerateReport from "./GenerateReport";
 import { apiCall } from "../../axiosConfig";
 import GeneratedPdfViewer from "./PDFViewer/GeneratedPdfViewer";
+import { Tabs } from "antd";
+import KPIReport from "./KPIReport";
 
 const Reports: FC = () => {
 	const [ahj_pdfs, setAhj_pdfs] = useState<Array<any>>([]);
@@ -43,6 +45,23 @@ const Reports: FC = () => {
 		loadAll();
 	}, []);
 
+	const tabItems = [
+		{
+			key: "ahj",
+			label: "Generate AHJ Report",
+			children: <GenerateReport setGeneratedPDF={setGeneratedPDF} />,
+		},
+		{
+			key: "kpi",
+			label: "View KPI Report",
+			children: <KPIReport />,
+		},
+	];
+
+	const onChange = (key: string) => {
+		console.log(key);
+	};
+
 	return (
 		<ReportContext.Provider value={{ ahj_pdfs, buildings }}>
 			{generatedPDF ? (
@@ -53,7 +72,9 @@ const Reports: FC = () => {
 					close={() => setGeneratedPDF(null)}
 				/>
 			) : null}
-			<GenerateReport PDF={generatedPDF} setGeneratedPDF={setGeneratedPDF} />
+			<div style={generatedPDF ? { display: "none" } : {}}>
+				<Tabs onChange={onChange} items={tabItems} destroyInactiveTabPane />
+			</div>
 		</ReportContext.Provider>
 	);
 };

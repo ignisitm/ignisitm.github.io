@@ -20,10 +20,9 @@ import { LoadingOutlined } from "@ant-design/icons";
 
 interface props {
 	setGeneratedPDF: Function;
-	PDF: any;
 }
 
-const GenerateReport: FC<props> = ({ setGeneratedPDF, PDF }) => {
+const GenerateReport: FC<props> = ({ setGeneratedPDF }) => {
 	const [form] = Form.useForm();
 	const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
 	const [selectedSystem, setSelectedSystem] = useState<any>(null);
@@ -166,7 +165,7 @@ const GenerateReport: FC<props> = ({ setGeneratedPDF, PDF }) => {
 	}
 
 	return (
-		<div style={PDF ? { display: "none" } : {}}>
+		<>
 			<Card title="Generate a New Report">
 				<Form
 					form={form}
@@ -347,7 +346,7 @@ const GenerateReport: FC<props> = ({ setGeneratedPDF, PDF }) => {
 					)}
 				</Form>
 			</Card>
-		</div>
+		</>
 	);
 };
 
