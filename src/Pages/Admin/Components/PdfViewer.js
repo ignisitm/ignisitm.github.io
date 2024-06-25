@@ -30,7 +30,7 @@ const PdfViewer = () => {
 
 	const { state } = useLocation();
 	const navigate = useNavigate();
-	const { ahj, heading, file, editMode } = state;
+	const { ahj, heading, file, editMode, systemId } = state;
 	const { completeLoading } = useLoaderContext();
 	const mainContent = useRef();
 
@@ -59,10 +59,12 @@ const PdfViewer = () => {
 				width={width}
 				draw={(context) => {
 					var scale = Math.min(width / vp.width, height / vp.height);
-					page.render({
-						canvasContext: context,
-						viewport: page.getViewport({ scale: scale }),
-					}).promise.catch((err) => console.log(err));
+					page
+						.render({
+							canvasContext: context,
+							viewport: page.getViewport({ scale: scale }),
+						})
+						.promise.catch((err) => console.log(err));
 				}}
 			/>
 		);
@@ -119,13 +121,8 @@ const PdfViewer = () => {
 					let textWidth = font.widthOfTextAtSize(text, size);
 
 					curr.drawText(text, {
-						x:
-							(field.startX + field.rectW / 2) * width -
-							textWidth / 2,
-						y:
-							height -
-							(field.startY + field.rectH / 2) * height -
-							3.5,
+						x: (field.startX + field.rectW / 2) * width - textWidth / 2,
+						y: height - (field.startY + field.rectH / 2) * height - 3.5,
 						size,
 						font,
 						color: rgb(0, 0, 0),
@@ -149,8 +146,7 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages)
-					pages.push(pages.length + 1);
+				while (pages.length < doc.numPages) pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc
@@ -171,8 +167,7 @@ const PdfViewer = () => {
 			.promise.then((doc) => {
 				setPdfRef(doc);
 				var pages = [];
-				while (pages.length < doc.numPages)
-					pages.push(pages.length + 1);
+				while (pages.length < doc.numPages) pages.push(pages.length + 1);
 				return Promise.all(
 					pages.map((num) => {
 						return doc.getPage(num).then((page) => {
@@ -273,6 +268,7 @@ const PdfViewer = () => {
 				data: {
 					ahj_id: ahj,
 					fields: JSON.stringify(assignedFields),
+					system_type: systemId,
 					filepath: {},
 				},
 				handleResponse: (res) => {
@@ -367,13 +363,7 @@ const PdfViewer = () => {
 	};
 
 	const Assigner = ({ pageSystem }) => {
-		const [system, setSystem] = useState(
-			assignedFields?.[selectedPage]?.[assignMode?.index]?.system
-				? assignedFields?.[selectedPage]?.[assignMode?.index]?.system
-				: pageSystem > 0
-				? pageSystem
-				: null
-		);
+		const [system, setSystem] = useState(systemId);
 		const [type, setType] = useState(
 			assignedFields?.[selectedPage]?.[assignMode?.index]?.type
 				? assignedFields?.[selectedPage]?.[assignMode?.index]?.type
@@ -405,7 +395,7 @@ const PdfViewer = () => {
 			setLoadingProcedures(true);
 			apiCall({
 				method: "GET",
-				url: `/dropdown/system_procedures?system_id=${system}`,
+				url: `/dropdown/system_procedures?system_id=${systemId}`,
 				handleResponse: (res) => {
 					setLoadingProcedures(false);
 					setProcedures(res.data.message);
@@ -418,7 +408,7 @@ const PdfViewer = () => {
 			setSystemFieldsLoading(true);
 			apiCall({
 				method: "GET",
-				url: `/dropdown/systemfields?id=${system}`,
+				url: `/dropdown/systemfields?id=${systemId}`,
 				handleResponse: (res) => {
 					setSystemFieldsLoading(false);
 					setSystemFields(res.data.message?.general_information);
@@ -432,7 +422,7 @@ const PdfViewer = () => {
 				let new_arr = prev[selectedPage];
 				new_arr[assignMode.index] = {
 					...new_arr[assignMode.index],
-					system,
+					system: systemId,
 					assigned:
 						type === "procedures"
 							? procedure
@@ -447,19 +437,32 @@ const PdfViewer = () => {
 		};
 
 		useEffect(() => {
-			if (type === "procedures" && system) getProcedures();
-			else if (type === "system_values" && system) getSystemFields();
-		}, [system, type]);
+			if (type === "procedures" && systemId) getProcedures();
+			else if (type === "system_values" && systemId) getSystemFields();
+		}, [systemId, type]);
 
 		return (
-			<Space
-				direction="vertical"
-				style={{ width: "100%", color: "white" }}
-			>
+			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
+				<Typography.Title
+					level={5}
+					ellipsis={{
+						tooltip: {
+							title: systems?.find((x) => x.id === systemId).name,
+							placement: "bottomLeft",
+						},
+					}}
+					style={{
+						color: "white",
+						marginBottom: 0,
+					}}
+				>
+					System: <br />
+					{systems?.find((x) => x.id === systemId).name}
+				</Typography.Title>
 				<Typography.Title level={5} style={{ color: "white" }}>
 					Assigning Field #{assignMode.index + 1}
 				</Typography.Title>
-				<div>
+				{/* <div>
 					<label style={{ margin: "4px" }}>Select System: </label>
 					<Select
 						showSearch
@@ -482,13 +485,11 @@ const PdfViewer = () => {
 							</Select.Option>
 						))}
 					</Select>
-				</div>
-				{system ? (
+				</div> */}
+				{systemId ? (
 					<>
 						<div>
-							<label style={{ margin: "4px" }}>
-								Select Type:
-							</label>
+							<label style={{ margin: "4px" }}>Select Type:</label>
 							<Select
 								value={type}
 								onChange={(e) => setType(e)}
@@ -510,9 +511,7 @@ const PdfViewer = () => {
 								</span>
 							) : (
 								<div>
-									<label style={{ margin: "4px" }}>
-										Select Procedure
-									</label>
+									<label style={{ margin: "4px" }}>Select Procedure</label>
 									<Select
 										showSearch
 										value={procedure}
@@ -520,23 +519,16 @@ const PdfViewer = () => {
 										placeholder="Select Procedure"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children
-												.toLowerCase()
-												.includes(input)
+											option.children.toLowerCase().includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(
-													optionB.children.toLowerCase()
-												)
+												.localeCompare(optionB.children.toLowerCase())
 										}
 									>
 										{procedures?.map((proc, index) => (
-											<Select.Option
-												key={index}
-												value={proc.id}
-											>
+											<Select.Option key={index} value={proc.id}>
 												{`${proc.code} : ${proc.procedure}`}
 											</Select.Option>
 										))}
@@ -550,9 +542,7 @@ const PdfViewer = () => {
 								</span>
 							) : (
 								<div>
-									<label style={{ margin: "4px" }}>
-										Select a System Field
-									</label>
+									<label style={{ margin: "4px" }}>Select a System Field</label>
 									<Select
 										showSearch
 										value={systemField}
@@ -560,23 +550,16 @@ const PdfViewer = () => {
 										placeholder="Select System Field"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
-											option.children
-												.toLowerCase()
-												.includes(input)
+											option.children.toLowerCase().includes(input)
 										}
 										filterSort={(optionA, optionB) =>
 											optionA.children
 												.toLowerCase()
-												.localeCompare(
-													optionB.children.toLowerCase()
-												)
+												.localeCompare(optionB.children.toLowerCase())
 										}
 									>
 										{systemFields?.map((proc, index) => (
-											<Select.Option
-												key={index}
-												value={proc.name}
-											>
+											<Select.Option key={index} value={proc.name}>
 												{proc.name}
 											</Select.Option>
 										))}
@@ -590,8 +573,7 @@ const PdfViewer = () => {
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
 					{(procedure || systemField) && (
 						<Button type="primary" onClick={assign}>
-							{assignedFields?.[selectedPage]?.[assignMode?.index]
-								?.assigned
+							{assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
 								? "Change"
 								: "Assign"}
 						</Button>
@@ -667,9 +649,7 @@ const PdfViewer = () => {
 									<div
 										className={
 											"thumbnail" +
-											(thumbnail.page === selectedPage
-												? "-selected"
-												: "")
+											(thumbnail.page === selectedPage ? "-selected" : "")
 										}
 										key={index}
 										onClick={() => {
@@ -703,13 +683,9 @@ const PdfViewer = () => {
 								<MainCanvas
 									key={index}
 									pageNo={page.page}
-									assignedFields={
-										assignedFields[page.page] || []
-									}
+									assignedFields={assignedFields[page.page] || []}
 									setAssignedFields={setAssignedFields}
-									width={
-										mainContent.current.clientWidth - 420
-									}
+									width={mainContent.current.clientWidth - 420}
 									style={
 										selectedPage === page.page
 											? { display: "flex" }
@@ -728,28 +704,28 @@ const PdfViewer = () => {
 				{!loadingPdf && (
 					<div className="side-panel-wrapper">
 						<div className="side-panel-contents">
-							<Space
-								direction="vertical"
-								style={{ width: "100%" }}
-							>
+							<Space direction="vertical" style={{ width: "100%" }}>
 								{assignMode ? (
-									<Assigner
-										pageSystem={
-											pageSystems?.[selectedPage] || 0
-										}
-									/>
+									<Assigner pageSystem={pageSystems?.[selectedPage] || 0} />
 								) : (
 									<>
 										<Typography.Title
 											level={5}
+											ellipsis={{
+												tooltip: {
+													title: systems?.find((x) => x.id === systemId).name,
+													placement: "bottomLeft",
+												},
+											}}
 											style={{
 												color: "white",
 												marginBottom: 0,
 											}}
 										>
-											Select a System for this Page:
+											System: <br />
+											{systems?.find((x) => x.id === systemId).name}
 										</Typography.Title>
-										<Select
+										{/* <Select
 											showSearch
 											value={
 												pageSystems?.[selectedPage] || 0
@@ -786,7 +762,7 @@ const PdfViewer = () => {
 													{sys.name}
 												</Select.Option>
 											))}
-										</Select>
+										</Select> */}
 										<Typography.Title
 											level={5}
 											style={{
@@ -796,42 +772,30 @@ const PdfViewer = () => {
 										>
 											Fields in this page:
 										</Typography.Title>
-										<Typography.Text
-											style={{ color: "lightgray" }}
-											italic
-										>
-											{assignedFields?.[selectedPage]
-												?.length > 0
+										<Typography.Text style={{ color: "lightgray" }} italic>
+											{assignedFields?.[selectedPage]?.length > 0
 												? "Click on a field to assign/edit"
 												: "No fields added"}
 										</Typography.Text>
-										{assignedFields?.[selectedPage]?.map(
-											(x, index) => (
-												<div
-													onClick={() => {
-														setAssignMode({
-															index,
-														});
+										{assignedFields?.[selectedPage]?.map((x, index) => (
+											<div
+												onClick={() => {
+													setAssignMode({
+														index,
+													});
+												}}
+												key={index}
+												className="side-field-list-item"
+											>
+												<Badge
+													style={{
+														color: "inherit",
 													}}
-													key={index}
-													className="side-field-list-item"
-												>
-													<Badge
-														style={{
-															color: "inherit",
-														}}
-														color={
-															x.assigned
-																? "green"
-																: "orange"
-														}
-														text={`Field #${
-															index + 1
-														}`}
-													/>
-												</div>
-											)
-										)}
+													color={x.assigned ? "green" : "orange"}
+													text={`Field #${index + 1}`}
+												/>
+											</div>
+										))}
 									</>
 								)}
 							</Space>

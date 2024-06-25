@@ -103,15 +103,15 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				setIsLoading(false);
 			},
 		});
-		apiCall({
-			method: "GET",
-			url: `/dropdown/ahj_pdf?id=${ahj}`,
-			handleResponse: (res) => {
-				setFiles(res.data.message);
-				setIsFilesLoading(false);
-				console.log(res.data.message);
-			},
-		});
+		// apiCall({
+		// 	method: "GET",
+		// 	url: `/dropdown/ahj_pdf?id=${ahj}`,
+		// 	handleResponse: (res) => {
+		// 		setFiles(res.data.message);
+		// 		setIsFilesLoading(false);
+		// 		console.log(res.data.message);
+		// 	},
+		// });
 	}, []);
 
 	const onClick: MenuProps["onClick"] = (e) => {
@@ -167,7 +167,7 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 					</div>
 				</div>
 				<br />
-				<div className="content-fixed-item">
+				{/* <div className="content-fixed-item">
 					<Typography.Text type="secondary">
 						Files ({files.length})
 					</Typography.Text>
@@ -205,7 +205,6 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 									});
 								}}
 							>
-								{/* <Upload style={{ width: "100%" }} {...uploadProps}> */}
 								<FilePdfOutlined />{" "}
 								<Typography.Text
 									ellipsis={{
@@ -218,34 +217,26 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 								>
 									{file.filepath.name}
 								</Typography.Text>
-								{/* </Uplgoad> */}
 							</div>
 						))
 					) : (
 						<div className={"system-list-item"}>
 							<Upload style={{ width: "100%" }} {...uploadProps}>
 								<PlusOutlined />{" "}
-								<Typography.Text
-									italic
-									style={{ width: "80%" }}
-								>
+								<Typography.Text italic style={{ width: "80%" }}>
 									Upload a file
 								</Typography.Text>
 							</Upload>
 						</div>
 					)}
 				</div>
-				<br />
+				<br /> */}
 				<div className="content-fixed-item">
 					<Typography.Text type="secondary">
 						System Types ({items?.length})
 					</Typography.Text>
 					{isLoading ? (
-						<Typography.Text
-							strong
-							style={{ float: "right" }}
-							type="secondary"
-						>
+						<Typography.Text strong style={{ float: "right" }} type="secondary">
 							<LoadingOutlined />
 						</Typography.Text>
 					) : null}
@@ -253,27 +244,26 @@ const FormCreator: React.FC<props> = ({ ahj, heading }) => {
 				<div className="content-fixed-item">
 					<AHJSystemList
 						items={items}
-						onClick={(item: any) =>
-							setSelectedKey(parseInt(item.key))
-						}
+						onClick={(item: any) => setSelectedKey(parseInt(item.key))}
 					/>
 				</div>
 			</div>
 			<div className="content-flex">
 				{selectedKey ? (
-					<FormCreatorMainSection ahj={ahj} systemId={selectedKey} />
+					<FormCreatorMainSection
+						ahj={ahj}
+						systemId={selectedKey}
+						heading={heading}
+					/>
 				) : (
 					<div className="content-flex-empty">
 						<Card style={{ width: 400 }}>
-							<Typography.Title
-								style={{ marginTop: "5px" }}
-								level={5}
-							>
+							<Typography.Title style={{ marginTop: "5px" }} level={5}>
 								{heading}
 							</Typography.Title>
 							<Typography.Text type="secondary">
-								Select a system type from the navigation panel
-								on the left to view the procedures.
+								Select a system type from the navigation panel on the left to
+								view the procedures.
 							</Typography.Text>
 						</Card>
 					</div>
