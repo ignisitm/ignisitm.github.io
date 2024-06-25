@@ -268,7 +268,7 @@ const PdfViewer = () => {
 				data: {
 					ahj_id: ahj,
 					fields: JSON.stringify(assignedFields),
-					system_type: systemId,
+					systemtype: systemId,
 					filepath: {},
 				},
 				handleResponse: (res) => {
