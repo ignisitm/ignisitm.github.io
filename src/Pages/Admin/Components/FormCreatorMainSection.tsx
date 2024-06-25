@@ -130,26 +130,29 @@ const FormCreatorMainSection: FC<props> = ({ systemId, ahj, heading }) => {
 							renderItem={(file: any) => (
 								<List.Item>
 									<Card>
-										<FilePdfOutlined />{" "}
-										<Button
-											type="link"
-											onClick={() => {
-												navigate("/pdfview", {
-													state: {
-														ahj,
-														heading,
-														file: {
-															...file,
-															name: file.filepath.name,
+										<Space>
+											<FilePdfOutlined style={{ fontSize: "25px" }} />{" "}
+											<Button
+												style={{ padding: 0 }}
+												type="link"
+												onClick={() => {
+													navigate("/pdfview", {
+														state: {
+															ahj,
+															heading,
+															file: {
+																...file,
+																name: file.filepath.name,
+															},
+															editMode: true,
+															systemId,
 														},
-														editMode: true,
-														systemId,
-													},
-												});
-											}}
-										>
-											{file.filepath.name}
-										</Button>
+													});
+												}}
+											>
+												{file.filepath.name}
+											</Button>
+										</Space>
 									</Card>
 								</List.Item>
 							)}
