@@ -9,6 +9,7 @@ import {
 	Select,
 	Button,
 	FormInstance,
+	InputNumber,
 } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -320,11 +321,16 @@ const SelectBuilding: FC<props> = ({
 											required: true,
 											message: "",
 										},
+										{
+											pattern: /^\d*$/,
+											message: "Should contain only numbers",
+										},
 									]}
 								>
 									<Input
 										className="selected-building"
 										disabled={!newBuilding}
+										suffix=" sq m."
 									/>
 								</Form.Item>
 							</Col>
@@ -336,6 +342,10 @@ const SelectBuilding: FC<props> = ({
 										{
 											required: true,
 											message: "",
+										},
+										{
+											pattern: /^\d*$/,
+											message: "Should contain only numbers",
 										},
 									]}
 								>
@@ -393,6 +403,10 @@ const SelectBuilding: FC<props> = ({
 										{
 											required: false,
 											message: "",
+										},
+										{
+											pattern: /^\d*$/,
+											message: "Should contain only numbers",
 										},
 									]}
 								>

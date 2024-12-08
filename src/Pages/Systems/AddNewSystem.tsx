@@ -81,6 +81,18 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		});
 	};
 
+	const sortDataforMFR = (data: any) => {
+		return data.sort((a: any, b: any) => {
+			if (a.frequency === 9999 && b.frequency !== 9999) {
+				return -1; // Move a before b
+			}
+			if (a.frequency !== 9999 && b.frequency === 9999) {
+				return 1; // Move b before a
+			}
+			return 0; // Keep the same order for others
+		});
+	};
+
 	const getProcedures = (id: any) => {
 		setProcedures([]);
 		setLoadingProcedures(true);
@@ -94,7 +106,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					last_service_date: dayjs(),
 				}));
 				setProceduresDetails(pd);
-				let grouped = groupBy(res.data.message, "ahj");
+				let grouped = groupAndSort(res.data.message, "ahj");
 				setProcedures(grouped);
 				setActiveAHJ(Object.keys(grouped)[0]?.toString() || "");
 				setLoadingProcedures(false);
@@ -120,6 +132,17 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			storage[group].push(item);
 			return storage;
 		}, {});
+	};
+
+	const groupAndSort = (data: any, groupKey: string) => {
+		let groupedData = groupBy(data, groupKey);
+
+		// Sort each group based on frequency
+		for (let key in groupedData) {
+			groupedData[key] = sortDataforMFR(groupedData[key]);
+		}
+
+		return groupedData;
 	};
 
 	const setAPLSD = (date: any) => {
@@ -195,7 +218,17 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									width: "20%",
 									render: (freq: any, row: any) => (
 										<Select
-											style={{ width: "100%" }}
+											style={{
+												width: "100%",
+											}}
+											disabled={freq !== 9999}
+											status={
+												ProceduresDetails.find(
+													(x: any) => x.procedure_id === row.id
+												)?.frequency === 9999
+													? "error"
+													: ""
+											}
 											onSelect={(e) => {
 												let pd = [...ProceduresDetails];
 												let index = pd.findIndex(
@@ -514,8 +547,32 @@ const AddNewSystem: FC<props> = ({ fetchData }: props) => {
 			delete values["type"];
 			delete values["name"];
 			delete values["tag"];
+
+			const hasInvalidFrequency = procedureDetails.some((prd: any) => {
+				if (prd.frequency === 9999) {
+					message.error(
+						"Please define the frequencies for all the procedures with frequency as 'Manufacturer Recommended'"
+					);
+					reject(
+						"Please define the frequencies for all the procedures with frequency as 'Manufacturer Recommended'"
+					);
+					return true; // Stop the iteration
+				}
+				return false;
+			});
+
+			if (hasInvalidFrequency) return;
+
 			procedureDetails = procedureDetails.map((prd: any) => {
 				let proc = { ...prd };
+				if (proc.frequency === 9999) {
+					message.error(
+						"Please define the frequencies for all the procedures with frequency as 'Manufacturer Recommended'"
+					);
+					reject(
+						"Please define the frequencies for all the procedures with frequency as 'Manufacturer Recommended'"
+					);
+				}
 				proc["last_service"] = proc.last_service_date;
 				proc["next_service"] = proc.last_service_date
 					.add(proc.frequency, "days")

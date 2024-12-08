@@ -314,8 +314,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			open={visible}
 			width={"100%"}
 			style={{ maxWidth: "800px", top: "20px" }}
-			title="Add a new Device"
-			okText="Add Device"
+			title="Add a new Component"
+			okText="Add Component"
 			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
@@ -340,11 +340,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			<Form form={form} layout="vertical" name="form_in_modal">
 				<Form.Item
 					name="name"
-					label="Device Name"
+					label="Component Name"
 					rules={[
 						{
 							required: true,
-							message: "Please input the name of Device!",
+							message: "Please input the name of Component!",
 						},
 					]}
 				>
@@ -395,19 +395,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					onChange={(e) => setAddCommonFields(e.target.checked)}
 					checked={addCommonFields}
 				>
-					Add the common fields{" "}
+					Add the common descriptions{" "}
 				</Checkbox>
 
 				<br />
 				<Text type="secondary">
-					Leave this box checked if you want to add all the common fields for
-					this device.
+					Leave this box checked if you want to add all the common descriptions
+					for this component.
 					<DeviceCommonFields />
 				</Text>
 				<br />
 				<br />
 
-				<label>General Fields: </label>
+				<label>Descriptions: </label>
 				{/* <Tabs
 					style={{ marginTop: "10px" }}
 					type="card"
@@ -518,7 +518,7 @@ const AddNewDevice: FC<props> = ({
 				}}
 				type="primary"
 			>
-				Add Device Type
+				Add Component
 			</Button>
 			<CollectionCreateForm
 				systems={systems}

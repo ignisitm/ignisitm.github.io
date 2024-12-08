@@ -13,6 +13,7 @@ import {
 	ReconciliationOutlined,
 	ClockCircleOutlined,
 	CheckCircleOutlined,
+	WarningOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
@@ -35,18 +36,30 @@ const Dashboard = () => {
 				completeLoading();
 				setLoading(false);
 				let systems_wo_contracts =
-					data?.["sys_co"]?.find(
-						(x: any) => x.current_contract === null
-					)?.count || 0;
-				let systems_wo_teams =
-					data?.["sys_team"]?.find((x: any) => x.team === null)
+					data?.["sys_co"]?.find((x: any) => x.current_contract === null)
 						?.count || 0;
+				let systems_wo_teams =
+					data?.["sys_team"]?.find((x: any) => x.team === null)?.count || 0;
 				let alerts = [];
-				console.log(
-					"Counts : ",
-					systems_wo_contracts,
-					systems_wo_teams
-				);
+				console.log("Counts : ", systems_wo_contracts, systems_wo_teams);
+				if (data.alerts?.expired_co?.length > 1) {
+					alerts.push({
+						label: `There are ${data.alerts.expired_co.length} contracts that have expired`,
+					});
+				} else if (data.alerts?.expired_co?.length === 1) {
+					alerts.push({
+						label: `There is ${data.alerts.expired_co.length} contract that has expired`,
+					});
+				}
+				if (data.alerts?.neartoexpiry_co?.length > 1) {
+					alerts.push({
+						label: `There are ${data.alerts.neartoexpiry_co.length} contracts that are going to expire soon`,
+					});
+				} else if (data.alerts?.neartoexpiry_co?.length === 1) {
+					alerts.push({
+						label: `There is ${data.alerts.neartoexpiry_co.length} contract that is going to expire soon`,
+					});
+				}
 				if (systems_wo_contracts == 1)
 					alerts.push({
 						label: `There is ${systems_wo_contracts} system without contract assigned to it`,
@@ -108,20 +121,14 @@ const Dashboard = () => {
 									}}
 								>
 									{loading ? (
-										<Skeleton.Button
-											active={true}
-											size="small"
-										/>
+										<Skeleton.Button active={true} size="small" />
 									) : (
-										data?.["contract"]?.find(
-											(x: any) => x.status === "ACTIVE"
-										)?.count || 0
+										data?.["contract"]?.find((x: any) => x.status === "ACTIVE")
+											?.count || 0
 									)}
 								</span>
 								<br />
-								<span style={{ color: "#353535" }}>
-									Active Contracts
-								</span>
+								<span style={{ color: "#353535" }}>Active Contracts</span>
 							</Col>
 						</Row>
 
@@ -169,10 +176,7 @@ const Dashboard = () => {
 									}}
 								>
 									{loading ? (
-										<Skeleton.Button
-											active={true}
-											size="small"
-										/>
+										<Skeleton.Button active={true} size="small" />
 									) : (
 										data?.["notification"]?.find(
 											(x: any) => x.status === "OPEN"
@@ -181,8 +185,7 @@ const Dashboard = () => {
 								</span>
 								<br />
 								<span style={{ color: "#353535" }}>
-									Notifications pending for work order
-									creation
+									Notifications pending for work order creation
 								</span>
 							</Col>
 						</Row>
@@ -226,14 +229,10 @@ const Dashboard = () => {
 									}}
 								>
 									{loading ? (
-										<Skeleton.Button
-											active={true}
-											size="small"
-										/>
+										<Skeleton.Button active={true} size="small" />
 									) : (
-										data?.["wo"]?.find(
-											(x: any) => x.status === "Pending"
-										)?.count || 0
+										data?.["wo"]?.find((x: any) => x.status === "Pending")
+											?.count || 0
 									)}
 								</span>
 								<br />
@@ -282,14 +281,10 @@ const Dashboard = () => {
 									}}
 								>
 									{loading ? (
-										<Skeleton.Button
-											active={true}
-											size="small"
-										/>
+										<Skeleton.Button active={true} size="small" />
 									) : (
-										data?.["wo"]?.find(
-											(x: any) => x.status === "Completed"
-										)?.count || 0
+										data?.["wo"]?.find((x: any) => x.status === "Completed")
+											?.count || 0
 									)}
 								</span>
 								<br />
@@ -341,8 +336,7 @@ const Dashboard = () => {
 								/>
 								<Marker position={[25.3548, 51.1839]}>
 									<Popup>
-										A pretty CSS3 popup. <br /> Easily
-										customizable.
+										A pretty CSS3 popup. <br /> Easily customizable.
 									</Popup>
 								</Marker>
 							</MapContainer>
@@ -373,7 +367,27 @@ const Dashboard = () => {
 								pagination={false}
 								locale={{ emptyText: "No Alerts" }}
 								columns={[
-									{ dataIndex: "label", title: `Alerts` },
+									{
+										dataIndex: "label",
+										title: `Alerts`,
+										render: (text) => (
+											<div
+												style={{
+													backgroundColor: "#fff7e6",
+													padding: "15px 10px",
+													display: "flex",
+													gap: "5px",
+													alignItems: "center",
+													borderRadius: "10px",
+												}}
+											>
+												<WarningOutlined
+													style={{ color: "red", fontSize: "20px" }}
+												/>{" "}
+												{text}
+											</div>
+										),
+									},
 								]}
 							/>
 						</div>

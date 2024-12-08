@@ -99,7 +99,7 @@ const NewAppLayout2: FC = () => {
 		"/pdfview": "Form Builder",
 		"/employees": "Employees",
 		"/roles": "Roles",
-		"/equipments": "Equipments",
+		"/equipments": "Inventory",
 		"/users": "Users",
 		"/generate-report": "Reports",
 		...(client.client_id === "admin" ? { "/": "Master Data" } : {}),
@@ -198,14 +198,9 @@ const NewAppLayout2: FC = () => {
 			label: "Resources",
 		},
 		{
-			key: "/teams",
-			icon: <TeamOutlined />,
-			label: "Teams",
-		},
-		{
-			key: "/users",
-			icon: <UserSwitchOutlined />,
-			label: "Users",
+			key: "/employees",
+			icon: <UserOutlined />,
+			label: "Employees",
 		},
 		{
 			key: "/roles",
@@ -213,14 +208,19 @@ const NewAppLayout2: FC = () => {
 			label: "Roles",
 		},
 		{
-			key: "/employees",
-			icon: <UserOutlined />,
-			label: "Employees",
+			key: "/users",
+			icon: <UserSwitchOutlined />,
+			label: "Users",
+		},
+		{
+			key: "/teams",
+			icon: <TeamOutlined />,
+			label: "Teams",
 		},
 		{
 			key: "/equipments",
 			icon: <SlidersOutlined />,
-			label: "Equipments",
+			label: "Inventory",
 		},
 		// {
 		// 	key: "/workorders",
@@ -261,9 +261,7 @@ const NewAppLayout2: FC = () => {
 	const verify = () => {
 		apiCall({
 			method: "POST",
-			url: `/${
-				client.client_id === "admin" ? "super" : "client"
-			}auth/verify`,
+			url: `/${client.client_id === "admin" ? "super" : "client"}auth/verify`,
 			data: { user: getUser(), token: getToken() },
 			handleResponse: (res) => {
 				console.log("token Verified");
@@ -335,11 +333,7 @@ const NewAppLayout2: FC = () => {
 				>
 					<div className="user-full-name">
 						<span>{userdetails?.name}&nbsp;&nbsp;</span>
-						<Avatar
-							style={{ top: "-2px" }}
-							shape="square"
-							size={28}
-						>
+						<Avatar style={{ top: "-2px" }} shape="square" size={28}>
 							{userdetails?.name.split(" ")[0][0] +
 								(userdetails?.name.split(" ")?.[1]?.[0] || "")}
 						</Avatar>
@@ -402,11 +396,7 @@ const NewAppLayout2: FC = () => {
 									paddingBottom: "10px",
 								}}
 							>
-								<img
-									width={"88"}
-									height={"55"}
-									src="logo.png"
-								/>
+								<img width={"88"} height={"55"} src="logo.png" />
 							</div>
 							<div className="nlayout-sidebar-items-wrapper">
 								<Menubarv2
@@ -489,8 +479,8 @@ const NewAppLayout2: FC = () => {
 							fontSize: "10px",
 						}}
 					>
-						{capitalizeFirstLetter(client.client_name)} ©2024
-						powered by IgnisITM
+						{capitalizeFirstLetter(client.client_name)} ©2024 powered by
+						IgnisITM
 					</Footer>
 				</Layout>
 			</Layout>

@@ -310,7 +310,14 @@ const GenerateReport: FC<props> = ({ setGeneratedPDF }) => {
 									dataSource={ahj_pdfs}
 									renderItem={(item, index) => (
 										<List.Item>
-											<Card style={{ minHeight: "100px" }} title={item.name}>
+											<Card
+												style={{
+													minHeight: "100px",
+													width: "fit-content",
+													marginRight: "10px",
+												}}
+												title={item.name}
+											>
 												{generating === index ? (
 													// <>
 													// 	<Typography.Text type="secondary">

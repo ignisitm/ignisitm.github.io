@@ -95,7 +95,7 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 
 	const columns = [
 		{
-			title: "Device Type",
+			title: "Component",
 			dataIndex: "name",
 			// sorter: true,
 		},
@@ -105,13 +105,13 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 		// 	// sorter: true,
 		// },
 		{
-			title: "Fields",
+			title: "Descriptions",
 			dataIndex: "id",
 			render: (id: number, row: any) => {
 				return (
 					<span key={id}>
 						<Button type="link" onClick={() => showModal(row)}>
-							View/Edit Fields
+							View/Edit Descriptions
 						</Button>
 					</span>
 				);
@@ -322,73 +322,66 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 		return (
 			<Row>
 				<Col span={24}>
-					{fields.map(
-						({ key, name, ...restField }: any, index: number) => (
-							<Row key={key}>
-								<Col className="field-list-number" span={1}>
-									{index + 1}
-								</Col>
-								<Col span={14}>
-									<Form.Item
-										{...restField}
-										name={[name, "name"]}
-										rules={[
-											{
-												required: true,
-												message: "Missing Field",
-											},
-										]}
+					{fields.map(({ key, name, ...restField }: any, index: number) => (
+						<Row key={key}>
+							<Col className="field-list-number" span={1}>
+								{index + 1}
+							</Col>
+							<Col span={14}>
+								<Form.Item
+									{...restField}
+									name={[name, "name"]}
+									rules={[
+										{
+											required: true,
+											message: "Missing Field",
+										},
+									]}
+								>
+									<Input
+										className="selected-building"
+										disabled={!fieldsEditMode}
+										placeholder="Name"
+									/>
+								</Form.Item>
+							</Col>
+							<Col span={4} style={{ paddingLeft: "10px" }}>
+								<Form.Item
+									{...restField}
+									name={[name, "type"]}
+									rules={[
+										{
+											required: true,
+											message: "Missing Type",
+										},
+									]}
+								>
+									<Select
+										className="selected-building"
+										disabled={!fieldsEditMode}
+										placeholder="Field Type"
 									>
-										<Input
-											className="selected-building"
-											disabled={!fieldsEditMode}
-											placeholder="Field name"
-										/>
-									</Form.Item>
-								</Col>
-								<Col span={4} style={{ paddingLeft: "10px" }}>
-									<Form.Item
-										{...restField}
-										name={[name, "type"]}
-										rules={[
-											{
-												required: true,
-												message: "Missing Type",
-											},
-										]}
-									>
-										<Select
-											className="selected-building"
-											disabled={!fieldsEditMode}
-											placeholder="Field Type"
-										>
-											<Select.Option value="text">
-												Text
-											</Select.Option>
-											<Select.Option value="number">
-												Number
-											</Select.Option>
+										<Select.Option value="text">Text</Select.Option>
+										<Select.Option value="number">Number</Select.Option>
 
-											<Select.Option value="boolean">
-												Yes / No
-											</Select.Option>
-										</Select>
-									</Form.Item>
-								</Col>
-								<Col span={3} style={{ paddingLeft: "10px" }}>
-									<Form.Item
-										{...restField}
-										name={[name, "mandatory"]}
-										rules={[
-											{
-												required: true,
-												message: "Enter a value",
-											},
-										]}
-										valuePropName="checked"
-										initialValue={false}
-									>
-										{/* <Select
+										<Select.Option value="boolean">Yes / No</Select.Option>
+									</Select>
+								</Form.Item>
+							</Col>
+							<Col span={3} style={{ paddingLeft: "10px" }}>
+								<Form.Item
+									{...restField}
+									name={[name, "mandatory"]}
+									rules={[
+										{
+											required: true,
+											message: "Enter a value",
+										},
+									]}
+									valuePropName="checked"
+									initialValue={false}
+								>
+									{/* <Select
 								className="selected-building"
 								disabled={!fieldsEditMode}
 								placeholder="Optional/Required"
@@ -396,244 +389,184 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 								<Select.Option value={1}>Required</Select.Option>
 								<Select.Option value={0}>Optional</Select.Option>
 							</Select> */}
-										<Checkbox
-											className="selected-building"
-											disabled={!fieldsEditMode}
-										>
-											Required
-										</Checkbox>
-									</Form.Item>
-								</Col>
-								<Col span={1} style={{ paddingLeft: "10px" }}>
-									{fieldsEditMode && (
-										<MinusCircleOutlined
-											className="form-item-icons"
-											onClick={() => remove(name)}
-										/>
-									)}
-								</Col>
-								<Form.Item
-									noStyle
-									shouldUpdate={(prevValues, currentValues) =>
-										prevValues[parent_name][name]?.type !==
-										currentValues[parent_name][name]?.type
-									}
-								>
-									{({ getFieldValue }) =>
-										getFieldValue([
-											parent_name,
-											name,
-											"type",
-										]) === "condition" ? (
-											<>
-												<Col
-													style={{
-														paddingLeft: "35px",
-													}}
+									<Checkbox
+										className="selected-building"
+										disabled={!fieldsEditMode}
+									>
+										Required
+									</Checkbox>
+								</Form.Item>
+							</Col>
+							<Col span={1} style={{ paddingLeft: "10px" }}>
+								{fieldsEditMode && (
+									<MinusCircleOutlined
+										className="form-item-icons"
+										onClick={() => remove(name)}
+									/>
+								)}
+							</Col>
+							<Form.Item
+								noStyle
+								shouldUpdate={(prevValues, currentValues) =>
+									prevValues[parent_name][name]?.type !==
+									currentValues[parent_name][name]?.type
+								}
+							>
+								{({ getFieldValue }) =>
+									getFieldValue([parent_name, name, "type"]) === "condition" ? (
+										<>
+											<Col
+												style={{
+													paddingLeft: "35px",
+												}}
+											>
+												{"-"}
+											</Col>
+											<Col
+												span={7}
+												style={{
+													paddingLeft: "8px",
+												}}
+											>
+												<Form.Item
+													{...restField}
+													name={[name, "condition"]}
+													rules={[
+														{
+															required: true,
+															message: "Missing Field",
+														},
+													]}
 												>
-													{"-"}
-												</Col>
-												<Col
-													span={7}
-													style={{
-														paddingLeft: "8px",
-													}}
-												>
-													<Form.Item
-														{...restField}
-														name={[
-															name,
-															"condition",
-														]}
-														rules={[
-															{
-																required: true,
-																message:
-																	"Missing Field",
-															},
-														]}
+													<Select
+														disabled={!fieldsEditMode}
+														className="selected-building"
+														placeholder="Condition"
 													>
-														<Select
-															disabled={
-																!fieldsEditMode
-															}
-															className="selected-building"
-															placeholder="Condition"
-														>
-															<Select.Option value="in_between">
-																In Between
-															</Select.Option>
-															<Select.Option value="not_between">
-																Not Between
-															</Select.Option>
-															<Select.Option value="equals_to">
-																Equals To
-															</Select.Option>
-															<Select.Option value="not_equals_to">
-																Not Equals To
-															</Select.Option>
-															<Select.Option value="greater_than">
-																Greater Than
-															</Select.Option>
-															<Select.Option value="lesser_than">
-																Lesser Than
-															</Select.Option>
-														</Select>
-													</Form.Item>
-												</Col>
-												<Col
-													span={6}
-													style={{
-														paddingLeft: "10px",
-													}}
+														<Select.Option value="in_between">
+															In Between
+														</Select.Option>
+														<Select.Option value="not_between">
+															Not Between
+														</Select.Option>
+														<Select.Option value="equals_to">
+															Equals To
+														</Select.Option>
+														<Select.Option value="not_equals_to">
+															Not Equals To
+														</Select.Option>
+														<Select.Option value="greater_than">
+															Greater Than
+														</Select.Option>
+														<Select.Option value="lesser_than">
+															Lesser Than
+														</Select.Option>
+													</Select>
+												</Form.Item>
+											</Col>
+											<Col
+												span={6}
+												style={{
+													paddingLeft: "10px",
+												}}
+											>
+												<Form.Item
+													{...restField}
+													name={[name, "value_1"]}
+													rules={[
+														{
+															required: true,
+															message: "Missing Field",
+														},
+													]}
 												>
-													<Form.Item
-														{...restField}
-														name={[name, "value_1"]}
-														rules={[
-															{
-																required: true,
-																message:
-																	"Missing Field",
-															},
-														]}
+													<Select
+														disabled={!fieldsEditMode}
+														className="selected-building"
+														placeholder="Value 1"
 													>
-														<Select
-															disabled={
-																!fieldsEditMode
-															}
-															className="selected-building"
-															placeholder="Value 1"
-														>
-															{getFieldValue(
-																"general_fields"
-															).map((row: any) =>
-																row?.type &&
-																row?.type ===
-																	"number" ? (
-																	<Select.Option
-																		value={
-																			row.name
-																		}
-																	>
-																		{
-																			row.name
-																		}
-																	</Select.Option>
-																) : null
-															)}
-														</Select>
-													</Form.Item>
-												</Col>
-												<Col
-													span={6}
-													style={{
-														paddingLeft: "10px",
-													}}
+														{getFieldValue("general_fields").map((row: any) =>
+															row?.type && row?.type === "number" ? (
+																<Select.Option value={row.name}>
+																	{row.name}
+																</Select.Option>
+															) : null
+														)}
+													</Select>
+												</Form.Item>
+											</Col>
+											<Col
+												span={6}
+												style={{
+													paddingLeft: "10px",
+												}}
+											>
+												<Form.Item
+													noStyle
+													shouldUpdate={(prevValues, currentValues) =>
+														prevValues[parent_name][name]?.condition !==
+														currentValues[parent_name][name]?.condition
+													}
 												>
-													<Form.Item
-														noStyle
-														shouldUpdate={(
-															prevValues,
-															currentValues
-														) =>
-															prevValues[
-																parent_name
-															][name]
-																?.condition !==
-															currentValues[
-																parent_name
-															][name]?.condition
-														}
-													>
-														{({ getFieldValue }) =>
+													{({ getFieldValue }) =>
+														getFieldValue([parent_name, name, "condition"]) &&
+														(getFieldValue([parent_name, name, "condition"]) ===
+															"in_between" ||
 															getFieldValue([
 																parent_name,
 																name,
 																"condition",
-															]) &&
-															(getFieldValue([
-																parent_name,
-																name,
-																"condition",
-															]) ===
-																"in_between" ||
-																getFieldValue([
-																	parent_name,
-																	name,
-																	"condition",
-																]) ===
-																	"not_between") ? (
-																<Form.Item
-																	{...restField}
-																	name={[
-																		name,
-																		"value_2",
-																	]}
-																	rules={[
-																		{
-																			required:
-																				true,
-																			message:
-																				"Missing Field",
-																		},
-																	]}
+															]) === "not_between") ? (
+															<Form.Item
+																{...restField}
+																name={[name, "value_2"]}
+																rules={[
+																	{
+																		required: true,
+																		message: "Missing Field",
+																	},
+																]}
+															>
+																<Select
+																	disabled={!fieldsEditMode}
+																	className="selected-building"
+																	placeholder="Value 2"
 																>
-																	<Select
-																		disabled={
-																			!fieldsEditMode
-																		}
-																		className="selected-building"
-																		placeholder="Value 2"
-																	>
-																		{getFieldValue(
-																			"general_fields"
-																		).map(
-																			(
-																				row: any
-																			) =>
-																				row?.type &&
-																				row?.type ===
-																					"number" ? (
-																					<Select.Option
-																						value={
-																							row.name
-																						}
-																					>
-																						{
-																							row.name
-																						}
-																					</Select.Option>
-																				) : null
-																		)}
-																	</Select>
-																</Form.Item>
-															) : null
-														}
-													</Form.Item>
-												</Col>
-												<Col
-													span={2}
-													style={{
-														paddingLeft: "10px",
-													}}
-												>
-													{fieldsEditMode ? (
-														<Tooltip
-															placement="right"
-															title="Define atleast one numerical field before adding a condition in General Fields Section"
-														>
-															<QuestionCircleOutlined className="form-item-icons" />
-														</Tooltip>
-													) : null}
-												</Col>
-											</>
-										) : null
-									}
-								</Form.Item>
-							</Row>
-						)
-					)}
+																	{getFieldValue("general_fields").map(
+																		(row: any) =>
+																			row?.type && row?.type === "number" ? (
+																				<Select.Option value={row.name}>
+																					{row.name}
+																				</Select.Option>
+																			) : null
+																	)}
+																</Select>
+															</Form.Item>
+														) : null
+													}
+												</Form.Item>
+											</Col>
+											<Col
+												span={2}
+												style={{
+													paddingLeft: "10px",
+												}}
+											>
+												{fieldsEditMode ? (
+													<Tooltip
+														placement="right"
+														title="Define atleast one numerical field before adding a condition in General Fields Section"
+													>
+														<QuestionCircleOutlined className="form-item-icons" />
+													</Tooltip>
+												) : null}
+											</Col>
+										</>
+									) : null
+								}
+							</Form.Item>
+						</Row>
+					))}
 
 					{fieldsEditMode && (
 						<Form.Item>
@@ -729,10 +662,7 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={12} className="table-button">
@@ -775,22 +705,20 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div> */}
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) *
-									(pagination.pageSize || 10) +
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
 			{/* <FieldsModal row={selectedDevice} /> */}
 			<Modal
-				title="Field Types"
+				title="Component Descriptions"
 				width={"100%"}
 				style={{ maxWidth: "800px", top: "20px" }}
 				destroyOnClose={true}
@@ -815,15 +743,13 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 							.validateFields()
 							.then((values) => {
 								values["id"] = selectedDevice.id;
-								saveEditedData(values, selectedDevice).then(
-									() => {
-										setSelectedDevice({
-											...selectedDevice,
-											...values,
-										});
-										setFieldsEditMode(false);
-									}
-								);
+								saveEditedData(values, selectedDevice).then(() => {
+									setSelectedDevice({
+										...selectedDevice,
+										...values,
+									});
+									setFieldsEditMode(false);
+								});
 							})
 							.catch((info) => {
 								console.log("Validate Failed:", info);
@@ -836,7 +762,7 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 						items={[
 							{
 								key: "1",
-								label: "General Fields",
+								label: "General Descriptions",
 								children: <GeneralProperties />,
 							},
 						]}
@@ -852,20 +778,12 @@ const DevicesTable: FC<props> = ({ system_id }) => {
 										>
 											Cancel
 										</Button>
-										<Button
-											htmlType="submit"
-											type="primary"
-										>
-											Save{" "}
-											{editLoading && <LoadingOutlined />}
+										<Button htmlType="submit" type="primary">
+											Save {editLoading && <LoadingOutlined />}
 										</Button>
 									</Space>
 								) : (
-									<Button
-										onClick={() => setFieldsEditMode(true)}
-									>
-										Edit
-									</Button>
+									<Button onClick={() => setFieldsEditMode(true)}>Edit</Button>
 								)}
 							</>
 						}

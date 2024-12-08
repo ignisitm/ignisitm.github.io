@@ -49,7 +49,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		<Modal
 			open={visible}
 			destroyOnClose={true}
-			title="Edit Procedure"
+			title="Edit Item"
 			style={{ minWidth: "632px", top: "20px" }}
 			okText="Save Changes"
 			maskClosable={false}
@@ -97,7 +97,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				</Form.Item>
 				<Form.Item
 					name="procedure"
-					label="Procedure"
+					label="Item"
 					rules={[
 						{
 							required: true,
@@ -143,7 +143,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				</Form.Item>
 				<Form.Item
 					name="instructions"
-					label="Instructions"
+					label="Procedure"
 					rules={[
 						{
 							required: false,

@@ -12,6 +12,7 @@ import {
 	Form,
 	InputNumber,
 	Select,
+	Drawer,
 } from "antd";
 import React, { FC, useEffect, useState } from "react";
 import { apiCall } from "../../axiosConfig";
@@ -36,6 +37,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 	const [showClose, setShowClose] = useState(false);
 	const [showEditModal, setShowEdit] = useState(false);
 	const [editingData, setEditingData] = useState<any>({});
+	const [history, SetHistory] = useState("");
+	const [historyData, setHistoryData] = useState<any>([]);
 	const [pagination, setPagination] = useState({
 		current: 1,
 		pageSize: 10,
@@ -69,6 +72,25 @@ const Equipments: React.FC<any> = ({ systems }) => {
 			title: "Description",
 			dataIndex: "description",
 			ellipsis: true,
+		},
+		{
+			title: "Assignment",
+			dataIndex: "id",
+			render: (id: number, row: any) => (
+				<Button
+					style={{ paddingLeft: 1 }}
+					type="link"
+					onClick={() => {
+						SetHistory(row.name);
+						getHistory(id).then((res) => {
+							setHistoryData(res.data.message);
+							console.log(res.data.message);
+						});
+					}}
+				>
+					View History
+				</Button>
+			),
 		},
 		{
 			title: "Action",
@@ -106,6 +128,11 @@ const Equipments: React.FC<any> = ({ systems }) => {
 			width: "5%",
 		},
 	];
+
+	const closeDrawer = () => {
+		setHistoryData([]);
+		SetHistory("");
+	};
 
 	const deleteRow = (id: number) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
@@ -168,14 +195,24 @@ const Equipments: React.FC<any> = ({ systems }) => {
 		search();
 	}, []);
 
+	const getHistory = (id: any) => {
+		return new Promise<any>((resolve, reject) => {
+			apiCall({
+				method: "GET",
+				url: `/clientresources/${id}`,
+				handleResponse: (res) => {
+					resolve(res);
+				},
+				handleError: (err) => reject(err),
+			});
+		});
+	};
+
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
 	};
 
-	const EditEquipment: FC<{ data: any; open: boolean }> = ({
-		data,
-		open,
-	}) => {
+	const EditEquipment: FC<{ data: any; open: boolean }> = ({ data, open }) => {
 		const [form] = Form.useForm();
 		const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -207,7 +244,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						setEditingData({});
 					}}
 					onOk={() => {
-						form.validateFields()
+						form
+							.validateFields()
 							.then((values) => {
 								setConfirmLoading(true);
 								onEdit(values).then(() => {
@@ -250,12 +288,8 @@ const Equipments: React.FC<any> = ({ systems }) => {
 								rules={[{ required: true }]}
 							>
 								<Select>
-									<Select.Option value="Spare Parts">
-										Spare Parts
-									</Select.Option>
-									<Select.Option value="Tools">
-										Tools
-									</Select.Option>
+									<Select.Option value="Spare Parts">Spare Parts</Select.Option>
+									<Select.Option value="Tools">Tools</Select.Option>
 								</Select>
 							</Form.Item>
 						</Col>
@@ -295,10 +329,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -329,8 +360,7 @@ const Equipments: React.FC<any> = ({ systems }) => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize +
-							pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize
@@ -338,6 +368,11 @@ const Equipments: React.FC<any> = ({ systems }) => {
 				</Col>
 			</Row>
 			<EditEquipment data={editingData} open={showEditModal} />
+			<Drawer
+				open={history !== ""}
+				onClose={closeDrawer}
+				title={history === "" ? "Select a item" : history}
+			></Drawer>
 		</>
 	);
 };

@@ -73,106 +73,38 @@ const ProcedureTable = () => {
 
 	const columns = [
 		{
-			title: "Name",
-			dataIndex: "name",
+			title: "Code",
+			dataIndex: "code",
 			render: (text: string) => <b>{text}</b>,
 		},
 		{
-			title: "Tag",
-			dataIndex: "tag",
+			title: "Procedure",
+			dataIndex: "procedure",
 		},
 		{
-			title: "Type",
-			dataIndex: "systemtype",
+			title: "System",
+			dataIndex: "system_id",
 		},
-		{
-			title: "Building",
-			dataIndex: "building_name",
-		},
-		{
-			title: "Contract No",
-			dataIndex: "current_contract",
-			render: (text: string) => text || "-",
-		},
-		{
-			title: "Contract Status",
-			dataIndex: "contract_status",
-			render: (text: string, row: any) => {
-				if (text === "EXPIRED")
-					return (
-						<>
-							<Tag
-								color={
-									statusColors[
-										text as keyof typeof statusColors
-									]
-								}
-							>
-								{text}
-							</Tag>{" "}
-							<Button
-								onClick={() => {
-									setOpenContract(true);
-									setSelectedSystem(row.id);
-								}}
-								style={{ paddingLeft: "2px" }}
-								type="link"
-							>
-								(Renew)
-							</Button>
-						</>
-					);
-				else if (text)
-					return (
-						<Tag
-							color={
-								statusColors[text as keyof typeof statusColors]
-							}
-						>
-							{text}
-						</Tag>
-					);
-				else
-					return (
-						<>
-							<Tag color={statusColors["NO CONTRACT"]}>
-								{"NO CONTRACT"}
-							</Tag>
-							<Button
-								onClick={() => {
-									setOpenContract(true);
-									setSelectedSystem(row.id);
-								}}
-								style={{ paddingLeft: "2px" }}
-								type="link"
-							>
-								(Assign)
-							</Button>
-						</>
-					);
-			},
-		},
-		{
-			title: "General Info",
-			dataIndex: "general_information",
-			render: (info: any, row: any) => (
-				<Button
-					onClick={() => {
-						setSelectedSystem(row.id);
-						setDrawerFields(row.fields);
-						setDrawerInfo(info);
-						setTimeout(() => {
-							openDrawer();
-						}, 200);
 
-						console.log("first");
-					}}
-					type="link"
-				>
-					View/Edit
-				</Button>
-			),
+		{
+			title: "Frequency",
+			dataIndex: "frequency_name",
 		},
+		{
+			title: "AHJ",
+			dataIndex: "name",
+		},
+		{
+			title: "Last Service",
+			dataIndex: "last_service",
+			render: (date: string) => <>{formatDate(date)}</>,
+		},
+		{
+			title: "Next Service",
+			dataIndex: "next_service",
+			render: (date: string) => <>{formatDate(date)}</>,
+		},
+
 		{
 			title: "Action",
 			dataIndex: "id",
@@ -193,6 +125,18 @@ const ProcedureTable = () => {
 			width: "5%",
 		},
 	];
+
+	const formatDate = (dateString: string) => {
+		const date = new Date(dateString);
+
+		// Extract day, month, and year
+		const day = String(date.getDate()).padStart(2, "0");
+		const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+		const year = date.getFullYear();
+
+		// Format as dd-mm-yyyy
+		return `${day}-${month}-${year}`;
+	};
 
 	const deleteRow = (id: number) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
@@ -220,9 +164,9 @@ const ProcedureTable = () => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "POST",
-			url: `/clientfilters/procedures?page=${
-				curr_pagination.current
-			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
+			url: `/clientfilters/procedures?page=${curr_pagination.current}&limit=${
+				curr_pagination.pageSize
+			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
@@ -326,10 +270,7 @@ const ProcedureTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -356,15 +297,13 @@ const ProcedureTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) *
-									(pagination.pageSize || 10) +
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>
@@ -380,7 +319,8 @@ const ProcedureTable = () => {
 					onCancel();
 				}}
 				onOk={() => {
-					form.validateFields()
+					form
+						.validateFields()
 						.then((values) => {
 							onCreate(values).then(() => {
 								form.resetFields();
@@ -416,18 +356,12 @@ const ProcedureTable = () => {
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(
-											optionB!
-												.children as unknown as string
-										).toLowerCase()
+										(optionB!.children as unknown as string).toLowerCase()
 									)
 							}
 						>
 							{contextVariables.contracts?.map(
-								(
-									item: { id: object; title: string },
-									index: number
-								) => (
+								(item: { id: object; title: string }, index: number) => (
 									<Select.Option
 										value={item.id}
 									>{`${item.id} - ${item.title}`}</Select.Option>

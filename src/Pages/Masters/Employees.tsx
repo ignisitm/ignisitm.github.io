@@ -54,6 +54,14 @@ const Employees: React.FC<any> = ({ systems }) => {
 			dataIndex: "full_name",
 		},
 		{
+			title: "Email",
+			dataIndex: "email",
+		},
+		{
+			title: "Contact No.",
+			dataIndex: "phone",
+		},
+		{
 			title: "Designation",
 			dataIndex: "designation",
 		},
@@ -168,7 +176,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 				apiCall({
 					method: "PUT",
 					url: `/clientemployees`,
-					data: { ...values, id: data.id },
+					data: { data: { ...values }, id: data.id },
 					handleResponse: (res) => {
 						resolve(res);
 					},
@@ -191,7 +199,8 @@ const Employees: React.FC<any> = ({ systems }) => {
 						setEditingData({});
 					}}
 					onOk={() => {
-						form.validateFields()
+						form
+							.validateFields()
 							.then((values) => {
 								setConfirmLoading(true);
 								onEdit(values).then(() => {
@@ -204,6 +213,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 							})
 							.catch((info) => {
 								console.log("Validate Failed:", info);
+								setConfirmLoading(false);
 							});
 					}}
 					confirmLoading={confirmLoading}
@@ -236,6 +246,25 @@ const Employees: React.FC<any> = ({ systems }) => {
 								<Input />
 							</Form.Item>
 						</Col>
+						<Col span={24}>
+							<Form.Item name="email" label="Email Address">
+								<Input />
+							</Form.Item>
+						</Col>
+						<Col span={24}>
+							<Form.Item
+								name="phone"
+								label="Contact Number"
+								rules={[
+									{
+										pattern: /^\d*$/,
+										message: "Should contain only numbers",
+									},
+								]}
+							>
+								<Input />
+							</Form.Item>
+						</Col>
 					</Form>
 				</Modal>
 			</>
@@ -254,10 +283,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -288,8 +314,7 @@ const Employees: React.FC<any> = ({ systems }) => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize +
-							pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize

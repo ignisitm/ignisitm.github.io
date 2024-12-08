@@ -47,7 +47,7 @@ const DeviceCommonFields = ({ type }: any) => {
 
 	const columns = [
 		{
-			title: "Field",
+			title: "Description",
 			dataIndex: "name",
 			width: "50%",
 			render: (name: any, row: any) =>
@@ -55,7 +55,7 @@ const DeviceCommonFields = ({ type }: any) => {
 					<Input
 						style={{ width: "95%" }}
 						size="small"
-						placeholder="Enter Field name"
+						placeholder="Enter name"
 						onChange={changeNewRowName}
 						value={newRow.name}
 					/>
@@ -88,10 +88,7 @@ const DeviceCommonFields = ({ type }: any) => {
 			dataIndex: "mandatory",
 			render: (mandatory: any, row: any) =>
 				row.type === "NEW_ROW" ? (
-					<Checkbox
-						checked={newRow.mandatory}
-						onChange={changeNewRowReq}
-					/>
+					<Checkbox checked={newRow.mandatory} onChange={changeNewRowReq} />
 				) : (
 					<Checkbox checked={mandatory} />
 				),
@@ -104,9 +101,7 @@ const DeviceCommonFields = ({ type }: any) => {
 					<Space>
 						<Button
 							loading={saving}
-							onClick={
-								editingRow === -1 ? saveNewRow : saveEditedRow
-							}
+							onClick={editingRow === -1 ? saveNewRow : saveEditedRow}
 							size="small"
 							icon={<SaveOutlined />}
 						>
@@ -252,7 +247,9 @@ const DeviceCommonFields = ({ type }: any) => {
 			method: "GET",
 			url: "/commonfields",
 			handleResponse: (res) => {
-				let response = [...res.data.message?.value] || [];
+				let response = res.data.message?.value
+					? [...res.data.message.value]
+					: [];
 				let cloned_respponse = JSON.parse(JSON.stringify(response));
 				setData(cloned_respponse);
 				setOrgData(response);
@@ -307,11 +304,11 @@ const DeviceCommonFields = ({ type }: any) => {
 	return (
 		<>
 			<Button onClick={openModal} type={type || "link"}>
-				View Common Fields
+				View Common Descriptions
 			</Button>
 			<Modal
 				open={open}
-				title="Common Fields for Devices"
+				title="Common Descriptions for Components"
 				onCancel={closeModal}
 				width={999}
 				style={{ top: "20px" }}

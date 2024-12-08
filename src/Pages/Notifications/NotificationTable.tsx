@@ -366,7 +366,7 @@ const NotificationTable = () => {
 					displayInRows: true,
 					options: [
 						{ label: "Open", value: "OPEN" },
-						{ label: "Closed", value: "CLOSE" },
+						{ label: "Closed", value: "CLOSED" },
 						{ label: "WO Created", value: "WO CREATED" },
 					],
 				},
@@ -447,10 +447,7 @@ const NotificationTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={9} className="table-button">
@@ -516,15 +513,13 @@ const NotificationTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) *
-									(pagination.pageSize || 10) +
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>

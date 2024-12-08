@@ -133,9 +133,13 @@ const AddContract: FC<props> = ({
 								required: true,
 								message: "Please enter the Total Contract Value",
 							},
+							{
+								pattern: /^\d*$/,
+								message: "Should contain only numbers",
+							},
 						]}
 					>
-						<Input />
+						<Input suffix="QAR" />
 					</Form.Item>
 				</Col>
 				{/* <Col md={6} xs={24}>

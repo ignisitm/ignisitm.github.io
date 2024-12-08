@@ -137,7 +137,7 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 			dataIndex: "code",
 		},
 		{
-			title: "Procedure",
+			title: "Item",
 			dataIndex: "procedure",
 			width: "50%",
 		},
@@ -148,7 +148,7 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 				cv.frequencies?.find((x: any) => x.id === freq)?.name,
 		},
 		{
-			title: "Instructions",
+			title: "Procedure",
 			dataIndex: "instructions",
 			render: (info: any) => (
 				<Popover
@@ -157,7 +157,7 @@ const ProceduresTable: FC<props> = ({ system, activity, ahj }) => {
 					overlayStyle={{ width: "450px" }}
 					content={<Input.TextArea readOnly rows={8} value={info} />}
 				>
-					<Button type="link">Instructions</Button>
+					<Button type="link">View Procedure</Button>
 				</Popover>
 			),
 		},

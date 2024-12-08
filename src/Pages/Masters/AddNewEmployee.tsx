@@ -106,6 +106,25 @@ const NewUserForm: FC<NewUserFormProps> = ({
 							<Input />
 						</Form.Item>
 					</Col>
+					<Col span={24}>
+						<Form.Item name="email" label="Email Address">
+							<Input />
+						</Form.Item>
+					</Col>
+					<Col span={24}>
+						<Form.Item
+							name="phone"
+							label="Contact Number"
+							rules={[
+								{
+									pattern: /^\d*$/,
+									message: "Should contain only numbers",
+								},
+							]}
+						>
+							<Input />
+						</Form.Item>
+					</Col>
 					<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />
 				</Row>
 

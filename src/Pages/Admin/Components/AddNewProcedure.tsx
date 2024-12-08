@@ -40,9 +40,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		<Modal
 			open={visible}
 			destroyOnClose={true}
-			title="Add a new Procedure"
+			title="Add a new Item"
 			style={{ minWidth: "632px", top: "20px" }}
-			okText="Add Procedure"
+			okText="Add Item"
 			maskClosable={false}
 			cancelText="Cancel"
 			onCancel={() => {
@@ -80,7 +80,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				</Form.Item>
 				<Form.Item
 					name="procedure"
-					label="Procedure"
+					label="Item"
 					rules={[
 						{
 							required: true,
@@ -126,7 +126,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				</Form.Item>
 				<Form.Item
 					name="instructions"
-					label="Instructions"
+					label="Procedure"
 					rules={[
 						{
 							required: false,
@@ -190,7 +190,7 @@ const AddNewProcedure: FC<props> = ({
 				}}
 				type="primary"
 			>
-				Add Procedure
+				Add Item
 			</Button>
 			<CollectionCreateForm
 				setSelectedDevices={setSelectedDevices}
