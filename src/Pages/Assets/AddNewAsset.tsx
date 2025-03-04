@@ -8,10 +8,14 @@ import {
 	Form,
 	Input,
 	InputNumber,
+	InputRef,
 	message,
 	Modal,
+	Popconfirm,
 	Row,
 	Select,
+	Space,
+	Table,
 	Tabs,
 	Typography,
 	Upload,
@@ -26,7 +30,7 @@ import {
 	RightOutlined,
 	UploadOutlined,
 } from "@ant-design/icons";
-import { FC, useState, useContext, useEffect } from "react";
+import { FC, useState, useContext, useEffect, useRef } from "react";
 import { AssetContext, NotificationContext } from "../../Helpers/Context";
 import { apiCall } from "../../axiosConfig";
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -77,10 +81,71 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [frequency, setFrequency] = useState<any>(null);
 	const [showNFPAError, setShowNFPAError] = useState(false);
 	const [systemTag, setSystemTag] = useState("/");
+	const [locations, setLocations] = useState<any[]>([]);
+	const [newLocation, setNewLocation] = useState("");
+	const [editLocations, setEditLocations] = useState(false);
+	const [loadingLocations, setLoadingLocations] = useState(false);
 	const [commonFields, setCommonFields] = useState<any>({
 		frequency: false,
-		last_service: false,
+		last_service: true,
 	});
+
+	//Location Functions
+
+	const getLocations = () => {
+		setLoadingLocations(true);
+		apiCall({
+			method: "GET",
+			url: `/clientsystemlocation?system_id=${selectedSystem}`,
+			handleResponse: (res) => {
+				setLoadingLocations(false);
+				setLocations(res.data.message);
+			},
+			handleError: () => {
+				setLoadingLocations(false);
+			},
+		});
+	};
+
+	const addLocations = () => {
+		setLoadingLocations(true);
+		apiCall({
+			method: "POST",
+			url: "/clientsystemlocation",
+			data: { name: newLocation, system_id: selectedSystem },
+			handleResponse: (res) => {
+				message.success(res.data.message);
+				getLocations();
+				setNewLocation("");
+			},
+			handleError: () => {
+				setLoadingLocations(false);
+				message.error("Error adding Locations");
+			},
+		});
+	};
+
+	const deleteLocation = (id: any) => {
+		setLoadingLocations(true);
+		apiCall({
+			method: "DELETE",
+			url: `/clientsystemlocation`,
+			data: { data: { id } },
+			handleResponse: (res) => {
+				message.success(res.data.message);
+				setLoadingLocations(false);
+				getLocations();
+			},
+			handleError: () => {
+				setLoadingLocations(false);
+				message.error("Error deleting Locations");
+			},
+		});
+	};
+
+	const onLocationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setNewLocation(event.target.value);
+	};
 
 	useEffect(() => {
 		if (selectedBuilding) getSystems(selectedBuilding);
@@ -92,6 +157,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			setSystems([]);
 			setDeviceTypes([]);
 			setGeneralInfo([]);
+			setLocations([]);
+			setNewLocation("");
 			form.setFieldValue("system_id", null);
 			form.setFieldValue("type_id", null);
 		}
@@ -129,8 +196,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	};
 
 	const beforeUpload = (file: RcFile) => {
-		const isJpgOrPng =
-			file.type === "image/jpeg" || file.type === "image/png";
+		const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
 		if (!isJpgOrPng) {
 			message.error("You can only upload JPEG/PNG file!");
 		}
@@ -157,6 +223,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setCommonFieldsSelected(false);
 		setCommonFields({});
 		setAssetDetails([]);
+		setLocations([]);
+		setNewLocation("");
 	};
 
 	const getSystems = (building_id: any) => {
@@ -175,6 +243,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 
 	const getDeviceTypes = (system_id: any) => {
 		setLoadingDeviceTypes(true);
+		getLocations();
 		apiCall({
 			method: "GET",
 			url: `/dropdown/devicetypes?system_id=${system_id}`,
@@ -216,9 +285,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		curr_assetDetails[assetPage] = form.getFieldsValue();
 		setAssetDetails(curr_assetDetails);
 		let next_asset =
-			curr_assetDetails[
-				direction === "prev" ? assetPage - 1 : assetPage + 1
-			];
+			curr_assetDetails[direction === "prev" ? assetPage - 1 : assetPage + 1];
 		if (next_asset) {
 			form.setFieldsValue(next_asset);
 			if (next_asset.frequency !== frequency) setShowNFPAError(true);
@@ -236,291 +303,325 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		}
 	};
 
-	const SingleEntry = () => (
-		<Row align="middle" justify="space-around">
-			<Col
-				span={8}
-				style={{
-					textAlign: "center",
-					marginTop: "20px",
-					paddingRight: "15px",
-				}}
-			>
-				{assetImage ? (
-					<>
-						<img
-							src={URL.createObjectURL(assetImage.originFileObj)}
-							height={"100%"}
-							width={"100%"}
-						/>
-						<Button
-							icon={<DeleteOutlined />}
-							onClick={() => setAssetImage(null)}
-							type="default"
-							block
-						>
-							Remove
-						</Button>
-					</>
-				) : (
-					<Upload
-						listType="picture-card"
-						showUploadList={false}
-						beforeUpload={beforeUpload}
-						onChange={(e: any) => {
-							console.log(e);
-							if (
-								e.file.type === "image/jpeg" ||
-								e.file.type === "image/png"
-							) {
-								setAssetImage(e.file);
-							}
-						}}
-						customRequest={dummyRequest}
-					>
-						<div>
-							<PlusOutlined />
-							<div style={{ marginTop: 8 }}>
-								Upload
-								<br />
-								Image
-							</div>
-						</div>
-					</Upload>
-				)}
-			</Col>
-			<Col span={16}>
-				<Form
-					form={form}
-					layout="vertical"
-					name="form_in_modal"
-					initialValues={{ modifier: "public" }}
+	const singleEntry = () => {
+		return (
+			<Row align="middle" justify="space-around">
+				<Col
+					span={8}
+					style={{
+						textAlign: "center",
+						marginTop: "20px",
+						paddingRight: "15px",
+					}}
 				>
-					<Form.Item
-						name="building_id"
-						label="Select Building"
-						rules={[
-							{
-								required: true,
-								message: "Please select a Building",
-							},
-						]}
-					>
-						<Select
-							showSearch
-							allowClear={true}
-							onChange={(e) => setSelectedBuilding(e)}
-							placeholder="Search to Select"
-							optionFilterProp="children"
-							filterOption={(input, option) =>
-								(option!.children as unknown as string)
-									.toLowerCase()
-									.includes(input)
-							}
-							filterSort={(optionA, optionB) =>
-								(optionA!.children as unknown as string)
-									.toLowerCase()
-									.localeCompare(
-										(
-											optionB!
-												.children as unknown as string
-										).toLowerCase()
-									)
-							}
-						>
-							{contextVariables.buildings?.map(
-								(
-									item: { id: number; building_name: string },
-									index: number
-								) => (
-									<Select.Option value={item.id}>
-										{item.building_name}
-									</Select.Option>
-								)
-							)}
-						</Select>
-					</Form.Item>
-					{loadingSystems && (
-						<h4>
-							<LoadingOutlined /> Loading Systems...
-						</h4>
-					)}
-					{systems.length > 0 ? (
-						<Form.Item
-							name="system_id"
-							label="Select System"
-							rules={[
-								{
-									required: true,
-									message: "Please select a System",
-								},
-							]}
-						>
-							<Select
-								showSearch
-								allowClear={true}
-								onChange={(e) => {
-									setSelectedSystem(e);
-									let tag = systems?.find(
-										(x: any) => x.id === e
-									).tag;
-									setSystemTag(`${tag}/`);
-								}}
-								placeholder="Search to Select"
-								optionFilterProp="children"
-								filterOption={(input, option) =>
-									(option!.children as unknown as string)
-										.toLowerCase()
-										.includes(input)
-								}
-								filterSort={(optionA, optionB) =>
-									(optionA!.children as unknown as string)
-										.toLowerCase()
-										.localeCompare(
-											(
-												optionB!
-													.children as unknown as string
-											).toLowerCase()
-										)
-								}
-							>
-								{systems?.map(
-									(
-										item: { id: object; name: string },
-										index: number
-									) => (
-										<Select.Option value={item.id}>
-											{item.name}
-										</Select.Option>
-									)
-								)}
-							</Select>
-						</Form.Item>
-					) : null}
-					{loadingDeviceTypes && (
-						<h4>
-							<LoadingOutlined /> Loading Asset Types...
-						</h4>
-					)}
-					{deviceTypes.length > 0 ? (
-						<Form.Item
-							name="type_id"
-							label="Select Asset Type"
-							rules={[
-								{
-									required: true,
-									message: "Please select asset type",
-								},
-							]}
-						>
-							<Select
-								showSearch
-								allowClear={true}
-								placeholder="Search to Select"
-								onChange={(e) => {
-									setSelectedAssetType(e);
-									form.setFieldValue(
-										"frequency",
-										deviceTypes.find((o) => o.id === e)
-											.frequency
-									);
-									setFrequency(
-										deviceTypes.find((o) => o.id === e)
-											.frequency
-									);
-								}}
-								optionFilterProp="children"
-								filterOption={(input, option) =>
-									(option!.children as unknown as string)
-										.toLowerCase()
-										.includes(input)
-								}
-								filterSort={(optionA, optionB) =>
-									(optionA!.children as unknown as string)
-										.toLowerCase()
-										.localeCompare(
-											(
-												optionB!
-													.children as unknown as string
-											).toLowerCase()
-										)
-								}
-							>
-								{deviceTypes?.map(
-									(
-										item: { id: object; name: string },
-										index: number
-									) => (
-										<Select.Option value={item.id}>
-											{item.name}
-										</Select.Option>
-									)
-								)}
-							</Select>
-						</Form.Item>
-					) : null}
-					{selectedAssetType && (
+					{assetImage ? (
 						<>
+							<img
+								src={URL.createObjectURL(assetImage.originFileObj)}
+								height={"100%"}
+								width={"100%"}
+							/>
+							<Button
+								icon={<DeleteOutlined />}
+								onClick={() => setAssetImage(null)}
+								type="default"
+								block
+							>
+								Remove
+							</Button>
+						</>
+					) : (
+						<Upload
+							listType="picture-card"
+							showUploadList={false}
+							beforeUpload={beforeUpload}
+							onChange={(e: any) => {
+								console.log(e);
+								if (
+									e.file.type === "image/jpeg" ||
+									e.file.type === "image/png"
+								) {
+									setAssetImage(e.file);
+								}
+							}}
+							customRequest={dummyRequest}
+						>
+							<div>
+								<PlusOutlined />
+								<div style={{ marginTop: 8 }}>
+									Upload
+									<br />
+									Image
+								</div>
+							</div>
+						</Upload>
+					)}
+				</Col>
+				<Col span={16}>
+					<Form
+						form={form}
+						layout="vertical"
+						name="form_in_modal"
+						initialValues={{ modifier: "public" }}
+					>
+						<Form.Item
+							name="building_id"
+							label="Select Building"
+							rules={[
+								{
+									required: true,
+									message: "Please select a Building",
+								},
+							]}
+						>
+							<Select
+								showSearch
+								allowClear={true}
+								onChange={(e) => setSelectedBuilding(e)}
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as string)
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as string)
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as string).toLowerCase()
+										)
+								}
+							>
+								{contextVariables.buildings?.map(
+									(
+										item: { id: number; building_name: string },
+										index: number
+									) => (
+										<Select.Option value={item.id}>
+											{item.building_name}
+										</Select.Option>
+									)
+								)}
+							</Select>
+						</Form.Item>
+						{loadingSystems && (
+							<h4>
+								<LoadingOutlined /> Loading Systems...
+							</h4>
+						)}
+						{systems.length > 0 ? (
 							<Form.Item
-								name="tag"
-								label="Asset Tag"
+								name="system_id"
+								label="Select System"
 								rules={[
 									{
 										required: true,
-										message:
-											"Please input the tag of Asset!",
+										message: "Please select a System",
 									},
 								]}
 							>
-								<Input prefix={systemTag} />
+								<Select
+									showSearch
+									allowClear={true}
+									onChange={(e) => {
+										setSelectedSystem(e);
+										let tag = systems?.find((x: any) => x.id === e).tag;
+										setSystemTag(`${tag}/`);
+									}}
+									placeholder="Search to Select"
+									optionFilterProp="children"
+									filterOption={(input, option) =>
+										(option!.children as unknown as string)
+											.toLowerCase()
+											.includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										(optionA!.children as unknown as string)
+											.toLowerCase()
+											.localeCompare(
+												(optionB!.children as unknown as string).toLowerCase()
+											)
+									}
+								>
+									{systems?.map(
+										(item: { id: object; name: string }, index: number) => (
+											<Select.Option value={item.id}>{item.name}</Select.Option>
+										)
+									)}
+								</Select>
 							</Form.Item>
-						</>
-					)}
-					{loadingGeneralInfo && (
-						<h4>
-							<LoadingOutlined /> Loading General Fields...
-						</h4>
-					)}
-
-					{generalInfo.length > 0
-						? generalInfo.map((field: any) => (
+						) : null}
+						{loadingDeviceTypes && (
+							<h4>
+								<LoadingOutlined /> Loading Asset Types...
+							</h4>
+						)}
+						{deviceTypes.length > 0 ? (
+							<Form.Item
+								name="type_id"
+								label="Select Asset Type"
+								rules={[
+									{
+										required: true,
+										message: "Please select asset type",
+									},
+								]}
+							>
+								<Select
+									showSearch
+									allowClear={true}
+									placeholder="Search to Select"
+									onChange={(e) => {
+										setSelectedAssetType(e);
+										form.setFieldValue(
+											"frequency",
+											deviceTypes.find((o) => o.id === e).frequency
+										);
+										setFrequency(deviceTypes.find((o) => o.id === e).frequency);
+									}}
+									optionFilterProp="children"
+									filterOption={(input, option) =>
+										(option!.children as unknown as string)
+											.toLowerCase()
+											.includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										(optionA!.children as unknown as string)
+											.toLowerCase()
+											.localeCompare(
+												(optionB!.children as unknown as string).toLowerCase()
+											)
+									}
+								>
+									{deviceTypes?.map(
+										(item: { id: object; name: string }, index: number) => (
+											<Select.Option value={item.id}>{item.name}</Select.Option>
+										)
+									)}
+								</Select>
+							</Form.Item>
+						) : null}
+						{selectedAssetType && (
+							<>
 								<Form.Item
-									name={field.name}
-									label={field.name}
+									name="tag"
+									label="Asset Tag"
 									rules={[
-										...(field.mandatory
-											? [
-													{
-														required: true,
-														message: `Please provide ${field.name}`,
-													},
-											  ]
-											: []),
+										{
+											required: true,
+											message: "Please input the tag of Asset!",
+										},
 									]}
 								>
-									{field.type === "number" ? (
-										<InputNumber
-											style={{ width: "100%" }}
-										/>
-									) : field.type === "text" ? (
-										<Input />
-									) : field.type === "boolean" ? (
-										<Select>
-											<Select.Option value={true}>
-												YES
-											</Select.Option>
-											<Select.Option value={false}>
-												NO
-											</Select.Option>
-										</Select>
-									) : null}
+									<Input prefix={systemTag} />
 								</Form.Item>
-						  ))
-						: null}
-				</Form>
-			</Col>
-		</Row>
-	);
+								<Form.Item name="location" label="Location">
+									<Select
+										showSearch
+										allowClear={true}
+										placeholder="Search to Select"
+										optionFilterProp="children"
+										filterOption={(input, option) =>
+											(option!.children as unknown as string)
+												.toLowerCase()
+												.includes(input)
+										}
+										filterSort={(optionA, optionB) =>
+											(optionA!.children as unknown as string)
+												.toLowerCase()
+												.localeCompare(
+													(optionB!.children as unknown as string).toLowerCase()
+												)
+										}
+										dropdownRender={(menu) => (
+											<>
+												{menu}
+												<Divider style={{ margin: "8px 0" }} />
+												<Row style={{ padding: "0 8px 4px" }}>
+													<Col span={24}>
+														<Button
+															type="dashed"
+															icon={<PlusOutlined />}
+															onClick={(e) => {
+																e.stopPropagation();
+																setEditLocations(true);
+															}}
+															block
+															size="small"
+														>
+															Add / Edit Location
+														</Button>
+													</Col>
+												</Row>
+											</>
+										)}
+									>
+										{locations?.map(
+											(item: { id: object; name: string }, index: number) => (
+												<Select.Option value={item.id}>
+													{item.name}
+												</Select.Option>
+											)
+										)}
+									</Select>
+								</Form.Item>
+							</>
+						)}
+						{loadingGeneralInfo && (
+							<h4>
+								<LoadingOutlined /> Loading General Fields...
+							</h4>
+						)}
+
+						{generalInfo.length > 0
+							? generalInfo.map((field: any) => (
+									<Form.Item
+										name={field.name}
+										label={field.name}
+										rules={[
+											...(field.mandatory
+												? [
+														{
+															required: true,
+															message: `Please provide ${field.name}`,
+														},
+												  ]
+												: []),
+										]}
+									>
+										{field.type === "number" ? (
+											<InputNumber style={{ width: "100%" }} />
+										) : field.type === "text" ? (
+											<Input />
+										) : field.type === "boolean" ? (
+											<Select>
+												<Select.Option value={true}>YES</Select.Option>
+												<Select.Option value={false}>NO</Select.Option>
+											</Select>
+										) : null}
+									</Form.Item>
+							  ))
+							: null}
+						{selectedAssetType && (
+							<Form.Item
+								name="last_service"
+								label="Last Service Date"
+								rules={[
+									{
+										required: true,
+										message: "Please enter the Last Service Date",
+									},
+								]}
+							>
+								<DatePicker format={"DD/MM/YYYY"} style={{ width: "100%" }} />
+							</Form.Item>
+						)}
+					</Form>
+				</Col>
+			</Row>
+		);
+	};
 
 	const MultipleEntry = () => (
 		<Form
@@ -557,10 +658,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								(optionA!.children as unknown as string)
 									.toLowerCase()
 									.localeCompare(
-										(
-											optionB!
-												.children as unknown as string
-										).toLowerCase()
+										(optionB!.children as unknown as string).toLowerCase()
 									)
 							}
 						>
@@ -597,9 +695,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								allowClear={true}
 								onChange={(e) => {
 									setSelectedSystem(e);
-									let tag = systems?.find(
-										(x: any) => x.id === e
-									).tag;
+									let tag = systems?.find((x: any) => x.id === e).tag;
 									setSystemTag(`${tag}/`);
 								}}
 								placeholder="Search to Select"
@@ -613,21 +709,13 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									(optionA!.children as unknown as string)
 										.toLowerCase()
 										.localeCompare(
-											(
-												optionB!
-													.children as unknown as string
-											).toLowerCase()
+											(optionB!.children as unknown as string).toLowerCase()
 										)
 								}
 							>
 								{systems?.map(
-									(
-										item: { id: object; name: string },
-										index: number
-									) => (
-										<Select.Option value={item.id}>
-											{item.name}
-										</Select.Option>
+									(item: { id: object; name: string }, index: number) => (
+										<Select.Option value={item.id}>{item.name}</Select.Option>
 									)
 								)}
 							</Select>
@@ -672,24 +760,82 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 										(optionA!.children as unknown as string)
 											.toLowerCase()
 											.localeCompare(
-												(
-													optionB!
-														.children as unknown as string
-												).toLowerCase()
+												(optionB!.children as unknown as string).toLowerCase()
 											)
 									}
 								>
 									{deviceTypes?.map(
-										(
-											item: { id: object; name: string },
-											index: number
-										) => (
-											<Select.Option value={item.id}>
-												{item.name}
-											</Select.Option>
+										(item: { id: object; name: string }, index: number) => (
+											<Select.Option value={item.id}>{item.name}</Select.Option>
 										)
 									)}
 								</Select>
+							</Form.Item>
+							<Form.Item name="location" label="Location">
+								<Select
+									showSearch
+									allowClear={true}
+									placeholder="Search to Select"
+									optionFilterProp="children"
+									filterOption={(input, option) =>
+										(option!.children as unknown as string)
+											.toLowerCase()
+											.includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										(optionA!.children as unknown as string)
+											.toLowerCase()
+											.localeCompare(
+												(optionB!.children as unknown as string).toLowerCase()
+											)
+									}
+									dropdownRender={(menu) => (
+										<>
+											{menu}
+											<Divider style={{ margin: "8px 0" }} />
+											<Row style={{ padding: "0 8px 4px" }}>
+												<Col span={24}>
+													<Button
+														type="dashed"
+														icon={<PlusOutlined />}
+														onClick={(e) => {
+															e.stopPropagation();
+															setEditLocations(true);
+														}}
+														block
+														size="small"
+													>
+														Add / Edit Location
+													</Button>
+												</Col>
+											</Row>
+										</>
+									)}
+								>
+									{locations?.map(
+										(item: { id: object; name: string }, index: number) => (
+											<Select.Option value={item.id}>{item.name}</Select.Option>
+										)
+									)}
+								</Select>
+							</Form.Item>
+							<Form.Item
+								label="Last Service Date"
+								name="last_service"
+								rules={[
+									{
+										required: true,
+										message: "Please enter the Last Service Date",
+									},
+								]}
+							>
+								<DatePicker
+									onChange={(e) =>
+										ModifyCommonFieldForAllAssets("last_service", e)
+									}
+									format={"DD/MM/YYYY"}
+									style={{ width: "100%" }}
+								/>
 							</Form.Item>
 							{showCommonFields(true)}
 						</>
@@ -700,10 +846,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			{commonFieldsSelected && (
 				<>
 					<Divider orientation="right" orientationMargin="0">
-						<Button
-							type="link"
-							onClick={() => setShowCommonFieldsModal(true)}
-						>
+						<Button type="link" onClick={() => setShowCommonFieldsModal(true)}>
 							Modify Common Fields
 						</Button>
 					</Divider>
@@ -789,8 +932,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 										rules={[
 											{
 												required: true,
-												message:
-													"Please input the tag of Asset!",
+												message: "Please input the tag of Asset!",
 											},
 										]}
 									>
@@ -800,8 +942,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							)}
 							{loadingGeneralInfo && (
 								<h4>
-									<LoadingOutlined /> Loading General
-									Fields...
+									<LoadingOutlined /> Loading General Fields...
 								</h4>
 							)}
 							{showCommonFields(false)}
@@ -874,8 +1015,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							</Typography.Text>
 						) : null}
 					</>
-				)}
-				{commonFields["last_service"] === val && (
+				)} */}
+				{/* {commonFields["last_service"] === val && (
 					<Form.Item
 						label="Last Service Date"
 						name="last_service"
@@ -933,18 +1074,11 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									) : field.type === "boolean" ? (
 										<Select
 											onBlur={(e) =>
-												ModifyCommonFieldForAllAssets(
-													field.name,
-													e
-												)
+												ModifyCommonFieldForAllAssets(field.name, e)
 											}
 										>
-											<Select.Option value={true}>
-												YES
-											</Select.Option>
-											<Select.Option value={false}>
-												NO
-											</Select.Option>
+											<Select.Option value={true}>YES</Select.Option>
+											<Select.Option value={false}>NO</Select.Option>
 										</Select>
 									) : null}
 								</Form.Item>
@@ -973,15 +1107,13 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 
 	const validateMultipleEntry = (assetDetails: any) => {
 		let mandatory_fields = [
-			// "last_service",
+			"last_service",
 			"building_id",
 			"system_id",
 			"type_id",
 			"tag",
 			// "frequency",
-			...generalInfo
-				.filter((x) => x.mandatory === true)
-				.map((x) => x.name),
+			...generalInfo.filter((x) => x.mandatory === true).map((x) => x.name),
 		];
 		return new Promise((resolve, reject) => {
 			if (assetDetails.length !== assetQty)
@@ -996,17 +1128,75 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						failed_assets.push((index + 1).toString());
 				});
 				console.log(failed_assets.length);
-				if (failed_assets.length !== 0)
-					reject(
-						`There are missing asset details for the following assets: ${failed_assets}`
-					);
-				else resolve(assetDetails);
+				if (failed_assets.length !== 0) {
+					if (failed_assets.length > 5) {
+						reject(
+							`There are missing asset details for the following assets: ${failed_assets
+								.slice(0, 5)
+								.join(", ")} and ${failed_assets.length - 5} more.`
+						);
+					} else {
+						reject(
+							`There are missing asset details for the following assets: ${failed_assets.join(
+								", "
+							)}`
+						);
+					}
+				} else {
+					resolve(assetDetails);
+				}
 			}
 		});
 	};
 
 	return (
 		<>
+			<Modal
+				zIndex={1001}
+				open={editLocations}
+				title="Edit Locations"
+				onCancel={() => setEditLocations(false)}
+				footer={
+					<Space.Compact style={{ width: "100%" }}>
+						<Input
+							onChange={onLocationChange}
+							value={newLocation}
+							placeholder="Add New Location"
+						/>
+						<Button onClick={addLocations} type="primary">
+							Add
+						</Button>
+					</Space.Compact>
+				}
+			>
+				<Table
+					dataSource={locations}
+					loading={loadingLocations}
+					pagination={false}
+					columns={[
+						{
+							title: "Location",
+							dataIndex: "name",
+							key: "name",
+						},
+						{
+							title: "Action",
+							key: "action",
+							width: "5%",
+							render: (_, record) => (
+								<Popconfirm
+									title="Are you sure you want to delete?"
+									onConfirm={() => {
+										deleteLocation(record.id);
+									}}
+								>
+									<Button type="text" danger icon={<DeleteOutlined />} />
+								</Popconfirm>
+							),
+						},
+					]}
+				/>
+			</Modal>
 			<Modal
 				// title="Select Common Fields"
 				zIndex={1001}
@@ -1080,10 +1270,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				)}
 				<Divider />
 				<h4>Enter No. of Assets: </h4>
-				<Input
-					value={assetQty ? assetQty : ""}
-					onChange={handleChangeQty}
-				/>
+				<Input value={assetQty ? assetQty : ""} onChange={handleChangeQty} />
 				<div style={{ width: "100%", textAlign: "center" }}>
 					<h4>OR</h4>
 				</div>
@@ -1103,16 +1290,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 											.trim()
 											.replace(/(\r\n|\n|\r)/gm, "");
 										let column_value =
-											data[i]?.[j]
-												?.trim()
-												.replace(
-													/(\r\n|\n|\r)/gm,
-													""
-												) || null;
+											data[i]?.[j]?.trim().replace(/(\r\n|\n|\r)/gm, "") ||
+											null;
 										new_obj[
-											header_value === "Asset tag"
-												? "tag"
-												: header_value
+											header_value === "Asset tag" ? "tag" : header_value
 										] = column_value || null;
 									}
 									if (new_obj.tag)
@@ -1152,8 +1333,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					<br /> <br />
 					<div>
 						<Typography.Text italic type="danger">
-							Download the CSV Template and fill the columns
-							(Non-Common Fields) and upload it here.
+							Download the CSV Template and fill the columns (Non-Common Fields)
+							and upload it here.
 							<br />
 							Note: Enter Asset Tags without the System Tag.
 						</Typography.Text>
@@ -1181,7 +1362,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				}}
 				onOk={() => {
 					if (entryType === "single") {
-						form.validateFields()
+						form
+							.validateFields()
 							.then((values) => {
 								values["image"] = assetImage;
 								values["tag"] = systemTag + values["tag"];
@@ -1198,11 +1380,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						validateMultipleEntry(curr_assetDetails)
 							.then(() => {
 								setAssetDetails(curr_assetDetails);
-								onCreate(
-									curr_assetDetails,
-									true,
-									systemTag
-								).then(() => {
+								onCreate(curr_assetDetails, true, systemTag).then(() => {
 									resetModal();
 								});
 							})
@@ -1218,12 +1396,12 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						{
 							key: "single",
 							label: "Single Entry",
-							children: <SingleEntry />,
+							children: singleEntry(),
 						},
 						{
 							key: "multiple",
 							label: "Multiple Entries",
-							children: <MultipleEntry />,
+							children: MultipleEntry(),
 						},
 					]}
 					onChange={onChangeEntryType}
@@ -1265,15 +1443,11 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 		});
 	};
 
-	const onCreate = (
-		values: any,
-		multi: boolean = false,
-		systemTag: string
-	) => {
+	const onCreate = (values: any, multi: boolean = false, systemTag: string) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			if (!multi) {
 				let GeneralInfoData = { ...values };
-				let { system_id, type_id, tag, image }: any = {
+				let { system_id, type_id, tag, image, last_service, location }: any = {
 					...GeneralInfoData,
 				};
 				delete GeneralInfoData["building_id"];
@@ -1281,42 +1455,47 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 				delete GeneralInfoData["type_id"];
 				delete GeneralInfoData["tag"];
 				delete GeneralInfoData["image"];
+				delete GeneralInfoData["last_service"];
+				delete GeneralInfoData["location"];
 
 				let responseData = {
 					system_id,
 					type_id,
 					tag,
+					location,
 					// next_service: last_service.add(frequency, "days").toISOString(),
 					general_info: GeneralInfoData,
 				};
-				console.log("Received values of form: ", responseData);
+
+				let date = {
+					last_service: last_service.toISOString(),
+				};
+				console.log("Received values of form: ", { data: responseData, date });
 				setConfirmLoading(true);
 				apiCall({
 					method: "POST",
 					url: "/clientassets",
-					data: responseData,
+					data: { data: responseData, date },
 					handleResponse: (res) => {
 						console.log(res.data.message);
 						if (image)
-							uploadfiles(image, res.data.message.id).then(
-								(uf_res) => {
-									console.log("File Upload Res: ", uf_res);
-									apiCall({
-										method: "PUT",
-										url: "/clientassets",
-										data: {
-											id: res.data.message.id,
-											data: { image: uf_res },
-										},
-										handleResponse: (up_res) => {
-											resolve(res);
-											setConfirmLoading(false);
-											setVisible(false);
-											fetchData();
-										},
-									});
-								}
-							);
+							uploadfiles(image, res.data.message.id).then((uf_res) => {
+								console.log("File Upload Res: ", uf_res);
+								apiCall({
+									method: "PUT",
+									url: "/clientassets",
+									data: {
+										id: res.data.message.id,
+										data: { image: uf_res },
+									},
+									handleResponse: (up_res) => {
+										resolve(res);
+										setConfirmLoading(false);
+										setVisible(false);
+										fetchData();
+									},
+								});
+							});
 						else {
 							resolve(res);
 							setConfirmLoading(false);
@@ -1335,9 +1514,10 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 					console.log(values);
 				} else {
 					let finalAssetList: Array<any> = [];
+					let last_service = values[0].last_service;
 					values.forEach((value: any) => {
 						let GeneralInfoData = { ...value };
-						let { system_id, type_id, tag }: any = {
+						let { system_id, type_id, tag, location }: any = {
 							...GeneralInfoData,
 						};
 						delete GeneralInfoData["building_id"];
@@ -1345,6 +1525,7 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 						delete GeneralInfoData["type_id"];
 						delete GeneralInfoData["frequency"];
 						delete GeneralInfoData["last_service"];
+						delete GeneralInfoData["location"];
 						delete GeneralInfoData["tag"];
 						delete GeneralInfoData["image"];
 
@@ -1353,17 +1534,23 @@ const AddNewAsset: FC<props> = ({ fetchData }: props) => {
 							type_id,
 							// frequency,
 							tag: `${systemTag}${tag}`,
+							location,
 							// next_service: last_service.add(frequency, "days").toISOString(),
 							general_info: GeneralInfoData,
 						};
+
 						finalAssetList.push(responseData);
 					});
+
+					let date = {
+						last_service: last_service.toISOString(),
+					};
 					console.log("Received values of form: ", finalAssetList);
 					setConfirmLoading(true);
 					apiCall({
 						method: "POST",
 						url: "/clientMassUpdate",
-						data: finalAssetList,
+						data: { data: finalAssetList, date },
 						handleResponse: (res) => {
 							console.log(res.data.message);
 							resolve(res);

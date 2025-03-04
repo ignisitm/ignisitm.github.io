@@ -1,5 +1,6 @@
 import {
 	Button,
+	Card,
 	Checkbox,
 	DatePicker,
 	Form,
@@ -10,6 +11,9 @@ import {
 	Row,
 	Select,
 	Space,
+	Tree,
+	TreeDataNode,
+	TreeProps,
 } from "antd";
 import {
 	AudioFilled,
@@ -26,6 +30,41 @@ import { createFromIconfontCN } from "@ant-design/icons";
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
+const treeData: TreeDataNode[] = [
+	{
+		title: "parent 1",
+		key: "0-0",
+		children: [
+			{
+				title: "parent 1-0",
+				key: "0-0-0",
+				disabled: true,
+				children: [
+					{
+						title: "leaf",
+						key: "0-0-0-0",
+						disableCheckbox: true,
+					},
+					{
+						title: "leaf",
+						key: "0-0-0-1",
+					},
+				],
+			},
+			{
+				title: "parent 1-1",
+				key: "0-0-1",
+				children: [
+					{
+						title: <span style={{ color: "#1677ff" }}>sss</span>,
+						key: "0-0-1-0",
+					},
+				],
+			},
+		],
+	},
+];
+
 interface props {
 	fetchData: Function;
 	notification_id: number;
@@ -33,6 +72,7 @@ interface props {
 }
 
 interface CollectionCreateFormProps {
+	notification_id: number;
 	visible: boolean;
 	confirmLoading: boolean;
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
@@ -42,6 +82,7 @@ interface CollectionCreateFormProps {
 const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	visible,
 	confirmLoading,
+	notification_id,
 	onCreate,
 	onCancel,
 }) => {
@@ -61,6 +102,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const mssgsBottom = useRef<HTMLDivElement>(null);
 	const [onlyAvailableResources, setOnlyAvailableResources] = useState(false);
 	const [cancelRecording, setCancelRecording] = useState(false);
+	const [assets, setAssets] = useState<any[]>([]);
+	const [loadingAssets, setLoadingAssets] = useState(false);
+	const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
+	const [procedures, setProcedures] = useState<any[]>([]);
 	const [remarks, setRemarks] = useState<any[]>([
 		// {
 		// 	username: "0009",
@@ -86,6 +131,63 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		recordingTime,
 		mediaRecorder,
 	} = useAudioRecorder();
+
+	const getAssets = () => {
+		setLoadingAssets(true);
+		apiCall({
+			method: "GET",
+			url: `/clientnotifications/${notification_id}`,
+			handleResponse: (res) => {
+				console.log("assets : ", notification_id, res.data.message.procedures);
+
+				let response = res.data.message.procedures;
+				setProcedures(response);
+
+				//get all rows that have unique asset_id, remove duplicate asset_id rows
+				let uniqueAssets = response.filter(
+					(v: any, i: any, a: any) =>
+						a.findIndex((t: any) => t.asset_id === v.asset_id) === i
+				);
+
+				console.log(uniqueAssets);
+
+				// there is location_name for each unique asset. i want to convert the unique assets to a tree structure where location_name is the parent and asset_name is the child
+				let treeData: any = [];
+				uniqueAssets.forEach((asset: any) => {
+					let locationIndex = treeData.findIndex(
+						(e: any) => e.title === asset.location_name
+					);
+					if (locationIndex === -1) {
+						treeData.push({
+							title: asset.location_name,
+							key: asset.location_name,
+							children: [
+								{
+									title: `${asset.device} - ${asset.tag}`,
+									key: asset.asset_id,
+								},
+							],
+						});
+					} else {
+						treeData[locationIndex].children.push({
+							title: `${asset.device} - ${asset.tag}`,
+							key: asset.asset_id,
+						});
+					}
+				});
+
+				setAssets(treeData);
+				setLoadingAssets(false);
+			},
+			handleError: () => {
+				setLoadingAssets(false);
+			},
+		});
+	};
+
+	useEffect(() => {
+		getAssets();
+	}, []);
 
 	useEffect(() => {
 		if (!recordingBlob) return;
@@ -192,6 +294,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		mssgsBottom.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	const onSelect: TreeProps["onSelect"] = (selectedKeys, info) => {
+		console.log("selected", selectedKeys, info);
+	};
+
+	const onCheck: TreeProps["onCheck"] = (checkedKeys, info) => {
+		// sel_assets will be all numbers in checkedKeys.
+		let sel_assets = Array.isArray(checkedKeys)
+			? checkedKeys.filter((e) => !isNaN(parseInt(e as string)))
+			: checkedKeys.checked.filter((e) => !isNaN(parseInt(e as string)));
+		console.log("checked", sel_assets, info);
+		setSelectedAssets(sel_assets);
+	};
+
 	return (
 		<Modal
 			open={visible}
@@ -208,12 +323,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				setEndDate(null);
 			}}
 			onOk={() => {
+				if (selectedAssets.length === 0) {
+					message.error("Please select atleast one asset");
+					return;
+				}
+
 				form
 					.validateFields()
 					.then((values) => {
 						values["wo_start"] = startDate;
 						values["wo_end"] = endDate;
 						values["status"] = "Pending";
+						values["assets"] = selectedAssets;
+						values["procedures"] = procedures;
 
 						onCreate(values).then((res) => {
 							console.log(res);
@@ -262,6 +384,19 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				>
 					<Input />
 				</Form.Item> */}
+				<label>Select Assets: </label>
+				<Card>
+					{assets.length > 0 ? (
+						<Tree
+							checkable
+							onSelect={onSelect}
+							onCheck={onCheck}
+							treeData={assets}
+						/>
+					) : (
+						"Loading Assets..."
+					)}
+				</Card>
 				<br />
 				<label>Select Dates: </label>
 				<Row>
@@ -522,7 +657,20 @@ const CreateNewWorkOrder: FC<props> = ({
 
 	const onCreate = (values: any) => {
 		values["notification_id"] = notification_id;
-		values["pending_procedures"] = pending_procedures;
+
+		let procedures = values["procedures"];
+		delete values["procedures"];
+
+		let selectedAssets = values["assets"];
+		delete values["assets"];
+
+		// p_procedures should be list of id from procedures where asset_id is in selectedAssets
+		let p_procedures = procedures
+			.filter((p: any) => selectedAssets.includes(p.asset_id))
+			.map((p: any) => p.id);
+		values["pending_procedures"] = p_procedures;
+
+		// values["pending_procedures"] = pending_procedures;
 		return new Promise<any>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
@@ -559,6 +707,7 @@ const CreateNewWorkOrder: FC<props> = ({
 			<CollectionCreateForm
 				visible={visible}
 				onCreate={onCreate}
+				notification_id={notification_id}
 				onCancel={() => {
 					setVisible(false);
 				}}
