@@ -86,7 +86,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [editLocations, setEditLocations] = useState(false);
 	const [loadingLocations, setLoadingLocations] = useState(false);
 	const [commonFields, setCommonFields] = useState<any>({
-		frequency: false,
+		location: true,
 		last_service: true,
 	});
 
@@ -221,7 +221,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setAssetPage(0);
 		setEntryType("single");
 		setCommonFieldsSelected(false);
-		setCommonFields({});
+		setCommonFields({
+			location: true,
+			last_service: true,
+		});
 		setAssetDetails([]);
 		setLocations([]);
 		setNewLocation("");
@@ -774,6 +777,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							<Form.Item name="location" label="Location">
 								<Select
 									showSearch
+									onSelect={(e) => ModifyCommonFieldForAllAssets("location", e)}
 									allowClear={true}
 									placeholder="Search to Select"
 									optionFilterProp="children"
@@ -830,8 +834,8 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 								]}
 							>
 								<DatePicker
-									onChange={(e) =>
-										ModifyCommonFieldForAllAssets("last_service", e)
+									onChange={(date) =>
+										ModifyCommonFieldForAllAssets("last_service", date)
 									}
 									format={"DD/MM/YYYY"}
 									style={{ width: "100%" }}
@@ -971,7 +975,10 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	);
 
 	const ModifyCommonFieldForAllAssets = (field: string, value: any) => {
+		console.log("hrtr");
+		console.log(commonFields);
 		if (commonFields[field]) {
+			console.log("get", value);
 			let curr_assets = assetDetails;
 			curr_assets.forEach((asset) => {
 				if (Object.keys(asset).includes(field)) asset[field] = value;
@@ -1073,7 +1080,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 										/>
 									) : field.type === "boolean" ? (
 										<Select
-											onBlur={(e) =>
+											onSelect={(e) =>
 												ModifyCommonFieldForAllAssets(field.name, e)
 											}
 										>
@@ -1261,6 +1268,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 									onChange={onChangeCommonFields}
 									checked={commonFields[field]}
 									value={field}
+									disabled={field === "location" || field === "last_service"}
 								>
 									{field}
 								</Checkbox>

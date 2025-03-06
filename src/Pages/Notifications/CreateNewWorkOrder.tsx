@@ -2,6 +2,7 @@ import {
 	Button,
 	Card,
 	Checkbox,
+	Col,
 	DatePicker,
 	Form,
 	Input,
@@ -106,6 +107,9 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	const [loadingAssets, setLoadingAssets] = useState(false);
 	const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
 	const [procedures, setProcedures] = useState<any[]>([]);
+	const [proceduresTree, setProceduresTree] = useState<any[]>([]);
+	const [procedureIds, setProcedureIds] = useState<any[]>([]);
+	const [assetProcedures, setAssetProcedures] = useState<any[]>([]);
 	const [remarks, setRemarks] = useState<any[]>([
 		// {
 		// 	username: "0009",
@@ -158,23 +162,52 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						(e: any) => e.title === asset.location_name
 					);
 					if (locationIndex === -1) {
-						treeData.push({
-							title: asset.location_name,
-							key: asset.location_name,
+						let deviceNode = {
+							title: `${asset.device} (1)`,
+							key: `${asset.location_name}-${asset.device}`,
 							children: [
 								{
-									title: `${asset.device} - ${asset.tag}`,
+									title: `${asset.tag}`,
 									key: asset.asset_id,
 								},
 							],
-						});
+						};
+						if (asset.location_name) {
+							treeData.push({
+								title: asset.location_name,
+								key: asset.location_name,
+								children: [deviceNode],
+							});
+						} else {
+							treeData.push(deviceNode);
+						}
 					} else {
-						treeData[locationIndex].children.push({
-							title: `${asset.device} - ${asset.tag}`,
-							key: asset.asset_id,
-						});
+						let deviceIndex = treeData[locationIndex].children.findIndex(
+							(e: any) => e.title.startsWith(asset.device)
+						);
+						if (deviceIndex === -1) {
+							treeData[locationIndex].children.push({
+								title: `${asset.device} (1)`,
+								key: `${asset.location_name}-${asset.device}`,
+								children: [
+									{
+										title: `${asset.tag}`,
+										key: asset.asset_id,
+									},
+								],
+							});
+						} else {
+							let deviceNode = treeData[locationIndex].children[deviceIndex];
+							deviceNode.children.push({
+								title: `${asset.tag}`,
+								key: asset.asset_id,
+							});
+							deviceNode.title = `${asset.device} (${deviceNode.children.length})`;
+						}
 					}
 				});
+
+				setSelectedAssets(uniqueAssets.map((e: any) => e.asset_id));
 
 				setAssets(treeData);
 				setLoadingAssets(false);
@@ -188,6 +221,104 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	useEffect(() => {
 		getAssets();
 	}, []);
+
+	useEffect(() => {
+		setProceduresTree([]);
+		if (procedures.length === 0) return;
+		let treeData: any = [];
+
+		let selectedProcedures = procedures.filter((p: any) =>
+			selectedAssets.includes(p.asset_id)
+		);
+
+		let selectedProceduresIds = selectedProcedures.map((p: any) => p.id);
+		setProcedureIds(selectedProceduresIds);
+		console.log("checked Procedures : ", selectedProceduresIds);
+
+		selectedProcedures.forEach((procedure: any) => {
+			let ahjIndex = treeData.findIndex((e: any) => e.title === procedure.ahj);
+			if (ahjIndex === -1) {
+				treeData.push({
+					title: procedure.ahj,
+					key: procedure.ahj,
+					children: [
+						{
+							title: procedure.activity,
+							key: `${procedure.ahj}-${procedure.activity}`,
+							children: [
+								{
+									title: `${procedure.code} - ${procedure.procedure}`,
+									key: `${procedure.ahj}-${procedure.activity}-${procedure.procedure}`,
+									isLeaf: true,
+									children: [
+										{
+											title: procedure.id,
+											key: procedure.id,
+										},
+									],
+								},
+							],
+						},
+					],
+				});
+			} else {
+				let activityIndex = treeData[ahjIndex].children.findIndex(
+					(e: any) => e.title === procedure.activity
+				);
+				if (activityIndex === -1) {
+					treeData[ahjIndex].children.push({
+						title: procedure.activity,
+						key: `${procedure.ahj}-${procedure.activity}`,
+						children: [
+							{
+								title: `${procedure.code} - ${procedure.procedure}`,
+								key: `${procedure.ahj}-${procedure.activity}-${procedure.procedure}`,
+								isLeaf: true,
+								children: [
+									{
+										title: procedure.id,
+										key: procedure.id,
+									},
+								],
+							},
+						],
+					});
+				} else {
+					let procedureIndex = treeData[ahjIndex].children[
+						activityIndex
+					].children.findIndex(
+						(e: any) => e.title === `${procedure.code} - ${procedure.procedure}`
+					);
+					if (procedureIndex === -1) {
+						treeData[ahjIndex].children[activityIndex].children.push({
+							title: `${procedure.code} - ${procedure.procedure}`,
+							key: `${procedure.ahj}-${procedure.activity}-${procedure.procedure}`,
+							isLeaf: true,
+							children: [
+								{
+									title: procedure.id,
+									key: procedure.id,
+								},
+							],
+						});
+					} else {
+						treeData[ahjIndex].children[activityIndex].children[
+							procedureIndex
+						].children.push({
+							title: procedure.id,
+							key: procedure.id,
+						});
+					}
+				}
+			}
+		});
+
+		setTimeout(() => {
+			setProceduresTree(treeData);
+		}, 1000);
+
+		console.log(treeData);
+	}, [assets, selectedAssets]);
 
 	useEffect(() => {
 		if (!recordingBlob) return;
@@ -294,10 +425,6 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		mssgsBottom.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
-	const onSelect: TreeProps["onSelect"] = (selectedKeys, info) => {
-		console.log("selected", selectedKeys, info);
-	};
-
 	const onCheck: TreeProps["onCheck"] = (checkedKeys, info) => {
 		// sel_assets will be all numbers in checkedKeys.
 		let sel_assets = Array.isArray(checkedKeys)
@@ -307,13 +434,23 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setSelectedAssets(sel_assets);
 	};
 
+	const onCheckProcedures: TreeProps["onCheck"] = (checkedKeys, info) => {
+		let sel_procedures = Array.isArray(checkedKeys)
+			? checkedKeys.filter((e) => !isNaN(parseInt(e as string)))
+			: checkedKeys.checked.filter((e) => !isNaN(parseInt(e as string)));
+
+		setProcedureIds(sel_procedures);
+		console.log("checked Procedures : ", sel_procedures);
+	};
+
 	return (
 		<Modal
 			open={visible}
+			width={"80%"}
 			title="Create Work Order"
 			okText="Create"
 			maskClosable={false}
-			style={{ top: "20px" }}
+			style={{ top: "20px", maxHeight: "640px" }}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();
@@ -334,8 +471,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						values["wo_start"] = startDate;
 						values["wo_end"] = endDate;
 						values["status"] = "Pending";
-						values["assets"] = selectedAssets;
-						values["procedures"] = procedures;
+						values["pending_procedures"] = procedureIds;
 
 						onCreate(values).then((res) => {
 							console.log(res);
@@ -366,13 +502,73 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			}}
 			confirmLoading={confirmLoading}
 		>
-			<Form
-				form={form}
-				layout="vertical"
-				name="form_in_modal"
-				initialValues={{ modifier: "public" }}
-			>
-				{/* <Form.Item
+			<Row gutter={24}>
+				<Col span={14}>
+					<div
+						style={{
+							height: "100%",
+							width: "100%",
+							display: "flex",
+							flexDirection: "column",
+							gap: "15px",
+						}}
+					>
+						<div
+							style={{
+								height: "45%",
+								width: "100%",
+								display: "flex",
+								flexDirection: "column",
+							}}
+						>
+							<label>Select Assets: </label>
+							<Card style={{ overflow: "scroll", flexGrow: 1 }}>
+								{assets.length > 0 ? (
+									<Tree
+										checkable
+										onCheck={onCheck}
+										treeData={assets}
+										defaultCheckedKeys={selectedAssets}
+										selectable={false}
+									/>
+								) : (
+									"Loading Assets..."
+								)}
+							</Card>
+						</div>
+						<div
+							style={{
+								height: "55%",
+								width: "100%",
+								display: "flex",
+								flexDirection: "column",
+							}}
+						>
+							<label>Select Procedures: </label>
+							<Card style={{ overflow: "scroll", flexGrow: 1 }}>
+								{proceduresTree.length > 0 ? (
+									<Tree
+										checkable
+										selectable={false}
+										onCheck={onCheckProcedures}
+										treeData={proceduresTree}
+										checkedKeys={procedureIds}
+									/>
+								) : (
+									"Loading Procedures..."
+								)}
+							</Card>
+						</div>
+					</div>
+				</Col>
+				<Col span={10}>
+					<Form
+						form={form}
+						layout="vertical"
+						name="form_in_modal"
+						initialValues={{ modifier: "public" }}
+					>
+						{/* <Form.Item
 					name="name"
 					label="Client Name"
 					rules={[
@@ -384,134 +580,133 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 				>
 					<Input />
 				</Form.Item> */}
-				<label>Select Assets: </label>
-				<Card>
-					{assets.length > 0 ? (
-						<Tree
-							checkable
-							onSelect={onSelect}
-							onCheck={onCheck}
-							treeData={assets}
-						/>
-					) : (
-						"Loading Assets..."
-					)}
-				</Card>
-				<br />
-				<label>Select Dates: </label>
-				<Row>
-					<RangePicker
-						style={{ width: "100%" }}
-						showTime={{ format: "HH:mm" }}
-						format="DD-MM-YYYY HH:mm"
-						onChange={onDateChange}
-					/>
-				</Row>
-				<Checkbox
-					checked={onlyAvailableResources}
-					onChange={(e) => setOnlyAvailableResources(e.target.checked)}
-				>
-					Show only resources available between these dates
-				</Checkbox>
-				<br />
-				<br />
-				<Form.Item
-					name="lead_executor"
-					label="Select Lead Executor"
-					rules={[{ required: true, message: "Please select a lead executor" }]}
-				>
-					<Select
-						showSearch
-						allowClear
-						placeholder="Search to Select"
-						optionFilterProp="children"
-						filterOption={(input, option) =>
-							(option!.children as unknown as string)
-								.toLowerCase()
-								.includes(input)
-						}
-						filterSort={(optionA, optionB) =>
-							(optionA!.children as unknown as string)
-								.toLowerCase()
-								.localeCompare(
-									(optionB!.children as unknown as string).toLowerCase()
-								)
-						}
-					>
-						{leadExecutors?.map(
-							(item: { username: string; name: string }, index: number) => (
-								<Select.Option value={item.username}>{item.name}</Select.Option>
-							)
-						)}
-					</Select>
-				</Form.Item>
-				<Form.Item
-					name="employees"
-					label="Select Employees"
-					rules={[
-						{ required: true, message: "Please select atleast one resource" },
-					]}
-				>
-					<Select
-						showSearch
-						allowClear
-						mode="multiple"
-						placeholder="Search to Select"
-						optionFilterProp="children"
-						filterOption={(input, option) =>
-							(option!.children as unknown as string)
-								.toLowerCase()
-								.includes(input)
-						}
-						filterSort={(optionA, optionB) =>
-							(optionA!.children as unknown as string)
-								.toLowerCase()
-								.localeCompare(
-									(optionB!.children as unknown as string).toLowerCase()
-								)
-						}
-					>
-						{employees?.map(
-							(item: { id: string; full_name: string }, index: number) => (
-								<Select.Option value={item.id}>{item.full_name}</Select.Option>
-							)
-						)}
-					</Select>
-				</Form.Item>
-				<Form.Item
-					name="resources"
-					label="Select Equipments"
-					rules={[
-						{ required: true, message: "Please select atleast one resource" },
-					]}
-				>
-					<Select
-						showSearch
-						allowClear
-						mode="multiple"
-						placeholder="Search to Select"
-						optionFilterProp="children"
-						filterOption={(input, option) =>
-							(option!.children as unknown as string)
-								.toLowerCase()
-								.includes(input)
-						}
-						filterSort={(optionA, optionB) =>
-							(optionA!.children as unknown as string)
-								.toLowerCase()
-								.localeCompare(
-									(optionB!.children as unknown as string).toLowerCase()
-								)
-						}
-					>
-						{equipments?.map(
-							(item: { id: number; name: string }, index: number) => (
-								<Select.Option value={item.id}>{item.name}</Select.Option>
-							)
-						)}
-					</Select>
-				</Form.Item>
-				{/*
+
+						<label>Select Dates: </label>
+						<Row>
+							<RangePicker
+								style={{ width: "100%" }}
+								showTime={{ format: "HH:mm" }}
+								format="DD-MM-YYYY HH:mm"
+								onChange={onDateChange}
+							/>
+						</Row>
+						<Checkbox
+							checked={onlyAvailableResources}
+							onChange={(e) => setOnlyAvailableResources(e.target.checked)}
+						>
+							Show only resources available between these dates
+						</Checkbox>
+						<br />
+						<br />
+						<Form.Item
+							name="lead_executor"
+							label="Select Lead Executor"
+							rules={[
+								{ required: true, message: "Please select a lead executor" },
+							]}
+						>
+							<Select
+								showSearch
+								allowClear
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as string)
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as string)
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as string).toLowerCase()
+										)
+								}
+							>
+								{leadExecutors?.map(
+									(item: { username: string; name: string }, index: number) => (
+										<Select.Option value={item.username}>
+											{item.name}
+										</Select.Option>
+									)
+								)}
+							</Select>
+						</Form.Item>
+						<Form.Item
+							name="employees"
+							label="Select Employees"
+							rules={[
+								{
+									required: true,
+									message: "Please select atleast one resource",
+								},
+							]}
+						>
+							<Select
+								showSearch
+								allowClear
+								mode="multiple"
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as string)
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as string)
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as string).toLowerCase()
+										)
+								}
+							>
+								{employees?.map(
+									(item: { id: string; full_name: string }, index: number) => (
+										<Select.Option value={item.id}>
+											{item.full_name}
+										</Select.Option>
+									)
+								)}
+							</Select>
+						</Form.Item>
+						<Form.Item
+							name="resources"
+							label="Select Equipments"
+							rules={[
+								{
+									required: true,
+									message: "Please select atleast one resource",
+								},
+							]}
+						>
+							<Select
+								showSearch
+								allowClear
+								mode="multiple"
+								placeholder="Search to Select"
+								optionFilterProp="children"
+								filterOption={(input, option) =>
+									(option!.children as unknown as string)
+										.toLowerCase()
+										.includes(input)
+								}
+								filterSort={(optionA, optionB) =>
+									(optionA!.children as unknown as string)
+										.toLowerCase()
+										.localeCompare(
+											(optionB!.children as unknown as string).toLowerCase()
+										)
+								}
+							>
+								{equipments?.map(
+									(item: { id: number; name: string }, index: number) => (
+										<Select.Option value={item.id}>{item.name}</Select.Option>
+									)
+								)}
+							</Select>
+						</Form.Item>
+						{/*
 				<Form.Item name="remarks" label="Remarks">
 					<TextArea rows={4} />
 				</Form.Item>
@@ -572,77 +767,79 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						</Button>
 					)}
 				</Row> */}
-				<label>Comments:</label>
-				<List
-					size="small"
-					split={false}
-					bordered
-					locale={{
-						emptyText: "No Messages",
-					}}
-					dataSource={remarks}
-					renderItem={(item) =>
-						item.createdby === user.username ? (
-							<List.Item style={{ justifyContent: "end" }}>
-								<div className="bubble-self" style={{ float: "right" }}>
-									<label style={{ fontWeight: "bold" }}>You</label>
-									<br />
-									{item.message}
-								</div>
-							</List.Item>
-						) : (
-							<List.Item>
-								<div className="bubble" style={{ float: "right" }}>
-									<label style={{ fontWeight: "bold" }}>{item.name}</label>
-									<br />
-									{item.message}
-								</div>
-							</List.Item>
-						)
-					}
-					style={{ height: "200px", overflow: "scroll" }}
-					footer={<div ref={mssgsBottom} />}
-				/>
-				<Space.Compact style={{ width: "100%", marginTop: "4px" }}>
-					{isRecording ? (
-						<Input
-							value={`Recording... ${new Date(recordingTime * 1000)
-								.toISOString()
-								.substring(14, 19)}`}
-							disabled={true}
-							className="selected-building"
-						/>
-					) : (
-						<Input
-							placeholder="Type here or Record to add a comment"
-							value={newMessage}
-							onChange={(e) => setNewMessage(e.currentTarget.value)}
-							onPressEnter={() => submitChat()}
-						/>
-					)}
-					<Button onClick={() => submitChat()}>Send</Button>
-					{isRecording ? (
-						<Button
-							onClick={() =>
-								setCancelRecording((e) => {
-									stopRecording();
-									return true;
-								})
+						<label>Comments:</label>
+						<List
+							size="small"
+							split={false}
+							bordered
+							locale={{
+								emptyText: "No Messages",
+							}}
+							dataSource={remarks}
+							renderItem={(item) =>
+								item.createdby === user.username ? (
+									<List.Item style={{ justifyContent: "end" }}>
+										<div className="bubble-self" style={{ float: "right" }}>
+											<label style={{ fontWeight: "bold" }}>You</label>
+											<br />
+											{item.message}
+										</div>
+									</List.Item>
+								) : (
+									<List.Item>
+										<div className="bubble" style={{ float: "right" }}>
+											<label style={{ fontWeight: "bold" }}>{item.name}</label>
+											<br />
+											{item.message}
+										</div>
+									</List.Item>
+								)
 							}
-							icon={<DeleteOutlined />}
+							style={{ height: "200px", overflow: "scroll" }}
+							footer={<div ref={mssgsBottom} />}
 						/>
-					) : (
-						<Button onClick={startRecording} icon={<AudioFilled />} />
-					)}
-				</Space.Compact>
+						<Space.Compact style={{ width: "100%", marginTop: "4px" }}>
+							{isRecording ? (
+								<Input
+									value={`Recording... ${new Date(recordingTime * 1000)
+										.toISOString()
+										.substring(14, 19)}`}
+									disabled={true}
+									className="selected-building"
+								/>
+							) : (
+								<Input
+									placeholder="Type here or Record to add a comment"
+									value={newMessage}
+									onChange={(e) => setNewMessage(e.currentTarget.value)}
+									onPressEnter={() => submitChat()}
+								/>
+							)}
+							<Button onClick={() => submitChat()}>Send</Button>
+							{isRecording ? (
+								<Button
+									onClick={() =>
+										setCancelRecording((e) => {
+											stopRecording();
+											return true;
+										})
+									}
+									icon={<DeleteOutlined />}
+								/>
+							) : (
+								<Button onClick={startRecording} icon={<AudioFilled />} />
+							)}
+						</Space.Compact>
 
-				{/* <AudioRecorder
+						{/* <AudioRecorder
 					onRecordingComplete={(e) => saveVoiceNote(e)}
 					onNotAllowedOrFound={(err) => console.table(err)}
 					downloadOnSavePress={false}
 					showVisualizer={true}
 				/> */}
-			</Form>
+					</Form>
+				</Col>
+			</Row>
 		</Modal>
 	);
 };
@@ -658,19 +855,6 @@ const CreateNewWorkOrder: FC<props> = ({
 	const onCreate = (values: any) => {
 		values["notification_id"] = notification_id;
 
-		let procedures = values["procedures"];
-		delete values["procedures"];
-
-		let selectedAssets = values["assets"];
-		delete values["assets"];
-
-		// p_procedures should be list of id from procedures where asset_id is in selectedAssets
-		let p_procedures = procedures
-			.filter((p: any) => selectedAssets.includes(p.asset_id))
-			.map((p: any) => p.id);
-		values["pending_procedures"] = p_procedures;
-
-		// values["pending_procedures"] = pending_procedures;
 		return new Promise<any>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
