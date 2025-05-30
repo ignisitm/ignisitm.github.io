@@ -137,7 +137,9 @@ const Employees: React.FC<any> = ({ systems }) => {
 				completeLoading();
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
-					setPagination({ ...curr_pagination, current: 1, total });
+					setPagination({ ...curr_pagination, total });
+				} else {
+					setPagination({ ...curr_pagination, total: 0 });
 				}
 			},
 			handleError: () => {
