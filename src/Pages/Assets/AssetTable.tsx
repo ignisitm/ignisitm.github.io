@@ -74,6 +74,10 @@ const AssetTable = () => {
 			dataIndex: "building_name",
 		},
 		{
+			title: "Location",
+			dataIndex: "location_name",
+		},
+		{
 			title: "General Info",
 			dataIndex: "general_info",
 			render: (info: any, row: any) => (
@@ -170,7 +174,7 @@ const AssetTable = () => {
 				setLoading(false);
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
-					setPagination({ ...curr_pagination, total });
+					setPagination({ ...curr_pagination, current: 1, total });
 				}
 			},
 			handleError: () => {
@@ -251,56 +255,50 @@ const AssetTable = () => {
 	};
 
 	const onCreate = (values: any) => {
-		return new Promise<AxiosResponse | AxiosError>(
-			async (resolve, reject) => {
-				setConfirmLoading(true);
-				console.log("Received values of form: ", values);
-				let responseData;
+		return new Promise<AxiosResponse | AxiosError>(async (resolve, reject) => {
+			setConfirmLoading(true);
+			console.log("Received values of form: ", values);
+			let responseData;
+			responseData = {
+				data: { general_info: { ...values } },
+				id: selectedAsset,
+			};
+			if (newAssetImage === null) {
 				responseData = {
-					data: { general_info: { ...values } },
-					id: selectedAsset,
+					...responseData,
+					data: { ...responseData.data, image: null },
 				};
-				if (newAssetImage === null) {
-					responseData = {
-						...responseData,
-						data: { ...responseData.data, image: null },
-					};
-					setAssetImage(null);
-				} else if (assetImage !== newAssetImage) {
-					let filepath = await uploadfiles(
-						newAssetImage,
-						selectedAsset
-					);
-					console.log(filepath);
-					responseData = {
-						...responseData,
-						data: { ...responseData.data, image: filepath },
-					};
-				}
-				console.log(responseData);
-
-				apiCall({
-					method: "PUT",
-					url: "/clientassets",
-					data: responseData,
-					handleResponse: (res) => {
-						resolve(res);
-						setConfirmLoading(false);
-						fetchData();
-						message.success(res.data.message);
-					},
-					handleError: (err) => {
-						reject(err);
-						setConfirmLoading(false);
-					},
-				});
+				setAssetImage(null);
+			} else if (assetImage !== newAssetImage) {
+				let filepath = await uploadfiles(newAssetImage, selectedAsset);
+				console.log(filepath);
+				responseData = {
+					...responseData,
+					data: { ...responseData.data, image: filepath },
+				};
 			}
-		);
+			console.log(responseData);
+
+			apiCall({
+				method: "PUT",
+				url: "/clientassets",
+				data: responseData,
+				handleResponse: (res) => {
+					resolve(res);
+					setConfirmLoading(false);
+					fetchData();
+					message.success(res.data.message);
+				},
+				handleError: (err) => {
+					reject(err);
+					setConfirmLoading(false);
+				},
+			});
+		});
 	};
 
 	const beforeUpload = (file: RcFile) => {
-		const isJpgOrPng =
-			file.type === "image/jpeg" || file.type === "image/png";
+		const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
 		if (!isJpgOrPng) {
 			message.error("You can only upload JPEG/PNG file!");
 		}
@@ -327,9 +325,7 @@ const AssetTable = () => {
 			onFinish={(values) => {
 				onCreate(values).then(() => {
 					closeEditMode();
-					setAssetImage(
-						URL.createObjectURL(newAssetImage.originFileObj)
-					);
+					setAssetImage(URL.createObjectURL(newAssetImage.originFileObj));
 					setNewAssetImage((file: any) =>
 						URL.createObjectURL(file.originFileObj)
 					);
@@ -349,9 +345,7 @@ const AssetTable = () => {
 						editMode
 							? newAssetImage === assetImage
 								? assetImage
-								: URL.createObjectURL(
-										newAssetImage.originFileObj
-								  )
+								: URL.createObjectURL(newAssetImage.originFileObj)
 							: assetImage
 					}
 				/>
@@ -416,15 +410,9 @@ const AssetTable = () => {
 							]}
 						>
 							{field.type === "number" ? (
-								<Input
-									className="selected-building"
-									disabled={!editMode}
-								/>
+								<Input className="selected-building" disabled={!editMode} />
 							) : (
-								<Input
-									className="selected-building"
-									disabled={!editMode}
-								/>
+								<Input className="selected-building" disabled={!editMode} />
 							)}
 						</Form.Item>
 				  ))
@@ -493,6 +481,12 @@ const AssetTable = () => {
 					type: "search",
 					group: "system",
 				},
+				{
+					key: "##name",
+					label: "Location",
+					type: "search",
+					group: "location",
+				},
 			]}
 		>
 			<Row style={{ marginBottom: 10 }}>
@@ -505,10 +499,7 @@ const AssetTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -535,15 +526,13 @@ const AssetTable = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) *
-									(pagination.pageSize || 10) +
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>

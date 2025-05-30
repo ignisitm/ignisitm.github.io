@@ -40,9 +40,7 @@ const User: React.FC = () => {
 			title: "Status",
 			dataIndex: "status",
 			render: (status: string) => (
-				<Tag color={status === "ACTIVE" ? "green" : "red"}>
-					{status}
-				</Tag>
+				<Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
 			),
 		},
 		{
@@ -66,16 +64,12 @@ const User: React.FC = () => {
 						} this user?`}
 						onConfirm={() => deleteRow(id, row.status)}
 						// onCancel={cancel}
-						okText={
-							row.status === "ACTIVE" ? "deactivate" : "activate"
-						}
+						okText={row.status === "ACTIVE" ? "deactivate" : "activate"}
 						cancelText="Cancel"
 						placement="left"
 					>
 						<Button danger={row.status === "ACTIVE"} type="link">
-							{row.status === "ACTIVE"
-								? "Deactivate"
-								: "Activate"}
+							{row.status === "ACTIVE" ? "Deactivate" : "Activate"}
 						</Button>
 					</Popconfirm>
 				</>
@@ -141,7 +135,7 @@ const User: React.FC = () => {
 				setLoading(false);
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
-					setPagination({ ...curr_pagination, total });
+					setPagination({ ...curr_pagination, current: 1, total });
 				}
 			},
 			handleError: () => {
@@ -206,10 +200,7 @@ const User: React.FC = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -241,15 +232,13 @@ const User: React.FC = () => {
 						bordered
 					/>
 					<div className="table-result-label">{`Showing ${
-						(pagination.current - 1) * (pagination.pageSize || 10) +
-						1
+						(pagination.current - 1) * (pagination.pageSize || 10) + 1
 					} - ${
 						pagination.total <
 						(pagination.current - 1) * (pagination.pageSize || 10) +
 							(pagination.pageSize || 10)
 							? pagination.total
-							: (pagination.current - 1) *
-									(pagination.pageSize || 10) +
+							: (pagination.current - 1) * (pagination.pageSize || 10) +
 							  (pagination.pageSize || 10)
 					} out of ${pagination.total} records`}</div>
 				</Col>

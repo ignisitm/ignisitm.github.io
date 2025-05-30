@@ -1161,7 +1161,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			<Modal
 				zIndex={1001}
 				open={editLocations}
-				title="Edit Locations"
+				title={"Locations (" + locations.length + ")"}
 				onCancel={() => setEditLocations(false)}
 				footer={
 					<Space.Compact style={{ width: "100%" }}>
@@ -1176,33 +1176,35 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					</Space.Compact>
 				}
 			>
-				<Table
-					dataSource={locations}
-					loading={loadingLocations}
-					pagination={false}
-					columns={[
-						{
-							title: "Location",
-							dataIndex: "name",
-							key: "name",
-						},
-						{
-							title: "Action",
-							key: "action",
-							width: "5%",
-							render: (_, record) => (
-								<Popconfirm
-									title="Are you sure you want to delete?"
-									onConfirm={() => {
-										deleteLocation(record.id);
-									}}
-								>
-									<Button type="text" danger icon={<DeleteOutlined />} />
-								</Popconfirm>
-							),
-						},
-					]}
-				/>
+				<div style={{ top: "20px", height: "60vh", overflowY: "scroll" }}>
+					<Table
+						dataSource={locations}
+						loading={loadingLocations}
+						pagination={false}
+						columns={[
+							{
+								title: "Location",
+								dataIndex: "name",
+								key: "name",
+							},
+							{
+								title: "Action",
+								key: "action",
+								width: "5%",
+								render: (_, record) => (
+									<Popconfirm
+										title="Are you sure you want to delete?"
+										onConfirm={() => {
+											deleteLocation(record.id);
+										}}
+									>
+										<Button type="text" danger icon={<DeleteOutlined />} />
+									</Popconfirm>
+								),
+							},
+						]}
+					/>
+				</div>
 			</Modal>
 			<Modal
 				// title="Select Common Fields"

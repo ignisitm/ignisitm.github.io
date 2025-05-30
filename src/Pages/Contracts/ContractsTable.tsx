@@ -139,15 +139,15 @@ const ContractsTable = () => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "POST",
-			url: `/clientfilters/contracts?page=${
-				curr_pagination.current
-			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
+			url: `/clientfilters/contracts?page=${curr_pagination.current}&limit=${
+				curr_pagination.pageSize
+			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
-					setPagination({ ...curr_pagination, total });
+					setPagination({ ...curr_pagination, current: 1, total });
 				}
 			},
 			handleError: () => {
@@ -222,10 +222,7 @@ const ContractsTable = () => {
 						value={searchText}
 					/>
 					{showClose && (
-						<Button
-							onClick={() => search(true)}
-							icon={<CloseOutlined />}
-						/>
+						<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 					)}
 				</Col>
 				<Col span={6} className="table-button">
@@ -255,8 +252,7 @@ const ContractsTable = () => {
 						(pagination.current - 1) * pagination.pageSize + 1
 					} - ${
 						pagination.total <
-						(pagination.current - 1) * pagination.pageSize +
-							pagination.pageSize
+						(pagination.current - 1) * pagination.pageSize + pagination.pageSize
 							? pagination.total
 							: (pagination.current - 1) * pagination.pageSize +
 							  pagination.pageSize

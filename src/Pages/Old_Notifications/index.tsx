@@ -185,7 +185,7 @@ const Notifications = () => {
 				// setLoading(false);
 				// if (res.data.message.length > 0) {
 				// 	let total = res.data.message[0].full_count;
-				// 	setPagination({ ...curr_pagination, total });
+				// 	setPagination({ ...curr_pagination, current: 1, total });
 				// }
 			},
 			handleError: () => {

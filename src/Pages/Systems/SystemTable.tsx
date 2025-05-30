@@ -138,13 +138,7 @@ const SystemTable = () => {
 				if (text === "EXPIRED")
 					return (
 						<>
-							<Tag
-								color={
-									statusColors[
-										text as keyof typeof statusColors
-									]
-								}
-							>
+							<Tag color={statusColors[text as keyof typeof statusColors]}>
 								{text}
 							</Tag>{" "}
 							<Button
@@ -161,20 +155,14 @@ const SystemTable = () => {
 					);
 				else if (text)
 					return (
-						<Tag
-							color={
-								statusColors[text as keyof typeof statusColors]
-							}
-						>
+						<Tag color={statusColors[text as keyof typeof statusColors]}>
 							{text}
 						</Tag>
 					);
 				else
 					return (
 						<>
-							<Tag color={statusColors["NO CONTRACT"]}>
-								{"NO CONTRACT"}
-							</Tag>
+							<Tag color={statusColors["NO CONTRACT"]}>{"NO CONTRACT"}</Tag>
 							<Button
 								onClick={() => {
 									setOpenContract(true);
@@ -335,15 +323,15 @@ const SystemTable = () => {
 		setShowClose(search ? true : false);
 		apiCall({
 			method: "POST",
-			url: `/clientfilters/systems?page=${
-				curr_pagination.current
-			}&limit=${curr_pagination.pageSize}&searchText=${search || ""}`,
+			url: `/clientfilters/systems?page=${curr_pagination.current}&limit=${
+				curr_pagination.pageSize
+			}&searchText=${search || ""}`,
 			handleResponse: (res) => {
 				setData(res.data.message);
 				setLoading(false);
 				if (res.data.message.length > 0) {
 					let total = res.data.message[0].full_count;
-					setPagination({ ...curr_pagination, total });
+					setPagination({ ...curr_pagination, current: 1, total });
 				}
 			},
 			handleError: () => {
@@ -454,15 +442,9 @@ const SystemTable = () => {
 							]}
 						>
 							{field.type === "number" ? (
-								<Input
-									className="selected-building"
-									disabled={!editMode}
-								/>
+								<Input className="selected-building" disabled={!editMode} />
 							) : (
-								<Input
-									className="selected-building"
-									disabled={!editMode}
-								/>
+								<Input className="selected-building" disabled={!editMode} />
 							)}
 						</Form.Item>
 				  ))
@@ -561,10 +543,7 @@ const SystemTable = () => {
 								value={searchText}
 							/>
 							{showClose && (
-								<Button
-									onClick={() => search(true)}
-									icon={<CloseOutlined />}
-								/>
+								<Button onClick={() => search(true)} icon={<CloseOutlined />} />
 							)}
 						</Col>
 						<Col span={6} className="table-button">
@@ -591,17 +570,13 @@ const SystemTable = () => {
 								bordered
 							/>
 							<div className="table-result-label">{`Showing ${
-								(pagination.current - 1) *
-									(pagination.pageSize || 10) +
-								1
+								(pagination.current - 1) * (pagination.pageSize || 10) + 1
 							} - ${
 								pagination.total <
-								(pagination.current - 1) *
-									(pagination.pageSize || 10) +
+								(pagination.current - 1) * (pagination.pageSize || 10) +
 									(pagination.pageSize || 10)
 									? pagination.total
-									: (pagination.current - 1) *
-											(pagination.pageSize || 10) +
+									: (pagination.current - 1) * (pagination.pageSize || 10) +
 									  (pagination.pageSize || 10)
 							} out of ${pagination.total} records`}</div>
 						</Col>
@@ -617,7 +592,8 @@ const SystemTable = () => {
 							onCancel();
 						}}
 						onOk={() => {
-							form.validateFields()
+							form
+								.validateFields()
 								.then((values) => {
 									onCreate(values).then(() => {
 										form.resetFields();
@@ -629,11 +605,7 @@ const SystemTable = () => {
 						}}
 						confirmLoading={confirmLoading}
 					>
-						<Form
-							form={form}
-							layout="vertical"
-							name="form_in_modal"
-						>
+						<Form form={form} layout="vertical" name="form_in_modal">
 							<Form.Item
 								name="contract_id"
 								label="Select Contract"
@@ -657,18 +629,12 @@ const SystemTable = () => {
 										(optionA!.children as unknown as string)
 											.toLowerCase()
 											.localeCompare(
-												(
-													optionB!
-														.children as unknown as string
-												).toLowerCase()
+												(optionB!.children as unknown as string).toLowerCase()
 											)
 									}
 								>
 									{contextVariables.contracts?.map(
-										(
-											item: { id: object; title: string },
-											index: number
-										) => (
+										(item: { id: object; title: string }, index: number) => (
 											<Select.Option
 												value={item.id}
 											>{`${item.id} - ${item.title}`}</Select.Option>
@@ -725,10 +691,7 @@ const SystemTable = () => {
 								<LoadingOutlined /> Loading
 							</div>
 						) : (
-							<Table
-								columns={procedureColumns}
-								dataSource={proceduresData}
-							/>
+							<Table columns={procedureColumns} dataSource={proceduresData} />
 						)}
 					</Drawer>
 					<Drawer
@@ -744,10 +707,7 @@ const SystemTable = () => {
 								<LoadingOutlined /> Loading
 							</div>
 						) : (
-							<Table
-								columns={defectsColumns}
-								dataSource={defectsData}
-							/>
+							<Table columns={defectsColumns} dataSource={defectsData} />
 						)}
 					</Drawer>
 				</Col>

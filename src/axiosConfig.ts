@@ -16,8 +16,8 @@ type params = {
 	errorMessage?: boolean;
 };
 
-const baseurl = "https://k1fn48lym8.execute-api.us-east-1.amazonaws.com/Prod/"; //DEV
-// const baseurl = "https://wprt15irj7.execute-api.us-east-1.amazonaws.com/Prod/"; //PROD
+// const baseurl = "https://k1fn48lym8.execute-api.us-east-1.amazonaws.com/Prod/"; //DEV
+const baseurl = "https://wprt15irj7.execute-api.us-east-1.amazonaws.com/Prod/"; //PROD
 
 async function apiCall({
 	method,
