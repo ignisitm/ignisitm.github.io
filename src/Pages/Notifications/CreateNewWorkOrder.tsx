@@ -450,7 +450,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			title="Create Work Order"
 			okText="Create"
 			maskClosable={false}
-			style={{ top: "20px", maxHeight: "640px" }}
+			style={{ top: "20px", maxHeight: "620px" }}
 			cancelText="Cancel"
 			onCancel={() => {
 				form.resetFields();
@@ -507,6 +507,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					<div
 						style={{
 							height: "100%",
+							maxHeight: "620px",
 							width: "100%",
 							display: "flex",
 							flexDirection: "column",
