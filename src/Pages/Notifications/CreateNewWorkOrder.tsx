@@ -471,7 +471,14 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						values["wo_start"] = startDate;
 						values["wo_end"] = endDate;
 						values["status"] = "Pending";
-						values["pending_procedures"] = procedureIds;
+
+						const uniqueSystemProcedureIds = [
+							...Array.from(
+								new Set(procedures.map((p: any) => p.system_procedure_id))
+							),
+						];
+						values["pending_procedures"] = uniqueSystemProcedureIds;
+						values["asset_procedure_ids"] = procedureIds;
 
 						onCreate(values).then((res) => {
 							console.log(res);
@@ -855,14 +862,15 @@ const CreateNewWorkOrder: FC<props> = ({
 
 	const onCreate = (values: any) => {
 		values["notification_id"] = notification_id;
-
+		const asset_procedures = values["asset_procedure_ids"];
+		delete values["asset_procedure_ids"];
 		return new Promise<any>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
 			apiCall({
 				method: "POST",
 				url: "/clientworkorders",
-				data: values,
+				data: { wo: values, asset_procedures },
 				handleResponse: (res) => {
 					let resdata: any = res.data;
 					resolve(resdata);
