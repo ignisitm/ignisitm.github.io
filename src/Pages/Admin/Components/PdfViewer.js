@@ -395,7 +395,7 @@ const PdfViewer = () => {
 			setLoadingProcedures(true);
 			apiCall({
 				method: "GET",
-				url: `/dropdown/system_procedures?system_id=${systemId}`,
+				url: `/dropdown/system_procedures?system_id=${systemId}&ahj=${ahj}`,
 				handleResponse: (res) => {
 					setLoadingProcedures(false);
 					setProcedures(res.data.message);
