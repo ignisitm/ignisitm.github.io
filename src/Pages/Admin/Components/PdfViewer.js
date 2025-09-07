@@ -28,6 +28,53 @@ import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 const PdfViewer = () => {
 	pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsLib.PDFWorker;
 
+	const buildingFields = [
+		{ label: "ID", value: "id" },
+		{ label: "Area", value: "building_area" },
+		{
+			label: "Completion Certificate Number",
+			value: "building_completion_certificate_number",
+		},
+		{ label: "Height", value: "building_height" },
+		{ label: "Name", value: "building_name" },
+		{ label: "Building Number", value: "building_no" },
+		{ label: "Contact Number", value: "contact_number" },
+		{ label: "Hazard Classification", value: "hazard_classification" },
+		{ label: "Jurisdiction", value: "jurisdiction" },
+		{ label: "Metrics", value: "metrics" },
+		{ label: "Occupancy Classification", value: "occupancy_classification" },
+		{ label: "Street Number", value: "street_no" },
+		{ label: "Type of Construction", value: "type_of_construction" },
+		{ label: "Unit Number", value: "unit_no" },
+		{ label: "Zone Number", value: "zone_no" },
+		{ label: "FM Company", value: "fm_company" },
+		{ label: "Attachments", value: "attachments" },
+		{ label: "Coordinates", value: "coordinates" },
+	];
+
+	const userFields = [
+		{ label: "Username", value: "username" },
+		{ label: "Password", value: "password" },
+		{ label: "First Login", value: "first_login" },
+		{ label: "Role", value: "role" },
+		{ label: "Status", value: "status" },
+		{ label: "Full Name", value: "full_name" },
+		{ label: "Designation", value: "designation" },
+		{ label: "Email", value: "email" },
+		{ label: "Phone", value: "phone" },
+	];
+
+	const contractFields = [
+		{ label: "ID", value: "id" },
+		{ label: "Type", value: "type" },
+		{ label: "Total Contract Value", value: "total_contract_value" },
+		{ label: "Title", value: "title" },
+		{ label: "From Date", value: "from_date" },
+		{ label: "To Date", value: "to_date" },
+		{ label: "Status", value: "status" },
+		{ label: "Contract Attachment", value: "contract_attachment" },
+	];
+
 	const { state } = useLocation();
 	const navigate = useNavigate();
 	const { ahj, heading, file, editMode, systemId } = state;
@@ -43,6 +90,7 @@ const PdfViewer = () => {
 	const [saving, setSaving] = useState(false);
 	const [assignMode, setAssignMode] = useState(null);
 	const [systems, setSystems] = useState(null);
+	const [devicetypes, setDeviceTypes] = useState(null);
 	const [pageSystems, setPageSystems] = useState({});
 	const [loadingPdf, setLoadingPdf] = useState(true);
 	const [fileURL, setFileURL] = useState(null);
@@ -76,6 +124,16 @@ const PdfViewer = () => {
 			url: "/dropdown/systemtypes",
 			handleResponse: (res) => {
 				setSystems(res.data.message);
+			},
+		});
+	};
+
+	const getDevices = () => {
+		apiCall({
+			method: "GET",
+			url: `/dropdown/devicetypes?system=${systemId}`,
+			handleResponse: (res) => {
+				setDeviceTypes(res.data.message);
 			},
 		});
 	};
@@ -141,46 +199,74 @@ const PdfViewer = () => {
 
 	const loadDocuments = (url) => {
 		console.log("Loading From DOCS");
-		pdfjsLib
-			.getDocument(url)
-			.promise.then((doc) => {
-				setPdfRef(doc);
-				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
-				return Promise.all(
-					pages.map((num) => {
-						return doc
-							.getPage(num)
-							.then(makeThumb)
-							.then((canvas) => {
-								return { page: num, canvas };
-							});
-					})
-				).then((res) => {
-					setThumbnails(res);
-				});
-			})
-			.catch(console.error);
 
 		pdfjsLib
 			.getDocument(url)
-			.promise.then((doc) => {
+			.promise.then(async (doc) => {
 				setPdfRef(doc);
-				var pages = [];
-				while (pages.length < doc.numPages) pages.push(pages.length + 1);
-				return Promise.all(
-					pages.map((num) => {
-						return doc.getPage(num).then((page) => {
-							return { page: num, canvas: page };
-						});
+
+				// Create array of page numbers
+				const pagesArr = Array.from({ length: doc.numPages }, (_, i) => i + 1);
+
+				// Generate thumbnails
+				const thumbs = await Promise.all(
+					pagesArr.map(async (num) => {
+						const page = await doc.getPage(num);
+						const thumb = makeThumb(page);
+						return { page: num, canvas: thumb };
 					})
-				).then((res) => {
-					setPages(res);
-					completeLoading();
-					setLoadingPdf(false);
-				});
+				);
+				setThumbnails(thumbs);
+
+				// Generate page objects (with annotations)
+				const pageObjs = await Promise.all(
+					pagesArr.map(async (num) => {
+						console.log("Getting page: ", num);
+						const page = await doc.getPage(num);
+
+						// 🔑 get annotations (form fields)
+						const annotations = await page.getAnnotations();
+
+						console.log("EditMode: ", editMode);
+						if (!editMode) {
+							console.log("Adding new fields in EditMode");
+							// Add new points to assignedFields from annotations
+							const divW = page.view[2];
+							const divH = page.view[3];
+							const newFields = annotations
+								.filter((ann) => ann.rect)
+								.map((ann) => {
+									const startX = ann.rect[0];
+									const startY = ann.rect[1];
+									const rectW = ann.rect[2] - ann.rect[0];
+									const rectH = ann.rect[3] - ann.rect[1];
+									return {
+										startX: startX / divW,
+										startY: 1 - (startY + rectH) / divH, // invert Y axis
+										rectW: rectW / divW,
+										rectH: rectH / divH,
+										fillable: true,
+										fillableField: ann.fieldName || null,
+									};
+								});
+							setAssignedFields((prev) => ({
+								...prev,
+								[num]: newFields,
+							}));
+						}
+
+						return { page: num, canvas: page, annotations };
+					})
+				);
+
+				console.log("pageObjs: ", pageObjs);
+				setPages(pageObjs);
+				completeLoading();
+				setLoadingPdf(false);
 			})
-			.catch(console.error);
+			.catch((error) => {
+				console.error("Error loading PDF document:", error);
+			});
 	};
 
 	const loadFromURL = () => {
@@ -204,7 +290,12 @@ const PdfViewer = () => {
 	};
 
 	useEffect(() => {
+		console.log(assignedFields);
+	}, [assignedFields]);
+
+	useEffect(() => {
 		getSystems();
+		getDevices();
 		console.log(file);
 		console.log(editMode);
 		let url;
@@ -388,8 +479,47 @@ const PdfViewer = () => {
 				: null
 		);
 
+		const [buildingField, setBuildingField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "building"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
+		);
+
+		const [userField, setUserField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "user"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
+		);
+
+		const [contractField, setContractField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "contract"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
+		);
+
+		const [DeviceTypeField, setDeviceTypeField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "device"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.device
+				: null
+		);
+
 		const [loadingProcedures, setLoadingProcedures] = useState(false);
 		const [systemFieldsLoading, setSystemFieldsLoading] = useState(false);
+
+		const [loadingDeviceFields, setLoadingDeviceFields] = useState(false);
+		const [deviceFields, setDeviceFields] = useState(
+			useState(
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+					assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "device"
+					? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+					: null
+			)
+		);
+		const [deviceField, setDeviceField] = useState(null);
 
 		const getProcedures = () => {
 			setLoadingProcedures(true);
@@ -428,18 +558,45 @@ const PdfViewer = () => {
 							? procedure
 							: type === "system_values"
 							? systemField
+							: type === "building"
+							? buildingField
+							: type === "user"
+							? userField
+							: type === "contract"
+							? contractField
+							: type === "device"
+							? deviceField
 							: null,
 					type,
+					device: type === "device" ? DeviceTypeField : null,
 				};
 				return { ...prev, [selectedPage]: new_arr };
 			});
 			setAssignMode(null);
 		};
 
+		const getDeviceFields = (id) => {
+			setLoadingDeviceFields(true);
+			apiCall({
+				method: "GET",
+				url: `/dropdown/devicefields?id=${id}`,
+				handleResponse: (res) => {
+					setLoadingDeviceFields(false);
+					setDeviceFields(res.data.message?.general_fields);
+				},
+				handleError: (err) => {
+					setLoadingDeviceFields(false);
+					console.error(err);
+				},
+			});
+		};
+
 		useEffect(() => {
 			if (type === "procedures" && systemId) getProcedures();
 			else if (type === "system_values" && systemId) getSystemFields();
-		}, [systemId, type]);
+			else if (type === "device" && DeviceTypeField)
+				getDeviceFields(DeviceTypeField);
+		}, [systemId, type, DeviceTypeField]);
 
 		return (
 			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
@@ -499,12 +656,76 @@ const PdfViewer = () => {
 								<Select.Option value="procedures">
 									Procedure Results
 								</Select.Option>
+								<Select.Option value="device">Device Values</Select.Option>
 								<Select.Option value="system_values">
 									System Values
 								</Select.Option>
+								<Select.Option value="contract">Contract Values</Select.Option>
+								<Select.Option value="building">Building Values</Select.Option>
+								<Select.Option value="user">User Values</Select.Option>
 							</Select>
 						</div>
-						{type === "procedures" ? (
+						{type === "device" ? (
+							<>
+								<div>
+									<label style={{ margin: "4px" }}>Select Device Type</label>
+									<Select
+										showSearch
+										value={DeviceTypeField}
+										onChange={(e) => setDeviceTypeField(e)}
+										placeholder="Select Device Type"
+										style={{ width: "100%" }}
+										filterOption={(input, option) =>
+											option.children.toLowerCase().includes(input)
+										}
+										filterSort={(optionA, optionB) =>
+											optionA.children
+												.toLowerCase()
+												.localeCompare(optionB.children.toLowerCase())
+										}
+									>
+										{devicetypes?.map((dev, index) => (
+											<Select.Option key={index} value={dev.id}>
+												{dev.name}
+											</Select.Option>
+										))}
+									</Select>
+								</div>
+								{DeviceTypeField &&
+									(loadingDeviceFields ? (
+										<span>
+											<LoadingOutlined /> Loading Device Fields
+										</span>
+									) : (
+										<div>
+											<label style={{ margin: "4px" }}>
+												Select Device Field
+											</label>
+											<Select
+												showSearch
+												value={deviceField}
+												onChange={(e) => setDeviceField(e)}
+												placeholder="Select Device Field"
+												style={{ width: "100%" }}
+												filterOption={(input, option) =>
+													option.children.toLowerCase().includes(input)
+												}
+												filterSort={(optionA, optionB) =>
+													optionA.children
+														.toLowerCase()
+														.localeCompare(optionB.children.toLowerCase())
+												}
+											>
+												{deviceFields?.map((dev, index) => (
+													<Select.Option key={index} value={dev.name}>
+														{dev.name}
+													</Select.Option>
+												))}
+											</Select>
+										</div>
+									))}
+							</>
+						) : type === "procedures" ? (
 							loadingProcedures ? (
 								<span>
 									<LoadingOutlined /> Loading Procedures
@@ -566,12 +787,92 @@ const PdfViewer = () => {
 									</Select>
 								</div>
 							)
+						) : type === "building" ? (
+							<div>
+								<label style={{ margin: "4px" }}>Select a Building Field</label>
+								<Select
+									showSearch
+									value={buildingField}
+									onChange={(e) => setBuildingField(e)}
+									placeholder="Select Building Field"
+									style={{ width: "100%" }}
+									filterOption={(input, option) =>
+										option.children.toLowerCase().includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										optionA.children
+											.toLowerCase()
+											.localeCompare(optionB.children.toLowerCase())
+									}
+								>
+									{buildingFields.map((blg, index) => (
+										<Select.Option key={index} value={blg.value}>
+											{blg.label}
+										</Select.Option>
+									))}
+								</Select>
+							</div>
+						) : type === "user" ? (
+							<div>
+								<label style={{ margin: "4px" }}>Select a User Field</label>
+								<Select
+									showSearch
+									value={userField}
+									onChange={(e) => setUserField(e)}
+									placeholder="Select User Field"
+									style={{ width: "100%" }}
+									filterOption={(input, option) =>
+										option.children.toLowerCase().includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										optionA.children
+											.toLowerCase()
+											.localeCompare(optionB.children.toLowerCase())
+									}
+								>
+									{userFields?.map((user, index) => (
+										<Select.Option key={index} value={user.value}>
+											{user.label}
+										</Select.Option>
+									))}
+								</Select>
+							</div>
+						) : type === "contract" ? (
+							<div>
+								<label style={{ margin: "4px" }}>Select a Contract Field</label>
+								<Select
+									showSearch
+									value={contractField}
+									onChange={(e) => setContractField(e)}
+									placeholder="Select Contract Field"
+									style={{ width: "100%" }}
+									filterOption={(input, option) =>
+										option.children.toLowerCase().includes(input)
+									}
+									filterSort={(optionA, optionB) =>
+										optionA.children
+											.toLowerCase()
+											.localeCompare(optionB.children.toLowerCase())
+									}
+								>
+									{contractFields.map((blg, index) => (
+										<Select.Option key={index} value={blg.value}>
+											{blg.label}
+										</Select.Option>
+									))}
+								</Select>
+							</div>
 						) : null}
 					</>
 				) : null}
 				<Space>
 					<Button onClick={() => setAssignMode(null)}>Cancel</Button>
-					{(procedure || systemField) && (
+					{(procedure ||
+						systemField ||
+						userField ||
+						buildingField ||
+						contractField ||
+						deviceField) && (
 						<Button type="primary" onClick={assign}>
 							{assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
 								? "Change"

@@ -112,7 +112,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 					</Select>
 				</Form.Item>
 				<Form.Item
-					name="notifiation_frequency"
+					name="notification_frequency"
 					label="Notification Frequency (No. of Days)"
 					rules={[
 						{
@@ -154,6 +154,7 @@ const AddNewClient: FC<props> = ({ fetchData }: props) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
+			values.notifiation_frequency = parseInt(values.notifiation_frequency);
 			apiCall({
 				method: "POST",
 				url: "/clients",
