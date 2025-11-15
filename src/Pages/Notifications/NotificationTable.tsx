@@ -121,6 +121,7 @@ const NotificationTable = () => {
 								pending_procedures={row.procedure_ids}
 								fetchData={fetchData}
 								notification_id={id}
+								type={row.type}
 							/>
 							<Popconfirm
 								title="Are you sure to delete?"

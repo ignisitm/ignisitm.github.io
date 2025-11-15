@@ -446,7 +446,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 						<Descriptions.Item label="Building Completion certificate No. ">
 							{buildingDetails.building_completion_certificate_number}
 						</Descriptions.Item>
-						<Descriptions.Item label="Jurisdiction ">QCD</Descriptions.Item>
+						{/* <Descriptions.Item label="Jurisdiction ">QCD</Descriptions.Item> */}
 						<Descriptions.Item label="Hazard Classification">
 							{
 								hazardClassification.find(

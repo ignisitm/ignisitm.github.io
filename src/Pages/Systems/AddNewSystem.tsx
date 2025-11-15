@@ -98,7 +98,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 		setLoadingProcedures(true);
 		apiCall({
 			method: "GET",
-			url: `dropdown/system_procedures?system_id=${id}`,
+			url: `dropdown/clientsystemprocedures?system_id=${id}`,
 			handleResponse: (res) => {
 				let pd = res.data.message.map((x: any) => ({
 					procedure_id: x.id,

@@ -154,7 +154,7 @@ const AddNewClient: FC<props> = ({ fetchData }: props) => {
 		return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
-			values.notifiation_frequency = parseInt(values.notifiation_frequency);
+			values.notification_frequency = parseInt(values.notification_frequency);
 			apiCall({
 				method: "POST",
 				url: "/clients",

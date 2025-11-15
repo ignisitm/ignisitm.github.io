@@ -70,12 +70,14 @@ interface props {
 	fetchData: Function;
 	notification_id: number;
 	pending_procedures: Array<number>;
+	type: string;
 }
 
 interface CollectionCreateFormProps {
 	notification_id: number;
 	visible: boolean;
 	confirmLoading: boolean;
+	type: string;
 	onCreate: (values: any) => Promise<AxiosResponse | AxiosError>;
 	onCancel: () => void;
 }
@@ -83,6 +85,7 @@ interface CollectionCreateFormProps {
 const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	visible,
 	confirmLoading,
+	type,
 	notification_id,
 	onCreate,
 	onCancel,
@@ -446,7 +449,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 	return (
 		<Modal
 			open={visible}
-			width={"80%"}
+			width={type !== "Corrective" ? "80%" : undefined}
 			title="Create Work Order"
 			okText="Create"
 			maskClosable={false}
@@ -510,66 +513,68 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 			confirmLoading={confirmLoading}
 		>
 			<Row gutter={24}>
-				<Col span={14}>
-					<div
-						style={{
-							height: "100%",
-							maxHeight: "620px",
-							width: "100%",
-							display: "flex",
-							flexDirection: "column",
-							gap: "15px",
-						}}
-					>
+				{type !== "Corrective" && (
+					<Col span={14}>
 						<div
 							style={{
-								height: "45%",
+								height: "100%",
+								maxHeight: "620px",
 								width: "100%",
 								display: "flex",
 								flexDirection: "column",
+								gap: "15px",
 							}}
 						>
-							<label>Select Assets: </label>
-							<Card style={{ overflow: "scroll", flexGrow: 1 }}>
-								{assets.length > 0 ? (
-									<Tree
-										checkable
-										onCheck={onCheck}
-										treeData={assets}
-										defaultCheckedKeys={selectedAssets}
-										selectable={false}
-									/>
-								) : (
-									"Loading Assets..."
-								)}
-							</Card>
+							<div
+								style={{
+									height: "45%",
+									width: "100%",
+									display: "flex",
+									flexDirection: "column",
+								}}
+							>
+								<label>Select Assets: </label>
+								<Card style={{ overflow: "scroll", flexGrow: 1 }}>
+									{assets.length > 0 ? (
+										<Tree
+											checkable
+											onCheck={onCheck}
+											treeData={assets}
+											defaultCheckedKeys={selectedAssets}
+											selectable={false}
+										/>
+									) : (
+										"Loading Assets..."
+									)}
+								</Card>
+							</div>
+							<div
+								style={{
+									height: "55%",
+									width: "100%",
+									display: "flex",
+									flexDirection: "column",
+								}}
+							>
+								<label>Select Procedures: </label>
+								<Card style={{ overflow: "scroll", flexGrow: 1 }}>
+									{proceduresTree.length > 0 ? (
+										<Tree
+											checkable
+											selectable={false}
+											onCheck={onCheckProcedures}
+											treeData={proceduresTree}
+											checkedKeys={procedureIds}
+										/>
+									) : (
+										"Loading Procedures..."
+									)}
+								</Card>
+							</div>
 						</div>
-						<div
-							style={{
-								height: "55%",
-								width: "100%",
-								display: "flex",
-								flexDirection: "column",
-							}}
-						>
-							<label>Select Procedures: </label>
-							<Card style={{ overflow: "scroll", flexGrow: 1 }}>
-								{proceduresTree.length > 0 ? (
-									<Tree
-										checkable
-										selectable={false}
-										onCheck={onCheckProcedures}
-										treeData={proceduresTree}
-										checkedKeys={procedureIds}
-									/>
-								) : (
-									"Loading Procedures..."
-								)}
-							</Card>
-						</div>
-					</div>
-				</Col>
-				<Col span={10}>
+					</Col>
+				)}
+				<Col span={type !== "Corrective" ? 10 : 24}>
 					<Form
 						form={form}
 						layout="vertical"
@@ -683,7 +688,7 @@ const CollectionCreateForm: FC<CollectionCreateFormProps> = ({
 							label="Select Equipments"
 							rules={[
 								{
-									required: true,
+									required: false,
 									message: "Please select atleast one resource",
 								},
 							]}
@@ -856,6 +861,7 @@ const CreateNewWorkOrder: FC<props> = ({
 	fetchData,
 	notification_id,
 	pending_procedures,
+	type,
 }: props) => {
 	const [visible, setVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
@@ -864,6 +870,9 @@ const CreateNewWorkOrder: FC<props> = ({
 		values["notification_id"] = notification_id;
 		const asset_procedures = values["asset_procedure_ids"];
 		delete values["asset_procedure_ids"];
+		if (type === "Corrective") {
+			values["pending_procedures"] = asset_procedures;
+		}
 		return new Promise<any>((resolve, reject) => {
 			console.log("Received values of form: ", values);
 			setConfirmLoading(true);
@@ -898,6 +907,7 @@ const CreateNewWorkOrder: FC<props> = ({
 				Create Work-Order
 			</Button>
 			<CollectionCreateForm
+				type={type}
 				visible={visible}
 				onCreate={onCreate}
 				notification_id={notification_id}

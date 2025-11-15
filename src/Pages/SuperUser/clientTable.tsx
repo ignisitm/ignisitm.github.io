@@ -15,8 +15,14 @@ import { apiCall } from "../../axiosConfig";
 import AddNewClient from "./AddNewClient";
 import { SyncOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AxiosError, AxiosResponse } from "axios";
+import { set } from "lodash";
 const { Search } = Input;
 const { Text } = Typography;
+
+type selectedAHJs = {
+	rowKey: number;
+	ahjs: number[];
+};
 
 const ClientTable = () => {
 	const [data, setData] = useState();
@@ -30,6 +36,10 @@ const ClientTable = () => {
 	});
 	const [modal, contextHolder] = Modal.useModal();
 	const [changeNameLoading, setChangeNameLoading] = useState(false);
+	const [AHJs, setAHJs] = useState<any>([]);
+	const [selectedAHJs, setSelectedAHJs] = useState<selectedAHJs | null>(null);
+	const [loadingAHJs, setLoadingAHJs] = useState(false);
+	const [showAHJModal, setShowAHJModal] = useState(false);
 
 	const columns = [
 		{
@@ -168,6 +178,21 @@ const ClientTable = () => {
 			width: "20%",
 		},
 		{
+			title: "Select AHJs",
+			dataIndex: "id",
+			render: (id: number, row: any) => (
+				<Button
+					type="link"
+					onClick={() => {
+						setSelectedAHJs({ rowKey: id, ahjs: row.ahjs || [] });
+						setShowAHJModal(true);
+					}}
+				>
+					Select AHJs
+				</Button>
+			),
+		},
+		{
 			title: "Action",
 			dataIndex: "id",
 			render: (id: number) => (
@@ -188,12 +213,48 @@ const ClientTable = () => {
 		},
 	];
 
+	const getAllAHJs = (
+		curr_pagination: any = pagination,
+		search: string = searchText
+	) => {
+		setLoadingAHJs(true);
+		setShowClose(search ? true : false);
+		apiCall({
+			method: "GET",
+			url: `/ahjform?page=${1}&limit=${9999}&searchText=${search || ""}`,
+			handleResponse: (res) => {
+				setAHJs(res.data.message);
+				console.log(res.data.message);
+				setLoadingAHJs(false);
+			},
+			handleError: () => {
+				setLoadingAHJs(false);
+			},
+		});
+	};
+
 	const changeClientName = (id: number, val: string, nf: number) => {
 		return new Promise((resolve, reject) => {
 			apiCall({
 				method: "PUT",
 				url: "/clients",
-				data: { id: id, name: val, notification_frequency: nf },
+				data: { id: id, data: { name: val, notification_frequency: nf } },
+				handleResponse: (res) => {
+					resolve(res);
+				},
+				handleError: (err) => {
+					reject(err);
+				},
+			});
+		});
+	};
+
+	const changeClientAHJs = (id: number, ahjs: any) => {
+		return new Promise((resolve, reject) => {
+			apiCall({
+				method: "PUT",
+				url: "/clients",
+				data: { id: id, data: { ahjs: ahjs } },
 				handleResponse: (res) => {
 					resolve(res);
 				},
@@ -263,11 +324,66 @@ const ClientTable = () => {
 
 	useEffect(() => {
 		search();
+		getAllAHJs();
 	}, []);
 
 	const handleTableChange = (newPagination: any) => {
 		fetchData(newPagination);
 	};
+
+	// AHJModal is always mounted, visibility controlled by 'open' prop
+	const AHJModal = (
+		<Modal
+			title="Select AHJs"
+			open={showAHJModal}
+			confirmLoading={loadingAHJs}
+			okText="Save"
+			onOk={() => {
+				setLoadingAHJs(true);
+				changeClientAHJs(selectedAHJs?.rowKey || 0, selectedAHJs?.ahjs)
+					.then(() => {
+						fetchData();
+						setShowAHJModal(false);
+					})
+					.finally(() => {
+						setLoadingAHJs(false);
+						setSelectedAHJs(null);
+					});
+			}}
+			onCancel={() => {
+				setLoadingAHJs(false);
+				setShowAHJModal(false);
+				setSelectedAHJs(null);
+			}}
+			width={800}
+			destroyOnClose={true}
+		>
+			<Table
+				rowSelection={{
+					type: "checkbox",
+					selectedRowKeys: selectedAHJs?.ahjs || [],
+					onChange: (selectedRowKeys) => {
+						setSelectedAHJs((prev) => ({
+							...(prev || { rowKey: 0, ahjs: [] }),
+							ahjs: selectedRowKeys as number[],
+						}));
+					},
+				}}
+				columns={[
+					{
+						title: "Name",
+						dataIndex: "name",
+					},
+				]}
+				dataSource={AHJs}
+				loading={loadingAHJs}
+				pagination={false}
+				rowKey={(record: any) => record.id}
+				size="small"
+				bordered
+			/>
+		</Modal>
+	);
 
 	return (
 		<>
@@ -319,6 +435,7 @@ const ClientTable = () => {
 					} out of ${pagination.total} records`}</div>
 				</Col>
 			</Row>
+			{AHJModal}
 			{contextHolder}
 		</>
 	);

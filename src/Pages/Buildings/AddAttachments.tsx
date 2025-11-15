@@ -34,7 +34,7 @@ const AddAttachments: FC<props> = ({
 	const onFinish = (values: any) => {
 		console.log(values);
 		nextFunc();
-		setAttachmentDetails(values.dragger);
+		setAttachmentDetails([...values.dragger, values.buildingImage]);
 		// apiCall({
 		// 	method: "POST",
 		// 	url: "/fileupload",
@@ -63,7 +63,27 @@ const AddAttachments: FC<props> = ({
 			wrapperCol={{ span: 24 }}
 			onValuesChange={(changedValues, allValues) => {}}
 		>
-			<Form.Item label="Upload Attachments">
+			<Form.Item
+				name="buildingImage"
+				label="Upload Building Image"
+				valuePropName="fileList"
+				getValueFromEvent={normFile}
+			>
+				<Upload
+					name="buildingImage"
+					customRequest={dummyRequest}
+					maxCount={1}
+					accept="image/*"
+					listType="picture"
+					showUploadList={{ showPreviewIcon: false }}
+					style={{ width: 150 }}
+				>
+					<Button size="small" icon={<InboxOutlined />}>
+						Select Image
+					</Button>
+				</Upload>
+			</Form.Item>
+			<Form.Item label="Upload other Attachments">
 				<Form.Item
 					name="dragger"
 					valuePropName="fileList"

@@ -510,16 +510,14 @@ const PdfViewer = () => {
 		const [loadingProcedures, setLoadingProcedures] = useState(false);
 		const [systemFieldsLoading, setSystemFieldsLoading] = useState(false);
 
-		const [loadingDeviceFields, setLoadingDeviceFields] = useState(false);
-		const [deviceFields, setDeviceFields] = useState(
-			useState(
-				assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
-					assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "device"
-					? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
-					: null
-			)
+		const [loadingDeviceFields, setLoadingDeviceFields] = useState(true);
+		const [deviceFields, setDeviceFields] = useState(null);
+		const [deviceField, setDeviceField] = useState(
+			assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned &&
+				assignedFields?.[selectedPage]?.[assignMode?.index]?.type === "device"
+				? assignedFields?.[selectedPage]?.[assignMode?.index]?.assigned
+				: null
 		);
-		const [deviceField, setDeviceField] = useState(null);
 
 		const getProcedures = () => {
 			setLoadingProcedures(true);
@@ -592,11 +590,14 @@ const PdfViewer = () => {
 		};
 
 		useEffect(() => {
+			console.log("USEEFFECT", type, systemId, DeviceTypeField);
 			if (type === "procedures" && systemId) getProcedures();
 			else if (type === "system_values" && systemId) getSystemFields();
-			else if (type === "device" && DeviceTypeField)
+			else if (type === "device" && DeviceTypeField) {
+				setLoadingDeviceFields(true);
 				getDeviceFields(DeviceTypeField);
-		}, [systemId, type, DeviceTypeField]);
+			}
+		}, [type, systemId, DeviceTypeField]);
 
 		return (
 			<Space direction="vertical" style={{ width: "100%", color: "white" }}>
@@ -619,30 +620,6 @@ const PdfViewer = () => {
 				<Typography.Title level={5} style={{ color: "white" }}>
 					Assigning Field #{assignMode.index + 1}
 				</Typography.Title>
-				{/* <div>
-					<label style={{ margin: "4px" }}>Select System: </label>
-					<Select
-						showSearch
-						value={system}
-						onChange={(e) => setSystem(e)}
-						placeholder="Select System"
-						style={{ width: "100%" }}
-						filterOption={(input, option) =>
-							option.children.toLowerCase().includes(input)
-						}
-						filterSort={(optionA, optionB) =>
-							optionA.children
-								.toLowerCase()
-								.localeCompare(optionB.children.toLowerCase())
-						}
-					>
-						{systems?.map((sys, index) => (
-							<Select.Option key={index} value={sys.id}>
-								{sys.name}
-							</Select.Option>
-						))}
-					</Select>
-				</div> */}
 				{systemId ? (
 					<>
 						<div>
@@ -672,7 +649,10 @@ const PdfViewer = () => {
 									<Select
 										showSearch
 										value={DeviceTypeField}
-										onChange={(e) => setDeviceTypeField(e)}
+										onChange={(e) => {
+											setDeviceTypeField(e);
+											getDeviceFields(e);
+										}}
 										placeholder="Select Device Type"
 										style={{ width: "100%" }}
 										filterOption={(input, option) =>
@@ -697,32 +677,34 @@ const PdfViewer = () => {
 											<LoadingOutlined /> Loading Device Fields
 										</span>
 									) : (
-										<div>
-											<label style={{ margin: "4px" }}>
-												Select Device Field
-											</label>
-											<Select
-												showSearch
-												value={deviceField}
-												onChange={(e) => setDeviceField(e)}
-												placeholder="Select Device Field"
-												style={{ width: "100%" }}
-												filterOption={(input, option) =>
-													option.children.toLowerCase().includes(input)
-												}
-												filterSort={(optionA, optionB) =>
-													optionA.children
-														.toLowerCase()
-														.localeCompare(optionB.children.toLowerCase())
-												}
-											>
-												{deviceFields?.map((dev, index) => (
-													<Select.Option key={index} value={dev.name}>
-														{dev.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
+										deviceFields !== undefined && (
+											<div>
+												<label style={{ margin: "4px" }}>
+													Select Device Field
+												</label>
+												<Select
+													showSearch
+													value={deviceField}
+													onChange={(e) => setDeviceField(e)}
+													placeholder="Select Device Field"
+													style={{ width: "100%" }}
+													filterOption={(input, option) =>
+														option?.children.toLowerCase().includes(input)
+													}
+													filterSort={(optionA, optionB) =>
+														optionA?.children
+															.toLowerCase()
+															.localeCompare(optionB.children.toLowerCase())
+													}
+												>
+													{(deviceFields || []).map((dev, index) => (
+														<Select.Option key={index} value={dev.name}>
+															{dev.name}
+														</Select.Option>
+													))}
+												</Select>
+											</div>
+										)
 									))}
 							</>
 						) : type === "procedures" ? (

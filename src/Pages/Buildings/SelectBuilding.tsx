@@ -523,7 +523,7 @@ const SelectBuilding: FC<props> = ({
 							</Select>
 						</Form.Item>
 					</Col> */}
-					<Col span={18} style={{ paddingLeft: "10px" }}>
+					{/* <Col span={18} style={{ paddingLeft: "10px" }}>
 						<Form.Item
 							label="Authority Having Jurisdiction"
 							name="jurisdiction"
@@ -550,7 +550,7 @@ const SelectBuilding: FC<props> = ({
 								</Row>
 							</Radio.Group>
 						</Form.Item>
-					</Col>
+					</Col> */}
 				</Row>
 				<Row>
 					<Col md={6} xs={0} style={{ paddingLeft: "10px" }} />

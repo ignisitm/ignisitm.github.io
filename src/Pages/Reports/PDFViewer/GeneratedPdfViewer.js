@@ -395,7 +395,7 @@ const GeneratedPdfViewer = ({ heading, file, close, filename }) => {
 			setLoadingProcedures(true);
 			apiCall({
 				method: "GET",
-				url: `/dropdown/system_procedures?system_id=${system}`,
+				url: `/dropdown/clientsystemprocedures?system_id=${system}`,
 				handleResponse: (res) => {
 					setLoadingProcedures(false);
 					setProcedures(res.data.message);

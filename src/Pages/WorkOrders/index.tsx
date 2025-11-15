@@ -34,6 +34,7 @@ import {
 	LeftCircleOutlined,
 	ArrowLeftOutlined,
 	UndoOutlined,
+	FileJpgOutlined,
 } from "@ant-design/icons";
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -362,6 +363,60 @@ const WorkOrder = () => {
 		{
 			title: "Tag",
 			dataIndex: "tag",
+		},
+		{
+			title: "Result",
+			dataIndex: "result",
+			render: (result: any, row: any) => (
+				<Tag color={result === "Y" ? "green" : result === "N" ? "red" : ""}>
+					{result === "Y" ? "PASSED" : result === "N" ? "FAILED" : "N/A"}
+				</Tag>
+			),
+		},
+		{
+			title: "Remarks",
+			dataIndex: "reason",
+		},
+		{
+			title: " ",
+			dataIndex: "id",
+			render: (id: any, row: any) => {
+				if (row.result === "N") {
+					let defect_id = (procedureDetails?.defects || []).find(
+						(defect: any) => defect.tag === row.tag
+					)?.id;
+					return (
+						<Popover
+							placement="bottomRight"
+							content={
+								<Button
+									type="link"
+									loading={loadingDefectImage === id}
+									onClick={() => {
+										setLoadingDefectImage(id);
+										apiCall({
+											method: "GET",
+											url: "ITMDefect/" + defect_id,
+											handleResponse: (res) => {
+												const url = res?.data?.message?.url || "";
+												window?.open(url, "_blank")?.focus();
+												setLoadingDefectImage(0);
+											},
+											handleError: () => setLoadingDefectImage(0),
+										});
+									}}
+								>
+									Show Image
+								</Button>
+							}
+							trigger="click"
+						>
+							<Button icon={<FileJpgOutlined />} />
+						</Popover>
+					);
+				}
+			},
+			width: "5%",
 		},
 	];
 
@@ -1176,7 +1231,7 @@ const WorkOrder = () => {
 									label: "Checked Assets",
 									children: (
 										<Table
-											dataSource={procedureDetails?.assets || []}
+											dataSource={procedureDetails?.itmdata || []}
 											loading={procedureDetailsLoading}
 											columns={procedureDetailCols}
 										/>
